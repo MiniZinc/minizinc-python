@@ -21,9 +21,16 @@ default_driver: Union[str, CDLL] = None
 
 class Driver(ABC):
 
-    @staticmethod
+    @classmethod
     @abstractmethod
-    def load_solver(solver: str, minizinc: Union[Path, CDLL]) -> Driver: pass
+    def load_solver(cls, solver: str, driver: Union[Path, CDLL]) -> Driver:
+        """
+        Initialize driver using a configuration known to MiniZinc
+        :param solver: the id, name, or tag of the solver to load
+        :param driver: the MiniZinc base driver to use, falls back to default_driver
+        :return: MiniZinc driver configured with the solver
+        """
+        pass
 
     @abstractmethod
     def __init__(self, name: str):
@@ -50,10 +57,10 @@ class LibDriver(Driver):
 
 class ExecDriver(Driver):
 
-    @staticmethod
-    def load_solver(solver: str, minizinc: Path) -> ExecDriver:
+    @classmethod
+    def load_solver(cls, solver: str, driver: Path) -> ExecDriver:
         # Find all available solvers
-        output = subprocess.run([minizinc, "--solvers-json"], capture_output=True, check=True)
+        output = subprocess.run([driver, "--solvers-json"], capture_output=True, check=True)
         solvers = json.loads(output.stdout)
 
         # Find the specified solver
@@ -71,24 +78,24 @@ class ExecDriver(Driver):
                 "No solver id or tag '%s' found, available options: %s" % (solver, sorted([x for x in names])))
 
         # Initialize driver
-        driver = ExecDriver(info["name"], info["version"], info["executable"])
+        ret = cls(info["name"], info["version"], info["executable"], driver)
 
         # Set all specified options
-        driver.mznlib = info.get("mznlib", driver.mznlib)
-        driver.tags = info.get("tags", driver.mznlib)
-        driver.stdFlags = info.get("stdFlags", driver.mznlib)
-        driver.extraFlags = info.get("extraFlags", driver.mznlib)
-        driver.supportsMzn = info.get("supportsMzn", driver.mznlib)
-        driver.supportsFzn = info.get("supportsFzn", driver.mznlib)
-        driver.needsSolns2Out = info.get("needsSolns2Out", driver.mznlib)
-        driver.needsMznExecutable = info.get("needsMznExecutable", driver.mznlib)
-        driver.needsStdlibDir = info.get("needsStdlibDir", driver.mznlib)
-        driver.isGUIApplication = info.get("isGUIApplication", driver.mznlib)
-        driver.id = info["id"]
+        ret.mznlib = info.get("mznlib", ret.mznlib)
+        ret.tags = info.get("tags", ret.mznlib)
+        ret.stdFlags = info.get("stdFlags", ret.mznlib)
+        ret.extraFlags = info.get("extraFlags", ret.mznlib)
+        ret.supportsMzn = info.get("supportsMzn", ret.mznlib)
+        ret.supportsFzn = info.get("supportsFzn", ret.mznlib)
+        ret.needsSolns2Out = info.get("needsSolns2Out", ret.mznlib)
+        ret.needsMznExecutable = info.get("needsMznExecutable", ret.mznlib)
+        ret.needsStdlibDir = info.get("needsStdlibDir", ret.mznlib)
+        ret.isGUIApplication = info.get("isGUIApplication", ret.mznlib)
+        ret.id = info["id"]
 
-        return driver
+        return ret
 
-    def __init__(self, name: str, version: str, executable: str, minizinc: str = None):
+    def __init__(self, name: str, version: str, executable: str, minizinc: Path = None):
         if minizinc is None:
             minizinc = default_driver
         self.driver = minizinc
@@ -137,6 +144,12 @@ def is_library(elem) -> bool:
 
 
 def load_solver(solver: str, minizinc: Union[CDLL, Path] = None) -> Driver:
+    """
+    Load solver from the configuration known to MiniZinc
+    :param solver: the id, name, or tag of the solver to load
+    :param minizinc: the MiniZinc base driver to use, falls back to default_driver
+    :return: MiniZinc driver configured with the solver
+    """
     if minizinc is None:
         minizinc = default_driver
 
