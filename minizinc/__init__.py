@@ -1,4 +1,4 @@
-from .driver import load_solver, set_default_minizinc
+from .driver import load_solver, find_minizinc, default_driver
 
-# Try and find the
-set_default_minizinc("minizinc")
+# Try and find MiniZinc and setup default driver
+driver.default_driver = find_minizinc("minizinc")

@@ -1,3 +1,5 @@
+from __future__ import annotations  # For the use of self-referencing type annotations
+
 import json
 import os
 import re
@@ -5,21 +7,23 @@ import shutil
 import subprocess
 from abc import ABC, abstractmethod
 from ctypes import cdll, CDLL
+from pathlib import Path
+from typing import Union
 
-from .model import Model
+from .model import ModelInstance
 
 #: MiniZinc version required by the python package
 required_version = (2, 2, 0)
 
 #: Default MiniZinc driver used by the python package
-default_driver = None
+default_driver: Union[str, CDLL] = None
 
 
 class Driver(ABC):
 
     @staticmethod
     @abstractmethod
-    def load_solver(solver, minizinc): pass
+    def load_solver(solver: str, minizinc: Union[Path, CDLL]) -> Driver: pass
 
     @abstractmethod
     def __init__(self, name: str):
@@ -27,7 +31,7 @@ class Driver(ABC):
         assert self.minizinc_version() >= required_version
 
     @abstractmethod
-    def solve(self, instance: Model, nr_solutions: int = None, processes: int = None,  random_seed: int = None,
+    def solve(self, instance: ModelInstance, nr_solutions: int = None, processes: int = None, random_seed: int = None,
               free_search: bool = False, **kwargs):
         pass
 
@@ -47,7 +51,7 @@ class LibDriver(Driver):
 class ExecDriver(Driver):
 
     @staticmethod
-    def load_solver(solver, minizinc):
+    def load_solver(solver: str, minizinc: Path) -> ExecDriver:
         # Find all available solvers
         output = subprocess.run([minizinc, "--solvers-json"], capture_output=True, check=True)
         solvers = json.loads(output.stdout)
@@ -108,7 +112,7 @@ class ExecDriver(Driver):
         self.needsStdlibDir = False
         self.isGUIApplication = False
 
-    def solve(self, instance: Model, nr_solutions: int = None, processes: int = None, random_seed: int = None,
+    def solve(self, instance: ModelInstance, nr_solutions: int = None, processes: int = None, random_seed: int = None,
               free_search: bool = False, **kwargs):
         pass
 
@@ -132,7 +136,7 @@ def is_library(elem) -> bool:
     return isinstance(elem, CDLL)
 
 
-def load_solver(solver: str, minizinc=None) -> Driver:
+def load_solver(solver: str, minizinc: Union[CDLL, Path] = None) -> Driver:
     if minizinc is None:
         minizinc = default_driver
 
@@ -144,22 +148,25 @@ def load_solver(solver: str, minizinc=None) -> Driver:
         raise FileExistsError("MiniZinc driver not found")
 
 
-def set_default_minizinc(name: str, path: list = None):
+def find_minizinc(name: str = "minizinc", path: list = None) -> Union[CDLL, Path, None]:
     """
-    Set MiniZinc driver to use when no other driver specified
+    Find MiniZinc driver on default or specified path
     :param name: Name of the executable or library
     :param path: List of locations to search
     """
-    global default_driver
     try:
         # Try to load the MiniZinc C API
         if path is None:
-            default_driver = cdll.LoadLibrary(name)
+            driver = cdll.LoadLibrary(name)
         else:
             env_backup = os.environ.copy()
             _path = os.environ["LD_LIBRARY_PATH"] = os.pathsep.join(path)
-            default_driver = cdll.LoadLibrary(name)
+            driver = cdll.LoadLibrary(name)
             os.environ = env_backup
     except OSError:
         # Try to locate the MiniZinc executable
-        default_driver = shutil.which(name, path=path)
+        driver = shutil.which(name, path=path)
+        if driver:
+            driver = Path(driver)
+
+    return driver
