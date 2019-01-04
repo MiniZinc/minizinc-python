@@ -1,15 +1,18 @@
 from __future__ import annotations  # For the use of self-referencing type annotations
 
+import contextlib
 import json
 import os
 import re
 import shutil
 import subprocess
+import tempfile
 from abc import ABC, abstractmethod
 from ctypes import cdll, CDLL
 from pathlib import Path
 from typing import Union, List, Any, Tuple
 
+from .result import Result
 from .model import Instance, Method
 
 #: MiniZinc version required by the python package
@@ -20,7 +23,6 @@ default_driver: Union[str, CDLL] = None
 
 
 class Driver(ABC):
-
     name: str
 
     @classmethod
@@ -58,7 +60,6 @@ class LibDriver(Driver):
 
 
 class ExecDriver(Driver):
-
     # Solver Configuration Options
     version: Tuple[int, int, int]
     mznlib: str
@@ -133,22 +134,84 @@ class ExecDriver(Driver):
         self.needsStdlibDir = False
         self.isGUIApplication = False
 
+    @contextlib.contextmanager
+    def _gen_solver(self) -> str:
+        file = None
+        if self.id is None:
+            file = tempfile.NamedTemporaryFile(prefix="minizinc_solver_", suffix=".msc")
+            file.write(self.to_json().encode())
+            file.flush()
+            file.seek(0)
+            self.id = file.name
+        try:
+            yield self.id
+        finally:
+            if file is not None:
+                file.close()
+                self.id = None
+
     def analyze(self, instance: Instance):
-        output = subprocess.run([self.driver, "--model-interface-only", instance.files], capture_output=True, check=True)  # TODO: Fix which files to add
+        output = subprocess.run([self.driver, "--model-interface-only", instance.files], capture_output=True,
+                                check=True)  # TODO: Fix which files to add
         interface = json.loads(output.stdout)
         instance.method = Method.from_string(interface.method)
         instance.input = interface.input  # TODO: Make python specification
         instance.output = interface.output  # TODO: Make python specification
 
-
     def solve(self, instance: Instance, nr_solutions: int = None, processes: int = None, random_seed: int = None,
               free_search: bool = False, **kwargs):
-        cmd = [self.driver, "--output-mode", "json", "--output-time"]
+        with self._gen_solver() as solver:
+            # Set standard command line arguments
+            cmd = [self.driver, "--solver", solver, "--output-mode", "json", "--output-time"]
+
+            # TODO: -n / -a flag
+            # Set number of processes to be used
+            if processes is not None:
+                if "-p" not in self.stdFlags:
+                    raise NotImplementedError("Solver does not support the -p flag")
+                cmd.extend(['-p', processes])
+            # Set random seed to be used
+            if random_seed is not None:
+                if "-r" not in self.stdFlags:
+                    raise NotImplementedError("Solver does not support the -r flag")
+                cmd.extend(['-r', random_seed])
+            # Enable free search if specified
+            if free_search:
+                if "-f" not in self.stdFlags:
+                    raise NotImplementedError("Solver does not support the -f flag")
+                cmd.extend(['-f'])
+
+            # Add files as last arguments
+            cmd.extend(instance.files)
+            # Run the MiniZinc process
+            output = subprocess.run(cmd, capture_output=True, check=False)
+            return Result.from_process(output)
 
     def minizinc_version(self) -> tuple:
         output = subprocess.run([self.driver, "--version"], capture_output=True, check=True)
         match = re.search(r"version (\d+)\.(\d+)\.(\d+)", output.stdout.decode())
         return tuple([int(i) for i in match.groups()])
+
+    def to_json(self):
+        info = {
+            "name": self.name,
+            "version": ".".join([str(i) for i in self.version]),
+            "mznlib": self.mznlib,
+            "tags": self.tags,
+            "executable": self.executable,
+            "supportsMzn": self.supportsMzn,
+            "supportsFzn": self.supportsFzn,
+            "needsSolns2Out": self.needsSolns2Out,
+            "needsMznExecutable": self.needsMznExecutable,
+            "needsStdlibDir": self.needsStdlibDir,
+            "isGUIApplication": self.isGUIApplication,
+        }
+        if self.id is None:
+            info["id"] = "org.minizinc.python." + self.name.lower()
+        else:
+            info["id"] = self.id
+
+        return json.dumps(info, sort_keys=True, indent=4)
 
     def __setattr__(self, key, value):
         if key in ["version", "executable", "mznlib", "tags", "stdFlags", "extraFlags", "supportsMzn", "supportsFzn",
