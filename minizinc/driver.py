@@ -8,7 +8,7 @@ import subprocess
 from abc import ABC, abstractmethod
 from ctypes import cdll, CDLL
 from pathlib import Path
-from typing import Union
+from typing import Union, List, Any, Tuple
 
 from .model import ModelInstance
 
@@ -20,6 +20,8 @@ default_driver: Union[str, CDLL] = None
 
 
 class Driver(ABC):
+
+    name: str
 
     @classmethod
     @abstractmethod
@@ -56,6 +58,18 @@ class LibDriver(Driver):
 
 
 class ExecDriver(Driver):
+
+    # Solver Configuration Options
+    version: Tuple[int, int, int]
+    mznlib: str
+    tags: List[str]
+    executable: str
+    supportsMzn: bool
+    supportsFzn: bool
+    needsSolns2Out: bool
+    needsMznExecutable: bool
+    needsStdlibDir: bool
+    isGUIApplication: bool
 
     @classmethod
     def load_solver(cls, solver: str, driver: Path) -> ExecDriver:
