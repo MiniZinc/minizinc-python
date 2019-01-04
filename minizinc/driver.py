@@ -10,7 +10,7 @@ from ctypes import cdll, CDLL
 from pathlib import Path
 from typing import Union, List, Any, Tuple
 
-from .model import ModelInstance
+from .model import Instance, Method
 
 #: MiniZinc version required by the python package
 required_version = (2, 2, 0)
@@ -133,9 +133,17 @@ class ExecDriver(Driver):
         self.needsStdlibDir = False
         self.isGUIApplication = False
 
+    def analyze(self, instance: Instance):
+        output = subprocess.run([self.driver, "--model-interface-only", instance.files], capture_output=True, check=True)  # TODO: Fix which files to add
+        interface = json.loads(output.stdout)
+        instance.method = Method.from_string(interface.method)
+        instance.input = interface.input  # TODO: Make python specification
+        instance.output = interface.output  # TODO: Make python specification
+
+
     def solve(self, instance: Instance, nr_solutions: int = None, processes: int = None, random_seed: int = None,
               free_search: bool = False, **kwargs):
-        pass
+        cmd = [self.driver, "--output-mode", "json", "--output-time"]
 
     def minizinc_version(self) -> tuple:
         output = subprocess.run([self.driver, "--version"], capture_output=True, check=True)
