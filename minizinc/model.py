@@ -22,7 +22,9 @@ class Model:
             self._file.close()
 
 
-class ModelInstance:
+class Instance:
+    method: Method
+
     def __init__(self, model, data=None):
         self.files: list[Path] = []
         if isinstance(model, Model):

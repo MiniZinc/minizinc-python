@@ -38,7 +38,7 @@ class Driver(ABC):
         assert self.minizinc_version() >= required_version
 
     @abstractmethod
-    def solve(self, instance: ModelInstance, nr_solutions: int = None, processes: int = None, random_seed: int = None,
+    def solve(self, instance: Instance, nr_solutions: int = None, processes: int = None, random_seed: int = None,
               free_search: bool = False, **kwargs):
         pass
 
@@ -119,7 +119,7 @@ class ExecDriver(Driver):
         self.needsStdlibDir = False
         self.isGUIApplication = False
 
-    def solve(self, instance: ModelInstance, nr_solutions: int = None, processes: int = None, random_seed: int = None,
+    def solve(self, instance: Instance, nr_solutions: int = None, processes: int = None, random_seed: int = None,
               free_search: bool = False, **kwargs):
         pass
 
