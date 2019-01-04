@@ -13,11 +13,11 @@ class Method(Enum):
 
     @classmethod
     def from_string(cls, s: str) -> Method:
-        if s is "sat":
+        if s == "sat":
             return cls.SATISFY
-        elif s is "min":
+        elif s == "min":
             return cls.MINIMIZE
-        elif s is "max":
+        elif s == "max":
             return cls.MAXIMIZE
         else:
             raise ValueError("Unknown Method %r, valid options are 'sat', 'min', or 'max'" % s)

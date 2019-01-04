@@ -151,45 +151,49 @@ class ExecDriver(Driver):
                 self.id = None
 
     def analyze(self, instance: Instance):
-        output = subprocess.run([self.driver, "--model-interface-only", instance.files], capture_output=True,
+        output = subprocess.run([self.driver, "--model-interface-only"] + instance.files, capture_output=True,
                                 check=True)  # TODO: Fix which files to add
         interface = json.loads(output.stdout)
-        instance.method = Method.from_string(interface.method)
-        instance.input = interface.input  # TODO: Make python specification
-        instance.output = interface.output  # TODO: Make python specification
+        instance.method = Method.from_string(interface["method"])
+        instance.input = interface["input"]  # TODO: Make python specification
+        instance.output = interface["output"]  # TODO: Make python specification
 
     def solve(self, instance: Instance, nr_solutions: int = None, processes: int = None, random_seed: int = None,
               free_search: bool = False, **kwargs):
+        self.analyze(instance)
         with self._gen_solver() as solver:
             # Set standard command line arguments
             cmd = [self.driver, "--solver", solver, "--output-mode", "json", "--output-time"]
+            # Enable statistics if possible
+            if "-s" in self.stdFlags:
+                cmd.append("-s")
 
             # TODO: -n / -a flag
             # Set number of processes to be used
             if processes is not None:
                 if "-p" not in self.stdFlags:
                     raise NotImplementedError("Solver does not support the -p flag")
-                cmd.extend(['-p', processes])
+                cmd.extend(["-p", processes])
             # Set random seed to be used
             if random_seed is not None:
                 if "-r" not in self.stdFlags:
                     raise NotImplementedError("Solver does not support the -r flag")
-                cmd.extend(['-r', random_seed])
+                cmd.extend(["-r", random_seed])
             # Enable free search if specified
             if free_search:
                 if "-f" not in self.stdFlags:
                     raise NotImplementedError("Solver does not support the -f flag")
-                cmd.extend(['-f'])
+                cmd.append("-f")
 
             # Add files as last arguments
             cmd.extend(instance.files)
             # Run the MiniZinc process
             output = subprocess.run(cmd, capture_output=True, check=False)
-            return Result.from_process(output)
+            return Result.from_process(instance, output)
 
     def minizinc_version(self) -> tuple:
         output = subprocess.run([self.driver, "--version"], capture_output=True, check=True)
-        match = re.search(r"version (\d+)\.(\d+)\.(\d+)", output.stdout.decode())
+        match = re.search(rb"version (\d+)\.(\d+)\.(\d+)", output.stdout)
         return tuple([int(i) for i in match.groups()])
 
     def to_json(self):
