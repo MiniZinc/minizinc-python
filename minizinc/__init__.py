@@ -1,5 +1,6 @@
-from .driver import load_solver, find_minizinc, default_driver
+from .driver import Driver, load_solver, find_minizinc
 from .model import Model, Instance
+from .solver import Solver
 
 # Try and find MiniZinc and setup default driver
 driver.default_driver = find_minizinc("minizinc")

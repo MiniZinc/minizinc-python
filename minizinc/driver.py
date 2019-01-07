@@ -1,49 +1,53 @@
 from __future__ import annotations  # For the use of self-referencing type annotations
 
-import contextlib
 import json
 import os
 import re
 import shutil
 import subprocess
-import tempfile
 from abc import ABC, abstractmethod
 from ctypes import cdll, CDLL
 from pathlib import Path
-from typing import Union, List, Any, Tuple
+from typing import Union, Optional
 
-from .result import Result
+import minizinc
 from .model import Instance, Method
+from .result import Result
 
 #: MiniZinc version required by the python package
 required_version = (2, 2, 0)
 
 #: Default MiniZinc driver used by the python package
-default_driver: Union[str, CDLL] = None
+default_driver: Optional[Driver] = None
 
 
 class Driver(ABC):
-    name: str
 
-    @classmethod
+    @staticmethod
+    def load(driver: Union[Path, CDLL]) -> Driver:
+        if isinstance(driver, CDLL):
+            return LibDriver(driver)
+        elif driver is not None:
+            return ExecDriver(driver)
+        else:
+            raise FileExistsError("MiniZinc driver not found")
+
     @abstractmethod
-    def load_solver(cls, solver: str, driver: Union[Path, CDLL]) -> Driver:
+    def load_solver(self, tag: str) -> minizinc.Solver:
         """
         Initialize driver using a configuration known to MiniZinc
-        :param solver: the id, name, or tag of the solver to load
-        :param driver: the MiniZinc base driver to use, falls back to default_driver
-        :return: MiniZinc driver configured with the solver
+        :param tag: the id, name, or tag of the solver to load
+        :return: MiniZinc solver configuration
         """
         pass
 
     @abstractmethod
-    def __init__(self, name: str):
-        self.name = name
+    def __init__(self, driver_location: Union[Path, CDLL]):
         assert self.minizinc_version() >= required_version
 
     @abstractmethod
-    def solve(self, instance: Instance, nr_solutions: int = None, processes: int = None, random_seed: int = None,
-              free_search: bool = False, **kwargs):
+    def solve(self, solver: minizinc.Solver, instance: Instance, nr_solutions: int = None, processes: int = None,
+              random_seed: int = None, free_search: bool = False, **kwargs):
         pass
 
     @abstractmethod
@@ -60,22 +64,17 @@ class LibDriver(Driver):
 
 
 class ExecDriver(Driver):
-    # Solver Configuration Options
-    version: Tuple[int, int, int]
-    mznlib: str
-    tags: List[str]
-    executable: str
-    supportsMzn: bool
-    supportsFzn: bool
-    needsSolns2Out: bool
-    needsMznExecutable: bool
-    needsStdlibDir: bool
-    isGUIApplication: bool
+    # Executable path for MiniZinc
+    executable: Path
 
-    @classmethod
-    def load_solver(cls, solver: str, driver: Path) -> ExecDriver:
+    def __init__(self, executable: Path):
+        self.executable = executable
+
+        super(ExecDriver, self).__init__(executable)
+
+    def load_solver(self, solver: str) -> minizinc.Solver:
         # Find all available solvers
-        output = subprocess.run([driver, "--solvers-json"], capture_output=True, check=True)
+        output = subprocess.run([self.executable, "--solvers-json"], capture_output=True, check=True)
         solvers = json.loads(output.stdout)
 
         # Find the specified solver
@@ -93,7 +92,7 @@ class ExecDriver(Driver):
                 "No solver id or tag '%s' found, available options: %s" % (solver, sorted([x for x in names])))
 
         # Initialize driver
-        ret = cls(info["name"], info["version"], info["executable"], driver)
+        ret = minizinc.Solver(info["name"], info["version"], info["executable"], self)
 
         # Set all specified options
         ret.mznlib = info.get("mznlib", ret.mznlib)
@@ -106,82 +105,42 @@ class ExecDriver(Driver):
         ret.needsMznExecutable = info.get("needsMznExecutable", ret.mznlib)
         ret.needsStdlibDir = info.get("needsStdlibDir", ret.mznlib)
         ret.isGUIApplication = info.get("isGUIApplication", ret.mznlib)
-        ret.id = info["id"]
+        ret._id = info["id"]
 
         return ret
 
-    def __init__(self, name: str, version: str, executable: str, minizinc: Path = None):
-        if minizinc is None:
-            minizinc = default_driver
-        self.driver = minizinc
-
-        # Set required fields
-        super().__init__(name)
-        self.id = None
-        match = re.search(r"(\d+)\.(\d+)\.(\d+)", version)
-        self.version = tuple([int(i) for i in match.groups()])
-        self.executable = executable
-
-        # Initialise optional fields
-        self.mznlib = ""
-        self.tags = []
-        self.stdFlags = []
-        self.extraFlags = []
-        self.supportsMzn = False
-        self.supportsFzn = True
-        self.needsSolns2Out = False
-        self.needsMznExecutable = False
-        self.needsStdlibDir = False
-        self.isGUIApplication = False
-
-    @contextlib.contextmanager
-    def _gen_solver(self) -> str:
-        file = None
-        if self.id is None:
-            file = tempfile.NamedTemporaryFile(prefix="minizinc_solver_", suffix=".msc")
-            file.write(self.to_json().encode())
-            file.flush()
-            file.seek(0)
-            self.id = file.name
-        try:
-            yield self.id
-        finally:
-            if file is not None:
-                file.close()
-                self.id = None
-
     def analyze(self, instance: Instance):
-        output = subprocess.run([self.driver, "--model-interface-only"] + instance.files, capture_output=True,
+        output = subprocess.run([self.executable, "--model-interface-only"] + instance.files, capture_output=True,
                                 check=True)  # TODO: Fix which files to add
         interface = json.loads(output.stdout)
         instance.method = Method.from_string(interface["method"])
         instance.input = interface["input"]  # TODO: Make python specification
         instance.output = interface["output"]  # TODO: Make python specification
 
-    def solve(self, instance: Instance, nr_solutions: int = None, processes: int = None, random_seed: int = None,
-              free_search: bool = False, **kwargs):
+    def solve(self, solver: minizinc.Solver, instance: Instance, nr_solutions: int = None, processes: int = None,
+              random_seed: int = None, free_search: bool = False, **kwargs):
         self.analyze(instance)
-        with self._gen_solver() as solver:
+        with solver.configuration() as conf:
             # Set standard command line arguments
-            cmd = [self.driver, "--solver", solver, "--output-mode", "json", "--output-time"]
+            cmd = [self.executable, "--solver", conf, "--output-mode", "json", "--output-time"]
             # Enable statistics if possible
-            if "-s" in self.stdFlags:
+            if "-s" in solver.stdFlags:
                 cmd.append("-s")
 
             # TODO: -n / -a flag
             # Set number of processes to be used
             if processes is not None:
-                if "-p" not in self.stdFlags:
+                if "-p" not in solver.stdFlags:
                     raise NotImplementedError("Solver does not support the -p flag")
                 cmd.extend(["-p", processes])
             # Set random seed to be used
             if random_seed is not None:
-                if "-r" not in self.stdFlags:
+                if "-r" not in solver.stdFlags:
                     raise NotImplementedError("Solver does not support the -r flag")
                 cmd.extend(["-r", random_seed])
             # Enable free search if specified
             if free_search:
-                if "-f" not in self.stdFlags:
+                if "-f" not in solver.stdFlags:
                     raise NotImplementedError("Solver does not support the -f flag")
                 cmd.append("-f")
 
@@ -192,69 +151,29 @@ class ExecDriver(Driver):
             return Result.from_process(instance, output)
 
     def minizinc_version(self) -> tuple:
-        output = subprocess.run([self.driver, "--version"], capture_output=True, check=True)
+        output = subprocess.run([self.executable, "--version"], capture_output=True, check=True)
         match = re.search(rb"version (\d+)\.(\d+)\.(\d+)", output.stdout)
         return tuple([int(i) for i in match.groups()])
 
-    def to_json(self):
-        info = {
-            "name": self.name,
-            "version": ".".join([str(i) for i in self.version]),
-            "mznlib": self.mznlib,
-            "tags": self.tags,
-            "executable": self.executable,
-            "supportsMzn": self.supportsMzn,
-            "supportsFzn": self.supportsFzn,
-            "needsSolns2Out": self.needsSolns2Out,
-            "needsMznExecutable": self.needsMznExecutable,
-            "needsStdlibDir": self.needsStdlibDir,
-            "isGUIApplication": self.isGUIApplication,
-        }
-        if self.id is None:
-            info["id"] = "org.minizinc.python." + self.name.lower()
-        else:
-            info["id"] = self.id
 
-        return json.dumps(info, sort_keys=True, indent=4)
-
-    def __setattr__(self, key, value):
-        if key in ["version", "executable", "mznlib", "tags", "stdFlags", "extraFlags", "supportsMzn", "supportsFzn",
-                   "needsSolns2Out", "needsMznExecutable", "needsStdlibDir", "isGUIApplication"] \
-                and getattr(self, key, None) is not value:
-            self.id = None
-        return super().__setattr__(key, value)
-
-
-def is_library(elem) -> bool:
-    """
-    Returns true if elem is an library format
-    """
-    return isinstance(elem, CDLL)
-
-
-def load_solver(solver: str, minizinc: Union[CDLL, Path] = None) -> Driver:
+def load_solver(tag: str) -> Optional[minizinc.Solver]:
     """
     Load solver from the configuration known to MiniZinc
-    :param solver: the id, name, or tag of the solver to load
-    :param minizinc: the MiniZinc base driver to use, falls back to default_driver
-    :return: MiniZinc driver configured with the solver
+    :param tag: the id, name, or tag of the solver to load
+    :return: A MiniZinc solver configuration if it is known
     """
-    if minizinc is None:
-        minizinc = default_driver
-
-    if is_library(minizinc):
-        return LibDriver.load_solver(solver, minizinc)
-    elif minizinc is not None:
-        return ExecDriver.load_solver(solver, minizinc)
+    if default_driver is not None:
+        return default_driver.load_solver(tag)
     else:
-        raise FileExistsError("MiniZinc driver not found")
+        raise FileExistsError("MiniZinc driver not found")  # TODO: Fix Error
 
 
-def find_minizinc(name: str = "minizinc", path: list = None) -> Union[CDLL, Path, None]:
+def find_minizinc(name: str = "minizinc", path: list = None) -> Optional[Driver]:
     """
     Find MiniZinc driver on default or specified path
     :param name: Name of the executable or library
     :param path: List of locations to search
+    :return: A MiniZinc Driver object, if the driver is found
     """
     try:
         # Try to load the MiniZinc C API
@@ -271,4 +190,6 @@ def find_minizinc(name: str = "minizinc", path: list = None) -> Union[CDLL, Path
         if driver:
             driver = Path(driver)
 
-    return driver
+    if driver is not None:
+        return Driver.load(driver)
+    return None
