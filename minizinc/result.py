@@ -1,8 +1,8 @@
 from __future__ import annotations  # For the use of self-referencing type annotations
 
-import datetime
 import json
 import re
+from datetime import timedelta
 from enum import Enum
 from subprocess import CompletedProcess
 from typing import Union, Dict, List
@@ -24,14 +24,14 @@ class Status(Enum):
     @classmethod
     def from_output(cls, output, method):
         s = cls.UNKNOWN
-        if b"=====UNSATISFIABLE=====" in output:
-            s = cls.UNSATISFIABLE
-        elif b"=====UNSATorUNBOUNDED=====" in output or b"=====UNBOUNDED=====" in output:
-            s = cls.UNBOUNDED
-        elif b"=====ERROR=====" in output:
+        if b"=====ERROR=====" in output:
             s = cls.ERROR
         elif b"=====UNKNOWN=====" in output:
             s = cls.UNKNOWN
+        elif b"=====UNSATISFIABLE=====" in output:
+            s = cls.UNSATISFIABLE
+        elif b"=====UNSATorUNBOUNDED=====" in output or b"=====UNBOUNDED=====" in output:
+            s = cls.UNBOUNDED
         elif method is Method.SATISFY:
             if b"==========" in output:
                 s = cls.ALL_SOLUTIONS
@@ -47,23 +47,39 @@ class Status(Enum):
 
 class Result:
     status: Status
+    instance: Instance
     complete: bool
     _solution: Union[Solution, List[Solution]]
-    solution_time: datetime.timedelta
+    time: timedelta
+
+    StatisticTypes = {
+        "nodes": int,  # Number of search nodes
+        "failures": int,  # Number of leaf nodes that were failed
+        "restarts": int,  # Number of times the solver restarted the search
+        "variables": int,  # Number of variables
+        "intVariables": int,  # Number of integer variables created
+        "boolVariables": int,  # Number of bool variables created
+        "floatVariables": int,  # Number of float variables created
+        "setVariables": int,  # Number of set variables created
+        "propagators": int,  # Number of propagators created
+        "propagations": int,  # Number of propagator invocations
+        "peakDepth": int,  # Peak depth of search tree
+        "nogoods": int,  # Number of nogoods created
+        "backjumps": int,  # Number of backjumps
+        "peakMem": float,  # Peak memory (in Mbytes)
+        "initTime": timedelta,  # Initialisation time (in seconds)
+        "solveTime": timedelta,  # Solving time (in seconds)
+    }
 
     def __init__(self):
         self.status = Status.ERROR
         self.complete = False
-
-    def __getitem__(self, item):
-        if self.complete:
-            return self._solution.get(item)
-        else:
-            raise NotImplementedError  # TODO: fix error type
+        self.stats = {}
 
     @classmethod
     def from_process(cls, instance: Instance, proc: CompletedProcess) -> Result:
         res = cls()
+        res.instance = instance
 
         # Determine solving status
         if proc.returncode == 0:
@@ -87,8 +103,33 @@ class Result:
         res._solution = json.loads(sol_json)
         match = re.search(rb"% time elapsed: (\d+.\d+) s", sol_stream[-1])
         if match:
-            time_ms = int( float(match[1]) * 1000 )
-            res.solution_time = datetime.timedelta(milliseconds=time_ms)
+            time_us = int(float(match[1]) * 1000000)
+            res.time = timedelta(milliseconds=time_us)
         # TODO: Handle other solutions
 
+        matches = re.findall(rb"%%%mzn-stat (\w*)=(.*)", proc.stdout)
+        for m in matches:
+            res.set_stat(m[0].decode(), m[1].decode())
+
         return res
+
+    def set_stat(self, name: str, value: str):
+        tt = self.StatisticTypes.get(name, str)
+        if tt is timedelta:
+            time_us = int(float(value) * 1000000)
+            self.stats[name] = timedelta(microseconds=time_us)
+        else:
+            self.stats[name] = tt(value)
+
+    def __getitem__(self, item):
+        if self.complete:  # TODO: Check if in output variables
+            return self._solution.get(item)
+        else:
+            raise NotImplementedError  # TODO: fix error type
+
+    @property
+    def objective(self):
+        if self.complete:
+            return self._solution.get("_objective")
+        else:
+            raise NotImplementedError  # TODO: fix error type
