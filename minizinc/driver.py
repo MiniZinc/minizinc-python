@@ -102,7 +102,7 @@ class ExecDriver(Driver):
         ret.mznlib = info.get("mznlib", ret.mznlib)
         ret.tags = info.get("tags", ret.mznlib)
         ret.stdFlags = info.get("stdFlags", ret.mznlib)
-        ret.extraFlags = info.get("extraFlags", ret.mznlib)
+        ret.extraFlags = info.get("extraFlags", ret.extraFlags)
         ret.supportsMzn = info.get("supportsMzn", ret.mznlib)
         ret.supportsFzn = info.get("supportsFzn", ret.mznlib)
         ret.needsSolns2Out = info.get("needsSolns2Out", ret.mznlib)

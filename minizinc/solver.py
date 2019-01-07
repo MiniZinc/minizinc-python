@@ -14,6 +14,8 @@ class Solver:
     version: Tuple[int, int, int]
     mznlib: str
     tags: List[str]
+    stdFlags = List[str]
+    extraFlags = List[str]
     executable: str
     supportsMzn: bool
     supportsFzn: bool
@@ -71,12 +73,14 @@ class Solver:
 
     def to_json(self):
         info = {
-            "id": self.id,
             "name": self.name,
             "version": ".".join([str(i) for i in self.version]),
+            "id": self.id,
+            "executable": self.executable,
             "mznlib": self.mznlib,
             "tags": self.tags,
-            "executable": self.executable,
+            "stdFlags": self.stdFlags,
+            "extraFlags": self.extraFlags,
             "supportsMzn": self.supportsMzn,
             "supportsFzn": self.supportsFzn,
             "needsSolns2Out": self.needsSolns2Out,
