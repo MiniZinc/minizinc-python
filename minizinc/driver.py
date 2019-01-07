@@ -46,8 +46,12 @@ class Driver(ABC):
         assert self.minizinc_version() >= required_version
 
     @abstractmethod
-    def solve(self, solver: minizinc.Solver, instance: Instance, nr_solutions: int = None, processes: int = None,
-              random_seed: int = None, free_search: bool = False, **kwargs):
+    def solve(self, solver: minizinc.Solver, instance: Instance,
+              nr_solutions: Optional[int] = None,
+              processes: Optional[int] = None,
+              random_seed: Optional[int] = None,
+              free_search: bool = False,
+              **kwargs):
         pass
 
     @abstractmethod
@@ -117,12 +121,16 @@ class ExecDriver(Driver):
         instance.input = interface["input"]  # TODO: Make python specification
         instance.output = interface["output"]  # TODO: Make python specification
 
-    def solve(self, solver: minizinc.Solver, instance: Instance, nr_solutions: int = None, processes: int = None,
-              random_seed: int = None, free_search: bool = False, **kwargs):
+    def solve(self, solver: minizinc.Solver, instance: Instance,
+              nr_solutions: Optional[int] = None,
+              processes: Optional[int] = None,
+              random_seed: Optional[int] = None,
+              free_search: bool = False,
+              **kwargs):
         self.analyze(instance)
         with solver.configuration() as conf:
             # Set standard command line arguments
-            cmd = [self.executable, "--solver", conf, "--output-mode", "json", "--output-time"]
+            cmd = [self.executable, "--solver", conf, "--output-mode", "json", "--output-time", "--output-objective"]
             # Enable statistics if possible
             if "-s" in solver.stdFlags:
                 cmd.append("-s")
