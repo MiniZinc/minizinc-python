@@ -51,6 +51,7 @@ class Driver(ABC):
               processes: Optional[int] = None,
               random_seed: Optional[int] = None,
               free_search: bool = False,
+              all_solutions=False,
               **kwargs):
         pass
 
@@ -125,6 +126,7 @@ class ExecDriver(Driver):
               nr_solutions: Optional[int] = None,
               processes: Optional[int] = None,
               random_seed: Optional[int] = None,
+              all_solutions=False,
               free_search: bool = False,
               **kwargs):
         self.analyze(instance)
@@ -135,17 +137,35 @@ class ExecDriver(Driver):
             if "-s" in solver.stdFlags:
                 cmd.append("-s")
 
-            # TODO: -n / -a flag
+            # Process number of solutions to be generated
+            if all_solutions:
+                if nr_solutions is not None:
+                    raise ValueError("The number of solutions cannot be limited when looking for all solutions")
+                if instance.method != Method.SATISFY:
+                    raise NotImplementedError("Finding all optimal solutions is not yet implemented")
+                if "-a" not in solver.stdFlags:
+                    raise NotImplementedError("Solver does not support the -a flag")
+                cmd.append("-a")
+            elif nr_solutions is not None:
+                if nr_solutions <= 0:
+                    raise ValueError("The number of solutions can only be set to a positive integer number")
+                if instance.method != Method.SATISFY:
+                    raise NotImplementedError("Finding all optimal solutions is not yet implemented")
+                if "-n" not in solver.stdFlags:
+                    raise NotImplementedError("Solver does not support the -n flag")
+                cmd.extend(["-n", str(nr_solutions)])
+            if "-a" not in solver.stdFlags and instance.method != Method.SATISFY:
+                cmd.append("-a")
             # Set number of processes to be used
             if processes is not None:
                 if "-p" not in solver.stdFlags:
                     raise NotImplementedError("Solver does not support the -p flag")
-                cmd.extend(["-p", processes])
+                cmd.extend(["-p", str(processes)])
             # Set random seed to be used
             if random_seed is not None:
                 if "-r" not in solver.stdFlags:
                     raise NotImplementedError("Solver does not support the -r flag")
-                cmd.extend(["-r", random_seed])
+                cmd.extend(["-r", str(random_seed)])
             # Enable free search if specified
             if free_search:
                 if "-f" not in solver.stdFlags:

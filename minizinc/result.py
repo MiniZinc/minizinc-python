@@ -44,12 +44,18 @@ class Status(Enum):
                 s = cls.SATISFIED
         return s
 
+    def has_solution(self) -> bool:
+        if self in [self.SATISFIED, self.ALL_SOLUTIONS, self.OPTIMAL_SOLUTION]:
+            return True
+        return False
 
 class Result:
+    # Allows you to access all (intermediate) solution when set to True
+    access_all: bool
     status: Status
     instance: Instance
     complete: bool
-    _solution: Union[Solution, List[Solution]]
+    _solutions: List[Solution]
     time: timedelta
 
     StatisticTypes = {
@@ -75,6 +81,8 @@ class Result:
         self.status = Status.ERROR
         self.complete = False
         self.stats = {}
+        self._solutions = []
+        self.access_all = False
 
     @classmethod
     def from_process(cls, instance: Instance, proc: CompletedProcess) -> Result:
@@ -87,29 +95,36 @@ class Result:
         else:
             res.status = Status.ERROR
 
-        # Determine if the solver completed all work
-        if instance.method == Method.SATISFY:
-            if '-a' in proc.args:  # TODO: Use the number of solutions
-                res.complete = (res.status == Status.ALL_SOLUTIONS)
-            else:
-                res.complete = (res.status == Status.SATISFIED)
-        else:
-            res.complete = (res.status == Status.OPTIMAL_SOLUTION)
-
         # Parse solution
         sol_stream = proc.stdout.split(b"----------")
         del sol_stream[-1]
-        sol_json = re.sub(rb"^\w*%.*\n?", b"", sol_stream[-1], flags=re.MULTILINE)
-        res._solution = json.loads(sol_json)
-        match = re.search(rb"% time elapsed: (\d+.\d+) s", sol_stream[-1])
-        if match:
-            time_us = int(float(match[1]) * 1000000)
-            res.time = timedelta(milliseconds=time_us)
-        # TODO: Handle other solutions
+        for raw_sol in sol_stream:
+            sol_json = re.sub(rb"^\w*%.*\n?", b"", raw_sol, flags=re.MULTILINE)
+            sol = json.loads(sol_json)
+            match = re.search(rb"% time elapsed: (\d+.\d+) s", raw_sol)
+            if match:
+                time_us = int(float(match[1]) * 1000000)
+                sol['_stats'] = sol.get('_stats', {})
+                sol['_stats']['time'] = timedelta(milliseconds=time_us)
+            res._solutions.append(sol)
 
         matches = re.findall(rb"%%%mzn-stat (\w*)=(.*)", proc.stdout)
         for m in matches:
             res.set_stat(m[0].decode(), m[1].decode())
+
+        # Determine if the solver completed all work
+        if instance.method == Method.SATISFY:
+            if '-a' in proc.args:  # TODO: Use the number of solutions
+                res.complete = (res.status == Status.ALL_SOLUTIONS)
+                res.access_all = True
+            if '-n' in proc.args:
+                n = int(proc.args[proc.args.index('-n') + 1])
+                res.complete = (len(res._solutions) == n)
+                res.access_all = True
+            else:
+                res.complete = (res.status == Status.SATISFIED)
+        else:
+            res.complete = (res.status == Status.OPTIMAL_SOLUTION)
 
         return res
 
@@ -122,14 +137,17 @@ class Result:
             self.stats[name] = tt(value)
 
     def __getitem__(self, item):
-        if self.complete:  # TODO: Check if in output variables
-            return self._solution.get(item)
+        if self.status.has_solution():
+            if self.access_all:
+                return self._solutions.__getitem__(item)
+            else:
+                return self._solutions[-1].__getitem__(item)
         else:
             raise NotImplementedError  # TODO: fix error type
 
     @property
     def objective(self):
-        if self.complete:
-            return self._solution.get("_objective")
+        if self.status.has_solution():
+            return self._solutions[-1].get("_objective")
         else:
             raise NotImplementedError  # TODO: fix error type
