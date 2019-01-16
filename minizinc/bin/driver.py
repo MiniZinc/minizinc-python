@@ -18,7 +18,7 @@ class BinDriver(Driver):
     def __init__(self, executable: Path):
         self.executable = executable
 
-        super(BinDriver, self).__init__(executable)
+        super(BinDriver, self).__init__()
 
     def load_solver(self, solver: str) -> minizinc.solver.Solver:
         # Find all available solvers

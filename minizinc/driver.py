@@ -30,6 +30,11 @@ class Driver(ABC):
         else:
             raise FileExistsError("MiniZinc driver not found")
 
+    def __init__(self):
+        self.Solver = self.load_solver
+        self.Instance = self._create_instance
+        assert self.version() >= required_version
+
     @abstractmethod
     def load_solver(self, tag: str) -> minizinc.Solver:
         """
@@ -38,12 +43,6 @@ class Driver(ABC):
         :return: MiniZinc solver configuration
         """
         pass
-
-    @abstractmethod
-    def __init__(self, driver_location: Union[Path, CDLL]):
-        self.Solver = self.load_solver
-        self.Instance = self._create_instance
-        assert self.version() >= required_version
 
     @abstractmethod
     def solve(self, solver: minizinc.Solver, instance: minizinc.model.Instance,
@@ -68,28 +67,31 @@ class Driver(ABC):
         pass
 
 
-def load_minizinc(name: str = "minizinc", path: list = None, set_default=True) -> Optional[Driver]:
+def load_minizinc(path: Optional[list[str]] = None, name: str = "minizinc", set_default=True) -> Optional[Driver]:
     """
     Find MiniZinc driver on default or specified path
-    :param name: Name of the executable or library
     :param path: List of locations to search
+    :param name: Name of the executable or library
     :param set_default: Set driver as default if
 
     :return: A MiniZinc Driver object, if the driver is found
     """
+    if path is not None:
+        path = os.pathsep.join(path)
+
     try:
         # Try to load the MiniZinc C API
         if path is None:
             driver = cdll.LoadLibrary(name)
         else:
             env_backup = os.environ.copy()
-            _path = os.environ["LD_LIBRARY_PATH"] = os.pathsep.join(path)
+            os.environ["LD_LIBRARY_PATH"] = path
             driver = cdll.LoadLibrary(name)
             os.environ = env_backup
     except OSError:
         # Try to locate the MiniZinc executable
         driver = shutil.which(name, path=path)
-        if driver:
+        if driver is not None:
             driver = Path(driver)
 
     if driver is not None:
