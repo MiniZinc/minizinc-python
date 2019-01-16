@@ -6,8 +6,6 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional
 
-import minizinc
-
 
 class Method(Enum):
     SATISFY = 1
@@ -48,9 +46,10 @@ class Model:
 class Instance:
     _method: Optional[Method]
 
-    def __init__(self, model, data=None):
+    def __init__(self, model, data=None, driver = None):
         self._method = None
         self.files = []
+        self.driver = driver
         if isinstance(model, Model):
             self.files.append(Path(model.file))
         else:
@@ -61,5 +60,17 @@ class Instance:
     @property
     def method(self):
         if self._method is None:
-            minizinc.default_driver.analyze(self)  # TODO: Link
+            self.driver.analyze(self)
         return self._method
+
+    def solve(self, solver, *args, **kwargs):
+        """
+        Forwarding method to the driver's solve method using the instance
+        :param solver: the MiniZinc solver configuration to be used
+        :param args, kwargs: accepts all other arguments found in the drivers solve method
+        :return: A result object containing the solution to the instance
+        """
+        if self.driver is not None:
+            return self.driver.solve(solver, self, *args, **kwargs)
+        else:
+            raise LookupError("Solver is not linked to a MiniZinc driver")

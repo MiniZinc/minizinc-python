@@ -4,7 +4,8 @@ import re
 import tempfile
 from typing import Optional, Tuple, List
 
-from .driver import Driver, default_driver
+import minizinc
+from .model import Instance
 
 
 class Solver:
@@ -24,9 +25,9 @@ class Solver:
     needsStdlibDir: bool
     isGUIApplication: bool
 
-    def __init__(self, name: str, version: str, executable: str, driver: Optional[Driver] = None):
+    def __init__(self, name: str, version: str, executable: str, driver = None):
         if driver is None:
-            driver = default_driver
+            driver = minizinc.default_driver
         self.driver = driver
 
         # Set required fields
@@ -70,6 +71,18 @@ class Solver:
             if file is not None:
                 file.close()
                 self._id = None
+
+    def solve(self, instance: Instance, *args, **kwargs):
+        """
+        Forwarding method to the driver's solve method using the solver configuration
+        :param instance: the MiniZinc instance to be solved
+        :param args, kwargs: accepts all other arguments found in the drivers solve method
+        :return: A result object containing the solution to the instance
+        """
+        if self.driver is not None:
+            return self.driver.solve(self, instance, *args, **kwargs)
+        else:
+            raise LookupError("Solver is not linked to a MiniZinc driver")
 
     def to_json(self):
         info = {

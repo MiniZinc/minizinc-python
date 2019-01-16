@@ -9,12 +9,10 @@ from typing import Union, Optional
 
 # Driver should not import any classes directly
 import minizinc.model
+import minizinc.solver
 
 #: MiniZinc version required by the python package
 required_version = (2, 2, 0)
-
-#: Default MiniZinc driver used by the python package
-default_driver: Optional[Driver] = None
 
 
 class Driver(ABC):
@@ -36,7 +34,7 @@ class Driver(ABC):
         assert self.version() >= required_version
 
     @abstractmethod
-    def load_solver(self, tag: str) -> minizinc.Solver:
+    def load_solver(self, tag: str) -> minizinc.solver.Solver:
         """
         Initialize driver using a configuration known to MiniZinc
         :param tag: the id, name, or tag of the solver to load
@@ -45,7 +43,7 @@ class Driver(ABC):
         pass
 
     @abstractmethod
-    def solve(self, solver: minizinc.Solver, instance: minizinc.model.Instance,
+    def solve(self, solver: minizinc.solver.Solver, instance: minizinc.model.Instance,
               nr_solutions: Optional[int] = None,
               processes: Optional[int] = None,
               random_seed: Optional[int] = None,
