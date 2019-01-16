@@ -4,6 +4,9 @@ import os
 import tempfile
 from enum import Enum
 from pathlib import Path
+from typing import Optional
+
+import minizinc
 
 
 class Method(Enum):
@@ -43,13 +46,20 @@ class Model:
 
 
 class Instance:
-    method: Method
+    _method: Optional[Method]
 
     def __init__(self, model, data=None):
-        self.files: list[Path] = []
+        self._method = None
+        self.files = []
         if isinstance(model, Model):
             self.files.append(Path(model.file))
         else:
             self.files.append(Path(os.path.abspath(model)))
         if data is not None:
             self.files.append(Path(os.path.abspath(data)))
+
+    @property
+    def method(self):
+        if self._method is None:
+            minizinc.default_driver.analyze(self)  # TODO: Link
+        return self._method

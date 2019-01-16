@@ -49,6 +49,7 @@ class Status(Enum):
             return True
         return False
 
+
 class Result:
     # Allows you to access all (intermediate) solution when set to True
     access_all: bool
