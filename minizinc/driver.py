@@ -1,6 +1,7 @@
 from __future__ import annotations  # For the use of self-referencing type annotations
 
 import os
+import platform
 import shutil
 from abc import ABC, abstractmethod
 from ctypes import CDLL, cdll
@@ -12,6 +13,8 @@ import minizinc.model
 import minizinc.solver
 
 #: MiniZinc version required by the python package
+from minizinc.support import append_environment
+
 required_version = (2, 2, 0)
 
 
@@ -74,7 +77,19 @@ def load_minizinc(path: Optional[list[str]] = None, name: str = "minizinc", set_
 
     :return: A MiniZinc Driver object, if the driver is found
     """
-    if path is not None:
+    if path is None:
+        # Add default MiniZinc locations to the path # TODO: Right place?
+        if platform.system() == 'Darwin':
+            append_environment('PATH', Path('/Applications/MiniZincIDE.app/Contents/Resources'))
+            append_environment('PATH', Path('~/Applications/MiniZincIDE.app/Contents/Resources').expanduser())
+            # TODO: LD_LIBRARY_PATH
+        elif platform.system() == 'Windows':
+            append_environment('PATH', Path('c:/Program Files/MiniZinc'))
+            append_environment('PATH', Path('c:/Program Files/MiniZinc IDE (bundled)'))
+            append_environment('PATH', Path('c:/Program Files (x86)/MiniZinc'))
+            append_environment('PATH', Path('c:/Program Files (x86)/MiniZinc IDE (bundled)'))
+            # TODO: LD_LIBRARY_PATH
+    else:
         path = os.pathsep.join(path)
 
     try:
@@ -95,6 +110,7 @@ def load_minizinc(path: Optional[list[str]] = None, name: str = "minizinc", set_
     if driver is not None:
         driver = Driver.load(driver)
         if set_default:
+            minizinc.default_driver = driver
             minizinc.Solver = driver.Solver
             minizinc.Instance = driver.Instance
         return driver
