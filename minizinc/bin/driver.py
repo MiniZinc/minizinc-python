@@ -121,7 +121,7 @@ class BinDriver(Driver):
             output = subprocess.run(cmd, capture_output=True, check=False)
             return Result.from_process(instance, output)
 
-    def minizinc_version(self) -> tuple:
+    def version(self) -> tuple:
         output = subprocess.run([self.executable, "--version"], capture_output=True, check=True)
         match = re.search(rb"version (\d+)\.(\d+)\.(\d+)", output.stdout)
         return tuple([int(i) for i in match.groups()])

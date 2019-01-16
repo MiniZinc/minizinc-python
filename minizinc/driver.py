@@ -43,7 +43,7 @@ class Driver(ABC):
     def __init__(self, driver_location: Union[Path, CDLL]):
         self.Solver = self.load_solver
         self.Instance = self._create_instance
-        assert self.minizinc_version() >= required_version
+        assert self.version() >= required_version
 
     @abstractmethod
     def solve(self, solver: minizinc.Solver, instance: minizinc.model.Instance,
@@ -56,7 +56,7 @@ class Driver(ABC):
         pass
 
     @abstractmethod
-    def minizinc_version(self) -> tuple:
+    def version(self) -> tuple:
         """
         Returns a tuple containing the semantic version of the MiniZinc version given
         :return: tuple containing the MiniZinc version
