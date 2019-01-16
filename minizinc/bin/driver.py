@@ -72,7 +72,6 @@ class BinDriver(Driver):
               all_solutions=False,
               free_search: bool = False,
               **kwargs):
-        self.analyze(instance)
         with solver.configuration() as conf:
             # Set standard command line arguments
             cmd = [self.executable, "--solver", conf, "--output-mode", "json", "--output-time", "--output-objective"]
@@ -127,4 +126,4 @@ class BinDriver(Driver):
         return tuple([int(i) for i in match.groups()])
 
     def _create_instance(self, model, data=None) -> Instance:
-        return Instance(model, data)
+        return Instance(model, data, driver=self)
