@@ -13,8 +13,6 @@ import minizinc.model
 import minizinc.solver
 
 #: MiniZinc version required by the python package
-from minizinc.support import append_environment
-
 required_version = (2, 2, 0)
 
 
@@ -23,11 +21,11 @@ class Driver(ABC):
     @staticmethod
     def load(driver: Union[Path, CDLL]) -> Driver:
         if isinstance(driver, CDLL):
-            from minizinc.lib.driver import LibDriver
-            return LibDriver(driver)
+            from minizinc.API.driver import APIDriver
+            return APIDriver(driver)
         elif driver is not None:
-            from minizinc.bin import BinDriver
-            return BinDriver(driver)
+            from minizinc.CLI import CLIDriver
+            return CLIDriver(driver)
         else:
             raise FileExistsError("MiniZinc driver not found")
 

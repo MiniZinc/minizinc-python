@@ -10,7 +10,7 @@ from ..driver import Driver
 from ..model import Instance, Method
 
 
-class BinDriver(Driver):
+class CLIDriver(Driver):
 
     # Executable path for MiniZinc
     executable: Path
@@ -18,7 +18,7 @@ class BinDriver(Driver):
     def __init__(self, executable: Path):
         self.executable = executable
 
-        super(BinDriver, self).__init__()
+        super(CLIDriver, self).__init__()
 
     def load_solver(self, solver: str) -> minizinc.solver.Solver:
         # Find all available solvers
