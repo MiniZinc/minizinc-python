@@ -78,32 +78,37 @@ def load_minizinc(path: Optional[list[str]] = None, name: str = "minizinc", set_
     :return: A MiniZinc Driver object, if the driver is found
     """
     if path is None:
-        # Add default MiniZinc locations to the path # TODO: Right place?
+        path_bin = os.environ["PATH"].split(os.pathsep)
+        path_lib = os.environ["LD_LIBRARY_PATH"].split(os.pathsep)
+        # Add default MiniZinc locations to the path
         if platform.system() == 'Darwin':
-            append_environment('PATH', Path('/Applications/MiniZincIDE.app/Contents/Resources'))
-            append_environment('PATH', Path('~/Applications/MiniZincIDE.app/Contents/Resources').expanduser())
+            MAC_LOCATIONS = [str(Path('/Applications/MiniZincIDE.app/Contents/Resources')),
+                          str(Path('~/Applications/MiniZincIDE.app/Contents/Resources').expanduser())]
+            path_bin.extend(MAC_LOCATIONS)
             # TODO: LD_LIBRARY_PATH
         elif platform.system() == 'Windows':
-            append_environment('PATH', Path('c:/Program Files/MiniZinc'))
-            append_environment('PATH', Path('c:/Program Files/MiniZinc IDE (bundled)'))
-            append_environment('PATH', Path('c:/Program Files (x86)/MiniZinc'))
-            append_environment('PATH', Path('c:/Program Files (x86)/MiniZinc IDE (bundled)'))
+            WIN_LOCATIONS = [str(Path('c:/Program Files/MiniZinc')),
+                             str(Path('c:/Program Files/MiniZinc IDE (bundled)')),
+                             str(Path('c:/Program Files (x86)/MiniZinc')),
+                             str(Path('c:/Program Files (x86)/MiniZinc IDE (bundled)'))]
+            path_bin.extend(WIN_LOCATIONS)
             # TODO: LD_LIBRARY_PATH
     else:
-        path = os.pathsep.join(path)
+        path_bin = path
+        path_lib = path
+
+    path_bin = os.pathsep.join(path_bin)
+    path_lib = os.pathsep.join(path_lib)
 
     try:
         # Try to load the MiniZinc C API
-        if path is None:
-            driver = cdll.LoadLibrary(name)
-        else:
-            env_backup = os.environ.copy()
-            os.environ["LD_LIBRARY_PATH"] = path
-            driver = cdll.LoadLibrary(name)
-            os.environ = env_backup
+        env_backup = os.environ.copy()
+        os.environ["LD_LIBRARY_PATH"] = path_lib
+        driver = cdll.LoadLibrary(name)
+        os.environ = env_backup
     except OSError:
         # Try to locate the MiniZinc executable
-        driver = shutil.which(name, path=path)
+        driver = shutil.which(name, path=path_bin)
         if driver is not None:
             driver = Path(driver)
 
