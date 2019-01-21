@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from ctypes import CDLL, cdll
 from datetime import timedelta
 from pathlib import Path
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 # Driver should not import any classes directly
 import minizinc.model
@@ -28,6 +28,7 @@ class Driver(ABC):
         else:
             raise FileExistsError("MiniZinc driver not found")
 
+    @abstractmethod
     def __init__(self):
         self.Solver = self.load_solver
         self.Instance = self._create_instance
@@ -36,7 +37,7 @@ class Driver(ABC):
     @abstractmethod
     def load_solver(self, tag: str) -> minizinc.solver.Solver:
         """
-        Initialize driver using a configuration known to MiniZinc
+        Load a solver configuration from MiniZinc
         :param tag: the id, name, or tag of the solver to load
         :return: MiniZinc solver configuration
         """
@@ -66,7 +67,7 @@ class Driver(ABC):
         pass
 
 
-def load_minizinc(path: Optional[list] = None, name: str = "minizinc", set_default=False) -> Optional[Driver]:
+def load_minizinc(path: Optional[List[str]] = None, name: str = "minizinc", set_default=False) -> Optional[Driver]:
     """
     Find MiniZinc driver on default or specified path
     :param path: List of locations to search
