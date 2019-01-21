@@ -146,6 +146,9 @@ class Result:
         else:
             raise NotImplementedError  # TODO: fix error type
 
+    def __len__(self):
+        return self._solutions.__len__()
+
     @property
     def objective(self):
         if self.status.has_solution():
