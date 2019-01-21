@@ -1,12 +1,12 @@
-import setuptools
+from setuptools import setup, find_packages
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setuptools.setup(
+setup(
     name="minizinc",
     version="0.0.1",
-    python_requires='>=3',
+    python_requires='>=3.7',
     author="Jip J. Dekker",
     author_email="jip.dekker@monash.edu",
     description="Access MiniZinc directly from Python",
@@ -18,10 +18,12 @@ setuptools.setup(
         'Documentation': 'http://minizinc.org/doc-latest',
         'Source': 'https://gitlab.com/minizinc/python',
     },
-    packages=setuptools.find_packages(),
+    packages=find_packages(where="src"),
+    package_dir={'': 'src'},
     classifiers=[
         "Development Status :: 1 - Planning",
         "Programming Language :: Python :: 3",
+        'Programming Language :: Python :: 3.7',
         "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
