@@ -1,5 +1,3 @@
-import os
-from sys import platform
 from typing import Optional
 
 from minizinc.driver import load_minizinc, Driver

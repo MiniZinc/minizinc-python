@@ -68,7 +68,7 @@ class Driver(ABC):
         pass
 
 
-def load_minizinc(path: Optional[list[str]] = None, name: str = "minizinc", set_default=True) -> Optional[Driver]:
+def load_minizinc(path: Optional[list[str]] = None, name: str = "minizinc", set_default=False) -> Optional[Driver]:
     """
     Find MiniZinc driver on default or specified path
     :param path: List of locations to search
