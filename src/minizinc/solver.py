@@ -1,6 +1,5 @@
 import contextlib
 import json
-import re
 import tempfile
 from typing import List, Optional, Tuple
 
@@ -34,8 +33,7 @@ class Solver:
         # Set required fields
         self.name = name
         self._id = None
-        match = re.search(r"(\d+)\.(\d+)\.(\d+)", version)
-        self.version = tuple([int(i) for i in match.groups()])
+        self.version = version
         self.executable = executable
 
         # Initialise optional fields
@@ -88,7 +86,7 @@ class Solver:
     def to_json(self):
         info = {
             "name": self.name,
-            "version": ".".join([str(i) for i in self.version]),
+            "version": self.version,
             "id": self.id,
             "executable": self.executable,
             "mznlib": self.mznlib,
