@@ -78,8 +78,8 @@ def load_minizinc(path: Optional[list[str]] = None, name: str = "minizinc", set_
     :return: A MiniZinc Driver object, if the driver is found
     """
     if path is None:
-        path_bin = os.environ["PATH"].split(os.pathsep)
-        path_lib = os.environ["LD_LIBRARY_PATH"].split(os.pathsep)
+        path_bin = os.environ.get("PATH", "").split(os.pathsep)
+        path_lib = os.environ.get("LD_LIBRARY_PATH", "").split(os.pathsep)
         # Add default MiniZinc locations to the path
         if platform.system() == 'Darwin':
             MAC_LOCATIONS = [str(Path('/Applications/MiniZincIDE.app/Contents/Resources')),
