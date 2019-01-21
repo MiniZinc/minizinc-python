@@ -1,6 +1,3 @@
-# For the use of self-referencing type annotations
-from __future__ import annotations
-
 import json
 import re
 from datetime import timedelta
@@ -87,7 +84,7 @@ class Result:
         self.access_all = False
 
     @classmethod
-    def from_process(cls, instance: Instance, proc: CompletedProcess) -> Result:  # noqa
+    def from_process(cls, instance: Instance, proc: CompletedProcess):
         res = cls()
         res.instance = instance
 

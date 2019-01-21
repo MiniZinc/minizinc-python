@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setup(
     name="minizinc",
     version="0.0.1",
-    python_requires='>=3.7',
+    python_requires='>=3.6',
     author="Jip J. Dekker",
     author_email="jip.dekker@monash.edu",
     description="Access MiniZinc directly from Python",
@@ -23,6 +23,7 @@ setup(
     classifiers=[
         "Development Status :: 1 - Planning",
         "Programming Language :: Python :: 3",
+        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
         "Operating System :: OS Independent",

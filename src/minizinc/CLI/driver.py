@@ -24,7 +24,8 @@ class CLIDriver(Driver):
 
     def load_solver(self, solver: str) -> minizinc.solver.Solver:
         # Find all available solvers
-        output = subprocess.run([self.executable, "--solvers-json"], capture_output=True, check=True)
+        output = subprocess.run([self.executable, "--solvers-json"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                check=True)
         solvers = json.loads(output.stdout)
 
         # Find the specified solver
@@ -124,11 +125,12 @@ class CLIDriver(Driver):
             # Add files as last arguments
             cmd.extend(instance.files)
             # Run the MiniZinc process
-            output = subprocess.run(cmd, capture_output=True, check=False)
+            output = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
             return Result.from_process(instance, output)
 
     def version(self) -> tuple:
-        output = subprocess.run([self.executable, "--version"], capture_output=True, check=True)
+        output = subprocess.run([self.executable, "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                check=True)
         match = re.search(rb"version (\d+)\.(\d+)\.(\d+)", output.stdout)
         return tuple([int(i) for i in match.groups()])
 

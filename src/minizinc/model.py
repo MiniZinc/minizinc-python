@@ -1,6 +1,3 @@
-# For the use of self-referencing type annotations
-from __future__ import annotations
-
 import os
 import tempfile
 from enum import Enum
@@ -14,7 +11,7 @@ class Method(Enum):
     MAXIMIZE = 3
 
     @classmethod
-    def from_string(cls, s: str) -> Method:  # noqa
+    def from_string(cls, s: str):
         if s == "sat":
             return cls.SATISFY
         elif s == "min":

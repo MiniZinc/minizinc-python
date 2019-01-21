@@ -1,6 +1,3 @@
-# For the use of self-referencing type annotations
-from __future__ import annotations
-
 import os
 import platform
 import shutil
@@ -21,7 +18,7 @@ required_version = (2, 2, 0)
 class Driver(ABC):
 
     @staticmethod
-    def load(driver: Union[Path, CDLL]) -> Driver:  # noqa
+    def load(driver: Union[Path, CDLL]):
         if isinstance(driver, CDLL):
             from minizinc.API.driver import APIDriver
             return APIDriver(driver)
@@ -65,11 +62,11 @@ class Driver(ABC):
         pass
 
     @abstractmethod
-    def _create_instance(self, model, data=None) -> minizinc.Instance:
+    def _create_instance(self, model, data=None) -> minizinc.model.Instance:
         pass
 
 
-def load_minizinc(path: Optional[list[str]] = None, name: str = "minizinc", set_default=False) -> Optional[Driver]:
+def load_minizinc(path: Optional[list] = None, name: str = "minizinc", set_default=False) -> Optional[Driver]:
     """
     Find MiniZinc driver on default or specified path
     :param path: List of locations to search
