@@ -5,6 +5,7 @@ import platform
 import shutil
 from abc import ABC, abstractmethod
 from ctypes import CDLL, cdll
+from datetime import timedelta
 from pathlib import Path
 from typing import Union, Optional
 
@@ -45,6 +46,7 @@ class Driver(ABC):
 
     @abstractmethod
     def solve(self, solver: minizinc.solver.Solver, instance: minizinc.model.Instance,
+              timeout: Optional[timedelta] = None,
               nr_solutions: Optional[int] = None,
               processes: Optional[int] = None,
               random_seed: Optional[int] = None,

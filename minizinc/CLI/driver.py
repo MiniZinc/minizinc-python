@@ -1,6 +1,7 @@
 import json
 import re
 import subprocess
+from datetime import timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -66,6 +67,7 @@ class CLIDriver(Driver):
         instance.output = interface["output"]  # TODO: Make python specification
 
     def solve(self, solver: minizinc.solver.Solver, instance: Instance,
+              timeout: Optional[timedelta] = None,
               nr_solutions: Optional[int] = None,
               processes: Optional[int] = None,
               random_seed: Optional[int] = None,
@@ -113,6 +115,10 @@ class CLIDriver(Driver):
                 if "-f" not in solver.stdFlags:
                     raise NotImplementedError("Solver does not support the -f flag")
                 cmd.append("-f")
+
+            # Set time limit for the MiniZinc solving
+            if timeout is not None:
+                cmd.extend(["--time-limit", str(int(timeout.total_seconds() * 1000))])
 
             # Add files as last arguments
             cmd.extend(instance.files)
