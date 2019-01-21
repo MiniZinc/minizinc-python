@@ -21,7 +21,7 @@ required_version = (2, 2, 0)
 class Driver(ABC):
 
     @staticmethod
-    def load(driver: Union[Path, CDLL]) -> Driver:
+    def load(driver: Union[Path, CDLL]) -> Driver:  # noqa
         if isinstance(driver, CDLL):
             from minizinc.API.driver import APIDriver
             return APIDriver(driver)
@@ -84,7 +84,7 @@ def load_minizinc(path: Optional[list[str]] = None, name: str = "minizinc", set_
         # Add default MiniZinc locations to the path
         if platform.system() == 'Darwin':
             MAC_LOCATIONS = [str(Path('/Applications/MiniZincIDE.app/Contents/Resources')),
-                          str(Path('~/Applications/MiniZincIDE.app/Contents/Resources').expanduser())]
+                             str(Path('~/Applications/MiniZincIDE.app/Contents/Resources').expanduser())]
             path_bin.extend(MAC_LOCATIONS)
             # TODO: LD_LIBRARY_PATH
         elif platform.system() == 'Windows':

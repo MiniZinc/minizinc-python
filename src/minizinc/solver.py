@@ -26,7 +26,7 @@ class Solver:
     needsStdlibDir: bool
     isGUIApplication: bool
 
-    def __init__(self, name: str, version: str, executable: str, driver = None):
+    def __init__(self, name: str, version: str, executable: str, driver=None):
         if driver is None:
             driver = minizinc.default_driver
         self.driver = driver
@@ -49,7 +49,7 @@ class Solver:
         self.needsMznExecutable = False
         self.needsStdlibDir = False
         self.isGUIApplication = False
-        
+
     @property
     def id(self) -> str:
         if self._id is None:

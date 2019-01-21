@@ -87,7 +87,7 @@ class Result:
         self.access_all = False
 
     @classmethod
-    def from_process(cls, instance: Instance, proc: CompletedProcess) -> Result:
+    def from_process(cls, instance: Instance, proc: CompletedProcess) -> Result:  # noqa
         res = cls()
         res.instance = instance
 

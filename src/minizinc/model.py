@@ -14,7 +14,7 @@ class Method(Enum):
     MAXIMIZE = 3
 
     @classmethod
-    def from_string(cls, s: str) -> Method:
+    def from_string(cls, s: str) -> Method:  # noqa
         if s == "sat":
             return cls.SATISFY
         elif s == "min":
@@ -47,7 +47,7 @@ class Model:
 class Instance:
     _method: Optional[Method]
 
-    def __init__(self, model, data=None, driver = None):
+    def __init__(self, model, data=None, driver=None):
         self._method = None
         self.files = []
         self.driver = driver
