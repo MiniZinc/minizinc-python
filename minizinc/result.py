@@ -106,7 +106,7 @@ class Result:
             if match:
                 time_us = int(float(match[1]) * 1000000)
                 sol['_stats'] = sol.get('_stats', {})
-                sol['_stats']['time'] = timedelta(milliseconds=time_us)
+                sol['_stats']['time'] = timedelta(microseconds=time_us)
             res._solutions.append(sol)
 
         matches = re.findall(rb"%%%mzn-stat (\w*)=(.*)", proc.stdout)
