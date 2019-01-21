@@ -1,13 +1,14 @@
-from __future__ import annotations  # For the use of self-referencing type annotations
+# For the use of self-referencing type annotations
+from __future__ import annotations
 
 import json
 import re
 from datetime import timedelta
 from enum import Enum
 from subprocess import CompletedProcess
-from typing import Union, Dict, List
+from typing import Dict, List, Union
 
-from .model import Method, Instance
+from .model import Instance, Method
 
 Solution = Dict[str, Union[float, int, bool]]
 

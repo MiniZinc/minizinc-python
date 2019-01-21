@@ -2,9 +2,10 @@ import contextlib
 import json
 import re
 import tempfile
-from typing import Optional, Tuple, List
+from typing import List, Optional, Tuple
 
 import minizinc
+
 from .model import Instance
 
 

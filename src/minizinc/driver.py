@@ -1,4 +1,5 @@
-from __future__ import annotations  # For the use of self-referencing type annotations
+# For the use of self-referencing type annotations
+from __future__ import annotations
 
 import os
 import platform
@@ -7,7 +8,7 @@ from abc import ABC, abstractmethod
 from ctypes import CDLL, cdll
 from datetime import timedelta
 from pathlib import Path
-from typing import Union, Optional
+from typing import Optional, Union
 
 # Driver should not import any classes directly
 import minizinc.model

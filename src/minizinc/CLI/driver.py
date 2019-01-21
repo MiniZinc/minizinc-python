@@ -6,9 +6,10 @@ from pathlib import Path
 from typing import Optional
 
 import minizinc.solver
-from ..result import Result
+
 from ..driver import Driver
 from ..model import Instance, Method
+from ..result import Result
 
 
 class CLIDriver(Driver):

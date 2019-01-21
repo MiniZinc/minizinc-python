@@ -1,4 +1,5 @@
-from __future__ import annotations  # For the use of self-referencing type annotations
+# For the use of self-referencing type annotations
+from __future__ import annotations
 
 import os
 import tempfile
