@@ -43,7 +43,7 @@ class CLIDriver(Driver):
                 "No solver id or tag '%s' found, available options: %s" % (solver, sorted([x for x in names])))
 
         # Initialize driver
-        ret = minizinc.solver.Solver(info["name"], info["version"], info["executable"], self)
+        ret = minizinc.solver.Solver(info["name"], info["version"], info.get("executable", ""), self)
 
         # Set all specified options
         ret.mznlib = info.get("mznlib", ret.mznlib)
