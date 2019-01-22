@@ -1,9 +1,10 @@
 import json
 import re
 import subprocess
+import warnings
 from datetime import timedelta
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional, Type
 
 import minizinc.solver
 
@@ -12,8 +13,26 @@ from ..model import Instance, Method
 from ..result import Result
 
 
-class CLIDriver(Driver):
+def to_python_type(mzn_type: dict) -> Type:
+    basetype = mzn_type['type']
+    if basetype == 'bool':
+        pytype = bool
+    elif basetype == 'float':
+        pytype = float
+    elif basetype == 'int':
+        pytype = int
+    else:
+        warnings.warn("Unable to determine basetype `" + basetype + "` assuming integer type", FutureWarning)
+        pytype = int
 
+    dim = mzn_type.get('dim', 0)
+    while dim >= 1:
+        pytype = List[pytype]
+        dim -= 1
+    return pytype
+
+
+class CLIDriver(Driver):
     # Executable path for MiniZinc
     executable: Path
 
@@ -65,8 +84,12 @@ class CLIDriver(Driver):
                                 stderr=subprocess.PIPE, check=True)  # TODO: Fix which files to add
         interface = json.loads(output.stdout)
         instance._method = Method.from_string(interface["method"])
-        instance.input = interface["input"]  # TODO: Make python specification
-        instance.output = interface["output"]  # TODO: Make python specification
+        instance.input = {}
+        for key, value in interface["input"].items():
+            instance.input[key] = to_python_type(value)
+        instance.output = {}
+        for (key, value) in interface["output"].items():
+            instance.output[key] = to_python_type(value)
 
     def solve(self, solver: minizinc.solver.Solver, instance: Instance,
               timeout: Optional[timedelta] = None,
