@@ -15,19 +15,19 @@ required_version = (2, 2, 0)
 
 class Driver(ABC):
 
-    @staticmethod
-    def load(driver: Union[Path, CDLL]):
+    def __new__(cls, driver: Union[Path, CDLL], *args, **kwargs):
         if isinstance(driver, CDLL):
             from minizinc.API.driver import APIDriver
-            return APIDriver(driver)
-        elif driver is not None:
-            from minizinc.CLI import CLIDriver
-            return CLIDriver(driver)
+            cls = APIDriver
         else:
-            raise FileExistsError("MiniZinc driver not found")
+            from minizinc.CLI import CLIDriver
+            cls = CLIDriver
+        ret = super().__new__(cls, *args, **kwargs)
+        ret.__init__(driver, *args, **kwargs)
+        return ret
 
     @abstractmethod
-    def __init__(self):
+    def __init__(self, driver: Union[Path, CDLL]):
         self.Solver = self.load_solver
         self.Instance = self._create_instance
         assert self.version() >= required_version
@@ -65,7 +65,7 @@ class Driver(ABC):
         pass
 
 
-def load_minizinc(path: Optional[List[str]] = None, name: str = "minizinc", set_default=False) -> Optional[Driver]:
+def find_driver(path: Optional[List[str]] = None, name: str = "minizinc", set_default=False) -> Optional[Driver]:
     """
     Find MiniZinc driver on default or specified path
     :param path: List of locations to search
@@ -110,7 +110,7 @@ def load_minizinc(path: Optional[List[str]] = None, name: str = "minizinc", set_
             driver = Path(driver)
 
     if driver is not None:
-        driver = Driver.load(driver)
+        driver = Driver(driver)
         if set_default:
             minizinc.default_driver = driver
             minizinc.Solver = driver.Solver

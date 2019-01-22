@@ -39,7 +39,7 @@ class CLIDriver(Driver):
     def __init__(self, executable: Path):
         self.executable = executable
 
-        super(CLIDriver, self).__init__()
+        super(CLIDriver, self).__init__(executable)
 
     def load_solver(self, solver: str) -> minizinc.solver.Solver:
         # Find all available solvers
