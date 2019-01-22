@@ -61,7 +61,7 @@ class Driver(ABC):
         pass
 
     @abstractmethod
-    def _create_instance(self, model, data=None):
+    def _create_instance(self, *args, **kwargs):
         pass
 
 

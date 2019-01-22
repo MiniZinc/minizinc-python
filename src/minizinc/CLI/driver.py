@@ -9,7 +9,7 @@ from typing import List, Optional, Type
 import minizinc.solver
 
 from ..driver import Driver
-from ..model import Instance, Method
+from ..instance import Instance, Method
 from ..result import Result
 
 
@@ -80,8 +80,9 @@ class CLIDriver(Driver):
         return ret
 
     def analyze(self, instance: Instance):
-        output = subprocess.run([self.executable, "--model-interface-only"] + instance.files, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, check=True)  # TODO: Fix which files to add
+        with instance.files() as files:
+            output = subprocess.run([self.executable, "--model-interface-only"] + files, stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE, check=True)  # TODO: Fix which files to add
         interface = json.loads(output.stdout)
         instance._method = Method.from_string(interface["method"])
         instance.input = {}
@@ -146,9 +147,10 @@ class CLIDriver(Driver):
                 cmd.extend(["--time-limit", str(int(timeout.total_seconds() * 1000))])
 
             # Add files as last arguments
-            cmd.extend(instance.files)
-            # Run the MiniZinc process
-            output = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+            with instance.files() as files:
+                cmd.extend(files)
+                # Run the MiniZinc process
+                output = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
             return Result.from_process(instance, output)
 
     def version(self) -> tuple:
@@ -157,5 +159,5 @@ class CLIDriver(Driver):
         match = re.search(rb"version (\d+)\.(\d+)\.(\d+)", output.stdout)
         return tuple([int(i) for i in match.groups()])
 
-    def _create_instance(self, model, data=None) -> Instance:
-        return Instance(model, data, driver=self)
+    def _create_instance(self, *args, **kwargs) -> Instance:
+        return Instance(self, *args, **kwargs)

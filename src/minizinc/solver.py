@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple
 
 import minizinc
 
-from .model import Instance
+from .instance import Instance
 
 
 class Solver:

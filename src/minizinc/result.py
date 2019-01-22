@@ -5,7 +5,7 @@ from enum import Enum
 from subprocess import CompletedProcess
 from typing import Dict, List, Union
 
-from .model import Instance, Method
+from .instance import Instance, Method
 
 Solution = Dict[str, Union[float, int, bool]]
 
