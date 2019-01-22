@@ -7,9 +7,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import List, Optional, Union
 
-# Driver should not import any classes directly
-import minizinc.model
-import minizinc.solver
+import minizinc
 
 #: MiniZinc version required by the python package
 required_version = (2, 2, 0)
@@ -35,7 +33,7 @@ class Driver(ABC):
         assert self.version() >= required_version
 
     @abstractmethod
-    def load_solver(self, tag: str) -> minizinc.solver.Solver:
+    def load_solver(self, tag: str):
         """
         Load a solver configuration from MiniZinc
         :param tag: the id, name, or tag of the solver to load
@@ -44,7 +42,7 @@ class Driver(ABC):
         pass
 
     @abstractmethod
-    def solve(self, solver: minizinc.solver.Solver, instance: minizinc.model.Instance,
+    def solve(self, solver, instance,
               timeout: Optional[timedelta] = None,
               nr_solutions: Optional[int] = None,
               processes: Optional[int] = None,
@@ -63,7 +61,7 @@ class Driver(ABC):
         pass
 
     @abstractmethod
-    def _create_instance(self, model, data=None) -> minizinc.model.Instance:
+    def _create_instance(self, model, data=None):
         pass
 
 
