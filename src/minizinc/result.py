@@ -145,7 +145,10 @@ class Result:
             raise NotImplementedError  # TODO: fix error type
 
     def __len__(self):
-        return self._solutions.__len__()
+        if self.access_all:
+            return self._solutions.__len__()
+        else:
+            return 1 if self.status.has_solution() else 0
 
     @property
     def objective(self):
