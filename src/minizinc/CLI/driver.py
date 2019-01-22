@@ -61,8 +61,8 @@ class CLIDriver(Driver):
         return ret
 
     def analyze(self, instance: Instance):
-        output = subprocess.run([self.executable, "--model-interface-only"] + instance.files, capture_output=True,
-                                check=True)  # TODO: Fix which files to add
+        output = subprocess.run([self.executable, "--model-interface-only"] + instance.files, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, check=True)  # TODO: Fix which files to add
         interface = json.loads(output.stdout)
         instance._method = Method.from_string(interface["method"])
         instance.input = interface["input"]  # TODO: Make python specification
