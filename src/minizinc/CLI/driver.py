@@ -109,7 +109,8 @@ class CLIDriver(Driver):
               **kwargs):
         with solver.configuration() as conf:
             # Set standard command line arguments
-            cmd = [self.executable, "--solver", conf, "--output-mode", "json", "--output-time", "--output-objective"]
+            cmd = [self.executable, "--solver", conf, "--output-mode", "json", "--output-time", "--output-objective",
+                   "--allow-multiple-assignments"]
             # Enable statistics if possible
             if "-s" in solver.stdFlags:
                 cmd.append("-s")
