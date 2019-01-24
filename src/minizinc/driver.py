@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from ctypes import CDLL, cdll
 from datetime import timedelta
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 
 import minizinc
 
@@ -14,6 +14,8 @@ required_version = (2, 2, 0)
 
 
 class Driver(ABC):
+    Solver: Any
+    Instance: Any
 
     def __new__(cls, driver: Union[Path, CDLL], *args, **kwargs):
         if isinstance(driver, CDLL):
@@ -28,8 +30,6 @@ class Driver(ABC):
 
     @abstractmethod
     def __init__(self, driver: Union[Path, CDLL]):
-        self.Solver = self.load_solver
-        self.Instance = self._create_instance
         assert self.version() >= required_version
 
     @abstractmethod
@@ -58,10 +58,6 @@ class Driver(ABC):
         Returns a tuple containing the semantic version of the MiniZinc version given
         :return: tuple containing the MiniZinc version
         """
-        pass
-
-    @abstractmethod
-    def _create_instance(self, *args, **kwargs):
         pass
 
 
@@ -114,6 +110,7 @@ def find_driver(path: Optional[List[str]] = None, name: str = "minizinc", set_de
         if set_default:
             minizinc.default_driver = driver
             minizinc.Solver = driver.Solver
+            minizinc.load_solver = driver.load_solver
             minizinc.Instance = driver.Instance
         return driver
     return None

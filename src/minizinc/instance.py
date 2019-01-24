@@ -1,10 +1,11 @@
-import contextlib
-import tempfile
+from abc import ABC, abstractmethod
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
-from minizinc import Driver
+import minizinc
+
+from .driver import Driver
 
 
 class Method(Enum):
@@ -24,47 +25,26 @@ class Method(Enum):
             raise ValueError("Unknown Method %r, valid options are 'sat', 'min', or 'max'" % s)
 
 
-class Instance:
-    _files: List[Path]
-    _driver: Driver
-    _method: Optional[Method]
-    _code_fragments: List[str]
+class Instance(ABC):
+    driver: Driver
 
-    def __init__(self, driver: Driver, files: Optional[List[Union[Path, str]]] = None):
-        self._parent = None
-        self._method = None
-        self._driver = driver
-        if files is None:
-            self._files = []
+    @abstractmethod
+    def __init__(self, files: Optional[List[Union[Path, str]]] = None, driver: Driver = None):
+        if driver is None:
+            if minizinc.default_driver is None:
+                raise LookupError("Could not initiate instance without a given or default driver")
+            self.driver = minizinc.default_driver
         else:
-            self._files = [Path(f) if isinstance(f, str) else f for f in files]
-        self._code_fragments = []
+            self.driver = driver
 
+    @abstractmethod
     def add_to_model(self, code: str):
-        self._code_fragments.append(code)
-
-    @contextlib.contextmanager
-    def files(self):
-        files = self._files.copy()
-        fragments = None
-        if len(self._code_fragments) > 0:
-            fragments = tempfile.NamedTemporaryFile(prefix="mzn_fragment", suffix=".mzn")
-            for code in self._code_fragments:
-                fragments.write(code.encode())
-            fragments.flush()
-            fragments.seek(0)
-            files.append(Path(fragments.name))
-        try:
-            yield files
-        finally:
-            if fragments is not None:
-                fragments.close()
+        pass
 
     @property
+    @abstractmethod
     def method(self):
-        if self._method is None:
-            self._driver.analyze(self)
-        return self._method
+        pass
 
     def solve(self, solver, *args, **kwargs):
         """
@@ -73,4 +53,4 @@ class Instance:
         :param args, kwargs: accepts all other arguments found in the drivers solve method
         :return: A result object containing the solution to the instance
         """
-        return self._driver.solve(solver, self, *args, **kwargs)
+        return self.driver.solve(solver, self, *args, **kwargs)

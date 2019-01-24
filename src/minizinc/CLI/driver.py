@@ -6,11 +6,11 @@ from datetime import timedelta
 from pathlib import Path
 from typing import List, Optional, Type
 
-import minizinc.solver
-
 from ..driver import Driver
-from ..instance import Instance, Method
+from ..instance import Method
 from ..result import Result
+from .instance import CLIInstance
+from .solver import CLISolver
 
 
 def to_python_type(mzn_type: dict) -> Type:
@@ -38,10 +38,17 @@ class CLIDriver(Driver):
 
     def __init__(self, executable: Path):
         self.executable = executable
+        # Create dynamic classes with the initialised driver
+        self.Instance = type('SpecialisedCLIInstance', (CLIInstance,),
+                             {'__init__': lambda myself, files=None: super(CLIInstance, myself).__init__(files, self)})
+        self.Solver = type('SpecialisedCLISolver', (CLISolver,), {
+                               '__init__': lambda myself, name, version, executable:
+                               super(CLISolver, myself).__init__(name, version, executable, self)
+                           })
 
         super(CLIDriver, self).__init__(executable)
 
-    def load_solver(self, solver: str) -> minizinc.solver.Solver:
+    def load_solver(self, solver: str) -> CLISolver:
         # Find all available solvers
         output = subprocess.run([self.executable, "--solvers-json"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 check=True)
@@ -62,7 +69,7 @@ class CLIDriver(Driver):
                 "No solver id or tag '%s' found, available options: %s" % (solver, sorted([x for x in names])))
 
         # Initialize driver
-        ret = minizinc.solver.Solver(info["name"], info["version"], info.get("executable", ""), self)
+        ret = CLISolver(info["name"], info["version"], info.get("executable", ""), self)
 
         # Set all specified options
         ret.mznlib = info.get("mznlib", ret.mznlib)
@@ -79,7 +86,7 @@ class CLIDriver(Driver):
 
         return ret
 
-    def analyze(self, instance: Instance):
+    def analyse(self, instance: CLIInstance):
         with instance.files() as files:
             output = subprocess.run([self.executable, "--model-interface-only"] + files, stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE, check=True)  # TODO: Fix which files to add
@@ -92,7 +99,7 @@ class CLIDriver(Driver):
         for (key, value) in interface["output"].items():
             instance.output[key] = to_python_type(value)
 
-    def solve(self, solver: minizinc.solver.Solver, instance: Instance,
+    def solve(self, solver: CLISolver, instance: CLIInstance,
               timeout: Optional[timedelta] = None,
               nr_solutions: Optional[int] = None,
               processes: Optional[int] = None,
@@ -158,6 +165,3 @@ class CLIDriver(Driver):
                                 check=True)
         match = re.search(rb"version (\d+)\.(\d+)\.(\d+)", output.stdout)
         return tuple([int(i) for i in match.groups()])
-
-    def _create_instance(self, *args, **kwargs) -> Instance:
-        return Instance(self, *args, **kwargs)

@@ -1,4 +1,4 @@
-from minizinc import Solver as load_solver
+from minizinc import load_solver
 
 
 def test_gecode():

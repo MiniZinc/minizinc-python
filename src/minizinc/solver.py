@@ -1,18 +1,16 @@
-import contextlib
 import json
-import tempfile
-from typing import List, Optional, Tuple
+from abc import ABC, abstractmethod
+from typing import List
 
 import minizinc
 
 from .instance import Instance
 
 
-class Solver:
-    # Solver identifier for MiniZinc driver
-    _id: Optional[str]
+class Solver(ABC):
     # Solver Configuration Options
-    version: Tuple[int, int, int]
+    name: str
+    version: str
     mznlib: str
     tags: List[str]
     stdFlags = List[str]
@@ -25,51 +23,18 @@ class Solver:
     needsStdlibDir: bool
     isGUIApplication: bool
 
+    @abstractmethod
     def __init__(self, name: str, version: str, executable: str, driver=None):
         if driver is None:
-            driver = minizinc.default_driver
+            if minizinc.default_driver is None:
+                raise LookupError("Could not initiate instance without a given or default driver")
+            self.driver = minizinc.default_driver
         self.driver = driver
 
-        # Set required fields
-        self.name = name
-        self._id = None
-        self.version = version
-        self.executable = executable
-
-        # Initialise optional fields
-        self.mznlib = ""
-        self.tags = []
-        self.stdFlags = []
-        self.extraFlags = []
-        self.supportsMzn = False
-        self.supportsFzn = True
-        self.needsSolns2Out = False
-        self.needsMznExecutable = False
-        self.needsStdlibDir = False
-        self.isGUIApplication = False
-
     @property
+    @abstractmethod
     def id(self) -> str:
-        if self._id is None:
-            return "org.minizinc.python." + self.name.lower()
-        else:
-            return self._id
-
-    @contextlib.contextmanager
-    def configuration(self) -> str:
-        file = None
-        if self._id is None:
-            file = tempfile.NamedTemporaryFile(prefix="minizinc_solver_", suffix=".msc")
-            file.write(self.to_json().encode())
-            file.flush()
-            file.seek(0)
-            self._id = file.name
-        try:
-            yield self._id
-        finally:
-            if file is not None:
-                file.close()
-                self._id = None
+        pass
 
     def solve(self, instance: Instance, *args, **kwargs):
         """
@@ -102,10 +67,3 @@ class Solver:
         }
 
         return json.dumps(info, sort_keys=True, indent=4)
-
-    def __setattr__(self, key, value):
-        if key in ["version", "executable", "mznlib", "tags", "stdFlags", "extraFlags", "supportsMzn", "supportsFzn",
-                   "needsSolns2Out", "needsMznExecutable", "needsStdlibDir", "isGUIApplication"] \
-                and getattr(self, key, None) is not value:
-            self._id = None
-        return super().__setattr__(key, value)
