@@ -88,8 +88,8 @@ class CLIDriver(Driver):
 
     def analyse(self, instance: CLIInstance):
         with instance.files() as files:
-            output = subprocess.run([self.executable, "--model-interface-only"] + files, stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE, check=True)  # TODO: Fix which files to add
+            output = subprocess.run([self.executable, "--allow-multiple-assignments", "--model-interface-only"] + files,
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)  # TODO: Fix which files to add
         interface = json.loads(output.stdout)
         instance._method = Method.from_string(interface["method"])
         instance.input = {}
