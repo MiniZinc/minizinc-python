@@ -107,7 +107,7 @@ class Result:
                 sol['_stats']['time'] = timedelta(microseconds=time_us)
             res._solutions.append(sol)
 
-        matches = re.findall(rb"%%%mzn-stat (\w*)=(.*)", proc.stdout)
+        matches = re.findall(rb"%%%mzn-stat:? (\w*)=(.*)", proc.stdout)
         for m in matches:
             res.set_stat(m[0].decode(), m[1].decode())
 
