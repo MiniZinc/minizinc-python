@@ -40,10 +40,10 @@ class CLIDriver(Driver):
         self.executable = executable
         # Create dynamic classes with the initialised driver
         self.Instance = type('SpecialisedCLIInstance', (CLIInstance,),
-                             {'__init__': lambda myself, files=None: super(CLIInstance, myself).__init__(files, self)})
+                             {'__init__': lambda myself, files=None: super(type(myself), myself).__init__(files, self)})
         self.Solver = type('SpecialisedCLISolver', (CLISolver,), {
                                '__init__': lambda myself, name, version, executable:
-                               super(CLISolver, myself).__init__(name, version, executable, self)
+                               super(type(myself), myself).__init__(name, version, executable, self)
                            })
 
         super(CLIDriver, self).__init__(executable)
