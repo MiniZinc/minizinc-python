@@ -16,7 +16,7 @@ def test_chuffed():
 
 
 def test_osicbc():
-    osicbc = load_solver("osicbc")
+    osicbc = load_solver("coinbc")
     assert osicbc is not None
-    assert osicbc.id.endswith("osicbc")
+    assert osicbc.id.endswith("coinbc")
     assert osicbc.executable == ""
