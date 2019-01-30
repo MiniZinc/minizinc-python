@@ -1,5 +1,5 @@
 import pytest
-from minizinc.error import MiniZincAssertionError, MiniZincTypeError
+from minizinc.error import MiniZincAssertionError, MiniZincTypeError, Location
 from test_case import InstanceTestCase
 
 
@@ -13,8 +13,12 @@ class AssertionTest(InstanceTestCase):
     """
 
     def test_assert(self):
-        with pytest.raises(MiniZincAssertionError, match="a not decreasing"):
+        with pytest.raises(MiniZincAssertionError, match="a not decreasing") as error:
             self.solver.solve(self.instance)
+        loc = error.value.location
+        assert str(loc.file).endswith(".mzn")
+        assert loc.line == 3
+        assert loc.columns == Location.unknown().columns
 
 
 class TypeErrorTest(InstanceTestCase):
@@ -24,5 +28,9 @@ class TypeErrorTest(InstanceTestCase):
     """
 
     def test_assert(self):
-        with pytest.raises(MiniZincTypeError, match="No matching operator found"):
+        with pytest.raises(MiniZincTypeError, match="No matching operator found") as error:
             self.solver.solve(self.instance)
+        loc = error.value.location
+        assert str(loc.file).endswith(".mzn")
+        assert loc.line == 3
+        assert loc.columns == range(20, 26)

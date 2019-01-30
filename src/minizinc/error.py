@@ -1,13 +1,13 @@
 import re
 from pathlib import Path
-from typing import NamedTuple, Optional
+from typing import NamedTuple, Optional, Sequence
 
 
 # TODO: Python 3.7 -> @dataclass
 class Location(NamedTuple):
     file: Optional[Path]
     line: int = 0
-    column: int = 0
+    columns: Sequence = []
 
     @classmethod
     def unknown(cls):
@@ -41,25 +41,26 @@ class MiniZincTypeError(MiniZincError):
 
 def parse_error(error_txt: bytes) -> MiniZincError:
     error = MiniZincError
-    if re.search(rb"evaluation error:", error_txt):
+    if re.search(rb"MiniZinc: evaluation error:", error_txt):
         error = EvaluationError
-        if re.search(rb"evaluation error:", error_txt):
+        if re.search(rb"Assertion failed:", error_txt):
             error = MiniZincAssertionError
     elif re.search(rb"MiniZinc: type error:", error_txt):
         error = MiniZincTypeError
 
     location = Location.unknown()
-    match = re.search(rb"(\w[^\w]+:(\d+)(.\d+)?:\w)", error_txt)
+    match = re.search(rb"([^\s]+):(\d+)(.(\d+)-(\d+))?:\s", error_txt)
     if match:
-        print(match.groups())
-        column = int(match[2].decode()) if match.groups() else location.column
-        location = Location(Path(match[0].decode()), int(match[3].decode()), column)
+        columns = location.columns
+        if match[3]:
+            columns = range(int(match[4].decode()), int(match[5].decode()))
+        location = Location(Path(match[1].decode()), int(match[2].decode()), columns)
 
     message = ""
     lst = error_txt.split(b"\n")
     if lst:
         while len(lst) > 1 and lst[-1] == b"":
             lst.pop()
-        message = lst[-1].split(b"error:", 1)[-1].strip()
+        message = lst[-1].split(b"rror:", 1)[-1].strip()
 
     return error(location, message.decode())
