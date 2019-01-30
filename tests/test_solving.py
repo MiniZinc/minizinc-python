@@ -30,7 +30,7 @@ class TestSatisfy(InstanceTestCase):
 class TestMaximise(InstanceTestCase):
     code = """
         array[1..5] of var 1..5: x;
-        solve maximize sum(x);
+        solve ::int_search(x, input_order, indomain_min) maximize sum(x);
     """
 
     def test_solve(self):
@@ -39,3 +39,9 @@ class TestMaximise(InstanceTestCase):
         assert result.status == Status.OPTIMAL_SOLUTION
         assert result["_objective"] == 25
         assert len(result) == 1
+
+    def test_intermediate(self):
+        result = self.solver.solve(self.instance)
+        result.access_all = True
+        assert len(result) == 21
+        assert result[len(result)-1]["_objective"] == 25
