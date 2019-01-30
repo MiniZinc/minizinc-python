@@ -134,7 +134,7 @@ class CLIDriver(Driver):
                 if "-n" not in solver.stdFlags:
                     raise NotImplementedError("Solver does not support the -n flag")
                 cmd.extend(["-n", str(nr_solutions)])
-            if "-a" not in solver.stdFlags and instance.method != Method.SATISFY:
+            if "-a" in solver.stdFlags and instance.method != Method.SATISFY:
                 cmd.append("-a")
             # Set number of processes to be used
             if processes is not None:
