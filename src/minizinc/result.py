@@ -5,6 +5,8 @@ from enum import Enum
 from subprocess import CompletedProcess
 from typing import Dict, List, Union
 
+from minizinc.error import parse_error
+
 from .instance import Instance, Method
 
 Solution = Dict[str, Union[float, int, bool]]
@@ -78,13 +80,14 @@ class Result:
 
     def __init__(self):
         self.status = Status.ERROR
+        self.error = None
         self.complete = False
         self.stats = {}
         self._solutions = []
         self.access_all = False
 
     @classmethod
-    def from_process(cls, instance: Instance, proc: CompletedProcess):
+    def from_process(cls, instance: Instance, proc: CompletedProcess, ignore_errors: bool = False):
         res = cls()
         res.instance = instance
 
@@ -93,6 +96,9 @@ class Result:
             res.status = Status.from_output(proc.stdout, instance.method)
         else:
             res.status = Status.ERROR
+            res.error = parse_error(proc.stderr)
+            if not ignore_errors:
+                raise res.error
 
         # Parse solution
         sol_stream = proc.stdout.split(b"----------")
