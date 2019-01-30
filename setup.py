@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="minizinc",
-    version="0.0.1",
+    version="0.1.0-alpha",
     python_requires='>=3.6',
     author="Jip J. Dekker",
     author_email="jip.dekker@monash.edu",
@@ -21,7 +21,7 @@ setup(
     packages=find_packages(where="src"),
     package_dir={'': 'src'},
     classifiers=[
-        "Development Status :: 1 - Planning",
+        "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 3",
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
