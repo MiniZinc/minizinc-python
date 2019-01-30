@@ -23,7 +23,7 @@ class MiniZincError(Exception):
     """
 
     def __init__(self, location: Location, message: str):
-        super(MiniZincError, self).__init__(message)
+        super().__init__(message)
         self.location = location
 
 
@@ -31,7 +31,11 @@ class EvaluationError(MiniZincError):
     pass
 
 
-class ModelAssertionError(EvaluationError):
+class MiniZincAssertionError(EvaluationError):
+    pass
+
+
+class MiniZincTypeError(MiniZincError):
     pass
 
 
@@ -40,12 +44,15 @@ def parse_error(error_txt: bytes) -> MiniZincError:
     if re.search(rb"evaluation error:", error_txt):
         error = EvaluationError
         if re.search(rb"evaluation error:", error_txt):
-            error = ModelAssertionError
+            error = MiniZincAssertionError
+    elif re.search(rb"MiniZinc: type error:", error_txt):
+        error = MiniZincTypeError
 
     location = Location.unknown()
-    match = re.search(rb"(\w[^\w]+:(\d+):(\d*)\w)", error_txt)
+    match = re.search(rb"(\w[^\w]+:(\d+)(.\d+)?:\w)", error_txt)
     if match:
-        column = int(match[2].decode()) if match[2].decode() else location.column
+        print(match.groups())
+        column = int(match[2].decode()) if match.groups() else location.column
         location = Location(Path(match[0].decode()), int(match[3].decode()), column)
 
     message = ""
@@ -53,6 +60,6 @@ def parse_error(error_txt: bytes) -> MiniZincError:
     if lst:
         while len(lst) > 1 and lst[-1] == b"":
             lst.pop()
-        message = lst[-1].strip()
+        message = lst[-1].split(b"error:", 1)[-1].strip()
 
     return error(location, message.decode())

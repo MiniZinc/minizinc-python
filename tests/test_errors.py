@@ -1,5 +1,5 @@
 import pytest
-from minizinc.error import ModelAssertionError
+from minizinc.error import MiniZincAssertionError, MiniZincTypeError
 from test_case import InstanceTestCase
 
 
@@ -13,5 +13,16 @@ class AssertionTest(InstanceTestCase):
     """
 
     def test_assert(self):
-        with pytest.raises(ModelAssertionError, match='a not decreasing'):
+        with pytest.raises(MiniZincAssertionError, match="a not decreasing"):
+            self.solver.solve(self.instance)
+
+
+class TypeErrorTest(InstanceTestCase):
+    code = """
+        array[1..2] of var int: i;
+        constraint i = 1.5;
+    """
+
+    def test_assert(self):
+        with pytest.raises(MiniZincTypeError, match="No matching operator found"):
             self.solver.solve(self.instance)
