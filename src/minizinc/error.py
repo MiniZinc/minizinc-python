@@ -39,14 +39,20 @@ class MiniZincTypeError(MiniZincError):
     pass
 
 
+class MiniZincSyntaxError(MiniZincError):
+    pass
+
+
 def parse_error(error_txt: bytes) -> MiniZincError:
     error = MiniZincError
-    if re.search(rb"MiniZinc: evaluation error:", error_txt):
+    if b"MiniZinc: evaluation error:" in error_txt:
         error = EvaluationError
-        if re.search(rb"Assertion failed:", error_txt):
+        if b"Assertion failed:" in error_txt:
             error = MiniZincAssertionError
-    elif re.search(rb"MiniZinc: type error:", error_txt):
+    elif b"MiniZinc: type error:" in error_txt:
         error = MiniZincTypeError
+    elif b"Error: syntax error" in error_txt:
+        error = MiniZincSyntaxError
 
     location = Location.unknown()
     match = re.search(rb"([^\s]+):(\d+)(.(\d+)-(\d+))?:\s", error_txt)

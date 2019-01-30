@@ -1,5 +1,6 @@
 import pytest
-from minizinc.error import MiniZincAssertionError, MiniZincTypeError, Location
+from minizinc.error import (Location, MiniZincAssertionError,
+                            MiniZincSyntaxError, MiniZincTypeError)
 from test_case import InstanceTestCase
 
 
@@ -34,3 +35,17 @@ class TypeErrorTest(InstanceTestCase):
         assert str(loc.file).endswith(".mzn")
         assert loc.line == 3
         assert loc.columns == range(20, 26)
+
+
+class SyntaxErrorTest(InstanceTestCase):
+    code = """
+        constrain true;
+    """
+
+    def test_assert(self):
+        with pytest.raises(MiniZincSyntaxError, match="unexpected bool literal") as error:
+            self.solver.solve(self.instance)
+        loc = error.value.location
+        assert str(loc.file).endswith(".mzn")
+        assert loc.line == 2
+        assert loc.columns == range(19, 22)
