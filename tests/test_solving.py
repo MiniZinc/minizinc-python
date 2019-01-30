@@ -1,0 +1,41 @@
+from minizinc.instance import Method
+from minizinc.result import Status
+from test_case import InstanceTestCase
+
+
+class TestSatisfy(InstanceTestCase):
+    code = "var 1..5: x"
+
+    def test_solve(self):
+        assert self.instance.method == Method.SATISFY
+        result = self.solver.solve(self.instance)
+        assert result.status == Status.SATISFIED
+        assert result["x"] in range(1, 5 + 1)
+        assert len(result) == 1
+
+    def test_all_solution(self):
+        result = self.solver.solve(self.instance, all_solutions=True)
+        assert result.status == Status.ALL_SOLUTIONS
+        assert len(result) == 5
+        assert sorted([sol["x"] for sol in result]) == [i for i in range(1, 5 + 1)]
+
+    def test_nr_solutions(self):
+        result = self.solver.solve(self.instance, nr_solutions=3)
+        assert result.status == Status.SATISFIED
+        assert len(result) == 3
+        for sol in result:
+            assert sol["x"] in range(1, 5 + 1)
+
+
+class TestMaximise(InstanceTestCase):
+    code = """
+        array[1..5] of var 1..5: x;
+        solve maximize sum(x);
+    """
+
+    def test_solve(self):
+        assert self.instance.method == Method.MAXIMIZE
+        result = self.solver.solve(self.instance)
+        assert result.status == Status.OPTIMAL_SOLUTION
+        assert result["_objective"] == 25
+        assert len(result) == 1
