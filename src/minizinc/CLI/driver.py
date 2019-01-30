@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import List, Optional, Type
 
 from ..driver import Driver
+from ..error import parse_error
 from ..instance import Method
 from ..result import Result
 from .instance import CLIInstance
@@ -90,7 +91,9 @@ class CLIDriver(Driver):
         with instance.files() as files:
             # TODO: Fix which files to add
             output = subprocess.run([self.executable, "--allow-multiple-assignments", "--model-interface-only"] + files,
-                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if output.returncode != 0:
+            raise parse_error(output.stderr)
         interface = json.loads(output.stdout)
         instance._method = Method.from_string(interface["method"])
         instance.input = {}
