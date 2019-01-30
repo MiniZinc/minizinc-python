@@ -107,6 +107,7 @@ class CLIDriver(Driver):
               random_seed: Optional[int] = None,
               all_solutions=False,
               free_search: bool = False,
+              ignore_errors=False,
               **kwargs):
         with solver.configuration() as conf:
             # Set standard command line arguments
@@ -160,7 +161,7 @@ class CLIDriver(Driver):
                 cmd.extend(files)
                 # Run the MiniZinc process
                 output = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-            return Result.from_process(instance, output)
+            return Result.from_process(instance, output, ignore_errors)
 
     def version(self) -> tuple:
         output = subprocess.run([self.executable, "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,

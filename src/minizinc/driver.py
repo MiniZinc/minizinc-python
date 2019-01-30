@@ -49,6 +49,7 @@ class Driver(ABC):
               random_seed: Optional[int] = None,
               free_search: bool = False,
               all_solutions=False,
+              ignore_errors=False,
               **kwargs):
         pass
 

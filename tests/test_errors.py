@@ -13,7 +13,7 @@ class AssertionTest(InstanceTestCase):
         solve satisfy;
     """
 
-    def test_assert(self):
+    def test_assertion_error(self):
         with pytest.raises(MiniZincAssertionError, match="a not decreasing") as error:
             self.solver.solve(self.instance)
         loc = error.value.location
@@ -28,7 +28,7 @@ class TypeErrorTest(InstanceTestCase):
         constraint i = 1.5;
     """
 
-    def test_assert(self):
+    def test_type_error(self):
         with pytest.raises(MiniZincTypeError, match="No matching operator found") as error:
             self.solver.solve(self.instance)
         loc = error.value.location
@@ -38,14 +38,12 @@ class TypeErrorTest(InstanceTestCase):
 
 
 class SyntaxErrorTest(InstanceTestCase):
-    code = """
-        constrain true;
-    """
+    code = "constrain true;"
 
-    def test_assert(self):
+    def test_syntax_error(self):
         with pytest.raises(MiniZincSyntaxError, match="unexpected bool literal") as error:
             self.solver.solve(self.instance)
         loc = error.value.location
         assert str(loc.file).endswith(".mzn")
-        assert loc.line == 2
-        assert loc.columns == range(19, 22)
+        assert loc.line == 1
+        assert loc.columns == range(11, 14)
