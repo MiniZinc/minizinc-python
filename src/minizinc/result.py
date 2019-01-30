@@ -101,10 +101,11 @@ class Result:
                 raise res.error
 
         # Parse solution
-        sol_stream = proc.stdout.split(b"----------")
-        del sol_stream[-1]
+        sol_stream = re.split(rb"----------|==========", proc.stdout)
         for raw_sol in sol_stream:
             sol_json = re.sub(rb"^\w*%.*\n?", b"", raw_sol, flags=re.MULTILINE)
+            if b"{" not in sol_json:
+                continue
             sol = json.loads(sol_json)
             match = re.search(rb"% time elapsed: (\d+.\d+) s", raw_sol)
             if match:
