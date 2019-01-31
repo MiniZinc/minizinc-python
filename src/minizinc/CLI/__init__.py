@@ -1,3 +1,3 @@
 from .driver import CLIDriver
-
-__all__ = ['CLIDriver']
+from .instance import CLIInstance
+from .solver import CLISolver

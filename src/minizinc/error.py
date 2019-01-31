@@ -5,8 +5,14 @@ from typing import NamedTuple, Optional, Sequence
 
 # TODO: Python 3.7 -> @dataclass
 class Location(NamedTuple):
+    """
+    Data class to represent a location within a file
+    """
+    #: Path to a file
     file: Optional[Path]
+    #: Line within the file (default: 0)
     line: int = 0
+    #: Columns on the line (default: [])
     columns: Sequence = []
 
     @classmethod
@@ -17,28 +23,33 @@ class Location(NamedTuple):
 class MiniZincError(Exception):
     """
     Exception raised for errors raised by the MiniZinc Driver
-    Attributes:
-        location -- file location of the error
-        message -- explanation of the error
     """
+    #: File location of the error
+    location: Location
+    #: Explanation of the error
+    message: str
 
     def __init__(self, location: Location, message: str):
         super().__init__(message)
         self.location = location
 
 
+# TODO: add docstring
 class EvaluationError(MiniZincError):
     pass
 
 
+# TODO: add docstring
 class MiniZincAssertionError(EvaluationError):
     pass
 
 
+# TODO: add docstring
 class MiniZincTypeError(MiniZincError):
     pass
 
 
+# TODO: add docstring
 class MiniZincSyntaxError(MiniZincError):
     pass
 
