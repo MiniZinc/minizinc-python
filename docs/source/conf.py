@@ -101,6 +101,8 @@ html_static_path = ['_static']
 #
 # html_sidebars = {}
 
+html_logo = '_static/minizinc.svg'
+
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
