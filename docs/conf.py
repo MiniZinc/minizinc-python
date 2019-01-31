@@ -26,7 +26,7 @@ author = 'Jip J. Dekker'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.1.0-alpha'
+release = '0.1.0-alpha.1'
 
 
 # -- General configuration ---------------------------------------------------
