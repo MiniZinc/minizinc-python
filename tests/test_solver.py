@@ -15,8 +15,8 @@ def test_chuffed():
     assert chuffed.executable == "fzn-chuffed"
 
 
-def test_osicbc():
-    osicbc = load_solver("coinbc")
-    assert osicbc is not None
-    assert osicbc.id.endswith("coinbc")
-    assert osicbc.executable == ""
+def test_coinbc():
+    coinbc = load_solver("coinbc")
+    assert coinbc is not None
+    assert coinbc.id.endswith("coinbc")
+    assert coinbc.executable == ""
