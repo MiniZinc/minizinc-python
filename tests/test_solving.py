@@ -44,4 +44,30 @@ class TestMaximise(InstanceTestCase):
         result = self.solver.solve(self.instance)
         result.access_all = True
         assert len(result) == 21
-        assert result[len(result)-1]["_objective"] == 25
+        assert result[len(result) - 1]["_objective"] == 25
+
+
+class TestParameter(InstanceTestCase):
+    code = """
+        int: n; % The number of queens.
+        array [1..n] of var 1..n: q;
+
+        include "alldifferent.mzn";
+
+        constraint alldifferent(q);
+        constraint alldifferent(i in 1..n)(q[i] + i);
+        constraint alldifferent(i in 1..n)(q[i] - i);
+    """
+
+    def test_2(self):
+        self.instance["n"] = 2
+        assert self.instance.method == Method.SATISFY
+        result = self.solver.solve(self.instance)
+        assert result.status == Status.UNSATISFIABLE
+
+    def test_4(self):
+        self.instance["n"] = 4
+        assert self.instance.method == Method.SATISFY
+        result = self.solver.solve(self.instance)
+        assert result.status == Status.SATISFIED
+        assert len(result["q"]) == 4
