@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from ctypes import CDLL, cdll
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, List, Optional, Union
+from typing import List, Optional, Type, Union
 
 import minizinc
 
@@ -14,8 +14,8 @@ required_version = (2, 2, 0)
 
 
 class Driver(ABC):
-    Solver: Any
-    Instance: Any
+    Solver: Type
+    Instance: Type
 
     def __new__(cls, driver: Union[Path, CDLL], *args, **kwargs):
         if isinstance(driver, CDLL):
@@ -27,6 +27,15 @@ class Driver(ABC):
         ret = super().__new__(cls, *args, **kwargs)
         ret.__init__(driver, *args, **kwargs)
         return ret
+
+    def make_default(self) -> None:
+        """
+        Method to override the current default MiniZinc Python driver with the current object.
+        """
+        minizinc.default_driver = self
+        minizinc.Solver = self.Solver
+        minizinc.load_solver = self.load_solver
+        minizinc.Instance = self.Instance
 
     @abstractmethod
     def __init__(self, driver: Union[Path, CDLL]):
@@ -70,13 +79,11 @@ class Driver(ABC):
         pass
 
 
-def find_driver(path: Optional[List[str]] = None, name: str = "minizinc", set_default=False) -> Optional[Driver]:
+def find_driver(path: Optional[List[str]] = None, name: str = "minizinc") -> Optional[Driver]:
     """
     Find MiniZinc driver on default or specified path
     :param path: List of locations to search
     :param name: Name of the executable or library
-    :param set_default: Set driver as default if
-
     :return: A MiniZinc Driver object, if the driver is found
     """
     if path is None:
@@ -116,10 +123,5 @@ def find_driver(path: Optional[List[str]] = None, name: str = "minizinc", set_de
 
     if driver is not None:
         driver = Driver(driver)
-        if set_default:
-            minizinc.default_driver = driver
-            minizinc.Solver = driver.Solver
-            minizinc.load_solver = driver.load_solver
-            minizinc.Instance = driver.Instance
         return driver
     return None

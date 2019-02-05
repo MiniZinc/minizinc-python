@@ -9,9 +9,10 @@ Solver = Solver
 load_solver: Callable[[str], Solver] = None
 
 #: Default MiniZinc driver used by the python package
-default_driver: Optional[Driver] = None
-find_driver(set_default=True)
-if default_driver is None:
+default_driver: Optional[Driver] = find_driver()
+if default_driver is not None:
+    default_driver.make_default()
+else:
     import warnings
     warnings.warn("MiniZinc was not found on the system: no default driver could be initialised", RuntimeWarning)
 
