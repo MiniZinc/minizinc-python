@@ -6,7 +6,8 @@ from datetime import timedelta
 from pathlib import Path
 from typing import List, Optional, Type
 
-from ..driver import Driver
+from minizinc import driver
+
 from ..error import parse_error
 from ..instance import Method
 from ..result import Result
@@ -33,7 +34,7 @@ def to_python_type(mzn_type: dict) -> Type:
     return pytype
 
 
-class CLIDriver(Driver):
+class CLIDriver(driver.Driver):
     # Executable path for MiniZinc
     executable: Path
 
@@ -169,5 +170,10 @@ class CLIDriver(Driver):
     def version(self) -> tuple:
         output = subprocess.run([self.executable, "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 check=True)
+        return output.stdout.decode()
+
+    def check_version(self):
+        output = subprocess.run([self.executable, "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                check=True)
         match = re.search(rb"version (\d+)\.(\d+)\.(\d+)", output.stdout)
-        return tuple([int(i) for i in match.groups()])
+        return tuple([int(i) for i in match.groups()]) >= driver.required_version

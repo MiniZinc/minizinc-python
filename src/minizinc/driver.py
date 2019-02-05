@@ -30,7 +30,7 @@ class Driver(ABC):
 
     @abstractmethod
     def __init__(self, driver: Union[Path, CDLL]):
-        assert self.version() >= required_version
+        assert self.check_version()
 
     @abstractmethod
     def load_solver(self, tag: str):
@@ -54,10 +54,18 @@ class Driver(ABC):
         pass
 
     @abstractmethod
-    def version(self) -> tuple:
+    def version(self) -> str:
         """
-        Returns a tuple containing the semantic version of the MiniZinc version given
-        :return: tuple containing the MiniZinc version
+        Version provides information about the version of the MiniZinc driver in use
+        :return: a string containing the version of the MiniZinc driver
+        """
+        pass
+
+    @abstractmethod
+    def check_version(self) -> bool:
+        """
+        Check if the version of the MiniZinc driver is compatible with the Minimal version required by MiniZinc Python
+        :return: result of compatibility check
         """
         pass
 
