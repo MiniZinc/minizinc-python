@@ -1,8 +1,11 @@
 import os
 import platform
+import re
 import shutil
+import subprocess
 from abc import ABC, abstractmethod
 from ctypes import CDLL, cdll
+from ctypes.util import find_library
 from datetime import timedelta
 from pathlib import Path
 from typing import List, Optional, Type, Union
@@ -109,13 +112,15 @@ def find_driver(path: Optional[List[str]] = None, name: str = "minizinc") -> Opt
     path_bin = os.pathsep.join(path_bin)
     path_lib = os.pathsep.join(path_lib)
 
-    try:
-        # Try to load the MiniZinc C API
-        env_backup = os.environ.copy()
-        os.environ["LD_LIBRARY_PATH"] = path_lib
-        driver = cdll.LoadLibrary(name)
-        os.environ = env_backup
-    except OSError:
+    # Try to load the MiniZinc C API
+    env_backup = os.environ.copy()
+    os.environ["LD_LIBRARY_PATH"] = path_lib
+    os.environ["DYLD_LIBRARY_PATH"] = path_lib
+    lib = find_library(name)
+    os.environ = env_backup
+    if lib is not None:
+        driver = cdll.LoadLibrary(lib)
+    else:
         # Try to locate the MiniZinc executable
         driver = shutil.which(name, path=path_bin)
         if driver is not None:
