@@ -6,8 +6,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import List, Optional, Type
 
-from minizinc import driver
-
+from .. import driver
 from ..error import parse_error
 from ..instance import Method
 from ..result import Result
@@ -167,6 +166,7 @@ class CLIDriver(driver.Driver):
                 output = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
             return Result.from_process(instance, output, ignore_errors)
 
+    @property
     def version(self) -> tuple:
         output = subprocess.run([self.executable, "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 check=True)

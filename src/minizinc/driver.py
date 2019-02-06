@@ -63,6 +63,7 @@ class Driver(ABC):
               **kwargs):
         pass
 
+    @property
     @abstractmethod
     def version(self) -> str:
         """
