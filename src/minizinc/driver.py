@@ -1,8 +1,6 @@
 import os
 import platform
-import re
 import shutil
-import subprocess
 from abc import ABC, abstractmethod
 from ctypes import CDLL, cdll
 from ctypes.util import find_library
