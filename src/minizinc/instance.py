@@ -1,3 +1,4 @@
+import contextlib
 from abc import ABC, abstractmethod
 from enum import Enum
 from pathlib import Path
@@ -38,12 +39,23 @@ class Instance(ABC):
             self.driver = driver
 
     @abstractmethod
-    def add_to_model(self, code: str):
+    def add_to_model(self, code: str) -> None:
+        pass
+
+    @contextlib.contextmanager
+    @abstractmethod
+    def branch(self) -> object:  # TODO: Self reference
+        """
+        Branch creates a new child of the Instance. The child Instance will inherit everything from the current
+        Instance, but can be specialised to solve sub-problems. Specialisations to the child instance will not change
+        the current instance.
+        :return: child class of the Instance
+        """
         pass
 
     @property
     @abstractmethod
-    def method(self):
+    def method(self) -> Method:
         pass
 
     def solve(self, solver, *args, **kwargs):

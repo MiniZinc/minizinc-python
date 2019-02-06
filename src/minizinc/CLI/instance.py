@@ -13,6 +13,7 @@ class CLIInstance(Instance):
     _files: List[Path]
     _method: Optional[Method]
     _code_fragments: List[str]
+    _parent: Optional[Instance]
 
     def __init__(self, files: Optional[List[Union[Path, str]]] = None, driver=None):
         super().__init__(files, driver)
@@ -30,24 +31,17 @@ class CLIInstance(Instance):
         self._code_fragments = []
 
     def __setitem__(self, key, value):
-        tt = self.input[key]
-        if isinstance(value, tt):
-            self.data[key] = value
-        else:
-            raise TypeError
+        self.data.__setitem__(key, value)
 
-    def __getitem__(self, item):
-        attr = self.data.get(item, None)
-        if attr is not None:
-            return attr
-        raise AttributeError
+    def __getitem__(self, *args, **kwargs):
+        self.data.__getitem__(*args, **kwargs)
 
     def add_to_model(self, code: str):
         self._code_fragments.append(code)
 
     @contextlib.contextmanager
-    def files(self):
-        files = self._files.copy()
+    def files(self) -> List[Path]:
+        files: List[Path] = self._files.copy()
         fragments = None
         data = None
         if len(self._code_fragments) > 0:
@@ -64,15 +58,29 @@ class CLIInstance(Instance):
             data.seek(0)
             files.append(Path(data.name))
         try:
-            yield files
+            if self._parent is not None:
+                with self._parent.files() as parent:
+                    files.extend(parent)
+                    yield files
+            else:
+                yield files
         finally:
             if fragments is not None:
                 fragments.close()
             if data is not None:
                 data.close()
 
+    @contextlib.contextmanager
+    def branch(self) -> Instance:  # TODO: Self reference
+        child = self.__class__()
+        child._parent = self
+        try:
+            yield child
+        finally:
+            del child
+
     @property
-    def method(self):
+    def method(self) -> Method:
         if self._method is None:
             self.driver.analyse(self)
         return self._method
