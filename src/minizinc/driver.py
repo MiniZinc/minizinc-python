@@ -91,19 +91,20 @@ def find_driver(path: Optional[List[str]] = None, name: str = "minizinc") -> Opt
     if path is None:
         path_bin = os.environ.get("PATH", "").split(os.pathsep)
         path_lib = os.environ.get("LD_LIBRARY_PATH", "").split(os.pathsep)
+        path_lib.extend(os.environ.get("DYLD_LIBRARY_PATH", "").split(os.pathsep))
         # Add default MiniZinc locations to the path
         if platform.system() == 'Darwin':
             MAC_LOCATIONS = [str(Path('/Applications/MiniZincIDE.app/Contents/Resources')),
                              str(Path('~/Applications/MiniZincIDE.app/Contents/Resources').expanduser())]
             path_bin.extend(MAC_LOCATIONS)
-            # TODO: LD_LIBRARY_PATH
+            path_lib.extend(MAC_LOCATIONS)
         elif platform.system() == 'Windows':
             WIN_LOCATIONS = [str(Path('c:/Program Files/MiniZinc')),
                              str(Path('c:/Program Files/MiniZinc IDE (bundled)')),
                              str(Path('c:/Program Files (x86)/MiniZinc')),
                              str(Path('c:/Program Files (x86)/MiniZinc IDE (bundled)'))]
             path_bin.extend(WIN_LOCATIONS)
-            # TODO: LD_LIBRARY_PATH
+            path_lib.extend(WIN_LOCATIONS)
     else:
         path_bin = path
         path_lib = path
@@ -117,7 +118,7 @@ def find_driver(path: Optional[List[str]] = None, name: str = "minizinc") -> Opt
     os.environ["DYLD_LIBRARY_PATH"] = path_lib
     lib = find_library(name)
     os.environ = env_backup
-    if lib is not None:
+    if lib and Path(lib).suffix in [".dll", ".dylib", ".so"]:
         driver = cdll.LoadLibrary(lib)
     else:
         # Try to locate the MiniZinc executable
