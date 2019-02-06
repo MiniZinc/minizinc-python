@@ -41,6 +41,15 @@ class CLIInstance(Instance):
 
     @contextlib.contextmanager
     def files(self) -> List[Path]:
+        """Gets list of files of the Instance
+
+        Files will create a list of paths to the files that together form the Instance. Parts of the Instance supplied
+        as files will remain in this form. Code fragments and parameter data that was supplied separately will be saved
+        to files and are only guaranteed to exist while within the created context.
+
+        Yields:
+            List of Path to create the Instance from the CLI
+        """
         files: List[Path] = self._files.copy()
         fragments = None
         data = None
@@ -96,10 +105,4 @@ class CLIInstance(Instance):
         self._input = value
 
     def solve(self, solver, *args, **kwargs):
-        """
-        Forwarding method to the driver's solve method using the instance
-        :param solver: the MiniZinc solver configuration to be used
-        :param args, kwargs: accepts all other arguments found in the drivers solve method
-        :return: A result object containing the solution to the instance
-        """
         return self.driver.solve(solver, self, *args, **kwargs)

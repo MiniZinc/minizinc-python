@@ -19,17 +19,20 @@ Instances
 
 ..  autoclass:: minizinc.instance.Instance
     :members:
+    :special-members:  __getitem__, __setitem__
 
-.. autoclass:: minizinc.instance.Method
+..  autoclass:: minizinc.instance.Method
 
 ..  autoclass:: minizinc.CLI.CLIInstance
     :members:
+    :special-members:  __getitem__, __setitem__
 
 Results
 -------
 
 ..  autoclass:: minizinc.result.Result
     :members:
+    :special-members:  __getitem__, __len__, __setitem__
 
 ..  autoclass:: minizinc.result.Status
     :members:
