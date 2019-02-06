@@ -2,7 +2,7 @@ import contextlib
 from abc import ABC, abstractmethod
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Union, Any
+from typing import Any, List, Optional, Union
 
 import minizinc
 
@@ -62,8 +62,8 @@ class Instance(ABC):
     def __setitem__(self, key: str, value: Any):
         """Set parameter of Instance.
 
-        This method overrides the default implementation of item access (``obj[key] = value``) for instances. Item access on a
-        Instance can be used to set parameters of the Instance.
+        This method overrides the default implementation of item access (``obj[key] = value``) for instances. Item
+        access on a Instance can be used to set parameters of the Instance.
 
         Args:
             key (str): Identifier of the parameter.

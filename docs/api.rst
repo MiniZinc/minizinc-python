@@ -60,7 +60,6 @@ Errors
     :members:
 
 ..  autoclass:: minizinc.error.Location
-    :members:
 
 ..  autoexception:: minizinc.error.EvaluationError
     :members:

@@ -1,6 +1,6 @@
 import pytest
-from minizinc.error import (Location, MiniZincAssertionError,
-                            MiniZincSyntaxError, MiniZincTypeError)
+from minizinc.error import (MiniZincAssertionError, MiniZincSyntaxError,
+                            MiniZincTypeError)
 from test_case import InstanceTestCase
 
 
@@ -19,7 +19,7 @@ class AssertionTest(InstanceTestCase):
         loc = error.value.location
         assert str(loc.file).endswith(".mzn")
         assert loc.line == 3
-        assert loc.columns == Location.unknown().columns
+        assert loc.columns == (0, 0)
 
 
 class TypeErrorTest(InstanceTestCase):
@@ -34,7 +34,7 @@ class TypeErrorTest(InstanceTestCase):
         loc = error.value.location
         assert str(loc.file).endswith(".mzn")
         assert loc.line == 3
-        assert loc.columns == range(20, 26)
+        assert loc.columns == (20, 26)
 
 
 class SyntaxErrorTest(InstanceTestCase):
@@ -46,4 +46,4 @@ class SyntaxErrorTest(InstanceTestCase):
         loc = error.value.location
         assert str(loc.file).endswith(".mzn")
         assert loc.line == 1
-        assert loc.columns == range(11, 14)
+        assert loc.columns == (11, 14)
