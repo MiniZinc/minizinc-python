@@ -15,7 +15,7 @@ setup(
     url="http://minizinc.org",
     project_urls={
         'Bug Tracker': 'https://gitlab.com/minizinc/python/issues',
-        'Documentation': 'http://minizinc.org/doc-latest',
+        "Documentation": "https://minizinc-python.readthedocs.io",
         'Source': 'https://gitlab.com/minizinc/python',
     },
     packages=find_packages(where="src"),
