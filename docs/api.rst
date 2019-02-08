@@ -32,7 +32,7 @@ Results
 
 ..  autoclass:: minizinc.result.Result
     :members:
-    :special-members:  __getitem__, __len__, __setitem__
+    :special-members:  __getitem__, __len__
 
 ..  autoclass:: minizinc.result.Status
     :members:
