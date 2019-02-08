@@ -14,9 +14,9 @@ class Solver(ABC):
         name (str): The name of the solver.
         version (str): The version of the solver.
         id (str): A unique identifier for the solver, “reverse domain name” notation.
-        executable (str): The executable for this solver that can run FlatZinc files. This can be just a file name (in which
-            case the solver has to be on the current PATH), or an absolute path to the executable, or a relative path
-            (which is interpreted relative to the location of the configuration file).
+        executable (str): The executable for this solver that can run FlatZinc files. This can be just a file name (in
+            which case the solver has to be on the current PATH), or an absolute path to the executable, or a relative
+            path (which is interpreted relative to the location of the configuration file).
         mznlib (str): The solver-specific library of global constraints and redefinitions. This should be the name of a
             directory (either an absolute path or a relative path, interpreted relative to the location of the
             configuration file). For solvers whose libraries are installed in the same location as the MiniZinc standard
@@ -53,7 +53,7 @@ class Solver(ABC):
     mznlib: str
     tags: List[str]
     stdFlags: List[str]
-    extraFlags: List[Tuple[str,str,str,str]]
+    extraFlags: List[Tuple[str, str, str, str]]
     executable: str
     supportsMzn: bool
     supportsFzn: bool

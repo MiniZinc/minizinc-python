@@ -37,14 +37,14 @@ class TestMaximise(InstanceTestCase):
         assert self.instance.method == Method.MAXIMIZE
         result = self.solver.solve(self.instance)
         assert result.status == Status.OPTIMAL_SOLUTION
-        assert result["_objective"] == 25
+        assert result.objective == 25
         assert len(result) == 1
 
     def test_intermediate(self):
         result = self.solver.solve(self.instance)
         result.access_all = True
         assert len(result) == 21
-        assert result[len(result) - 1]["_objective"] == 25
+        assert result[len(result) - 1].objective == 25
 
 
 class TestParameter(InstanceTestCase):

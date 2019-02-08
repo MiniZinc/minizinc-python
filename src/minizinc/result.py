@@ -3,13 +3,11 @@ import re
 from datetime import timedelta
 from enum import Enum
 from subprocess import CompletedProcess
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, NamedTuple, Optional, Union
 
 from minizinc.error import parse_error
 
 from .instance import Instance, Method
-
-Solution = Dict[str, Union[float, int, bool]]
 
 
 class Status(Enum):
@@ -73,6 +71,27 @@ class Status(Enum):
         if self in [self.SATISFIED, self.ALL_SOLUTIONS, self.OPTIMAL_SOLUTION]:
             return True
         return False
+
+
+class Solution(NamedTuple):
+    """Representation of a MiniZinc solution in Python
+
+    Attributes:
+        assignments (Dict[str, Union[bool, float, int]]): Variable assignments made to form the solution
+        objective (Optional[Union[float, int]]): Objective value of the solution
+        statistics (Dict[str, Union[float, int, timedelta]]): Statistical information generated during the search for
+            the Solution
+    """
+    assignments: Dict[str, Union[bool, float, int]] = {}
+    objective: Optional[Union[float, int]] = None
+    statistics: Dict[str, Union[float, int, timedelta]] = {}
+
+    def __getitem__(self, key):
+        """Overrides the default implementation of item access (obj[key]) to directly access the assignments."""
+        if isinstance(key, str):
+            return self.assignments.__getitem__(key)
+        else:
+            return super().__getitem__(key)
 
 
 class Result:
@@ -161,13 +180,20 @@ class Result:
             sol_json = re.sub(rb"^\w*%.*\n?", b"", raw_sol, flags=re.MULTILINE)
             if b"{" not in sol_json:
                 continue
-            sol = json.loads(sol_json)
+            dict = json.loads(sol_json)
+            asgn = {}
+            objective = None
+            stats = {}
+            for k, v in dict.items():
+                if not k.startswith("_"):
+                    asgn[k] = v
+                elif k == "_objective":
+                    objective = v
             match = re.search(rb"% time elapsed: (\d+.\d+) s", raw_sol)
             if match:
                 time_us = int(float(match[1]) * 1000000)
-                sol['_stats'] = sol.get('_stats', {})
-                sol['_stats']['time'] = timedelta(microseconds=time_us)
-            res._solutions.append(sol)
+                stats["time"] = timedelta(microseconds=time_us)
+            res._solutions.append(Solution(asgn, objective, stats))
 
         matches = re.findall(rb"%%%mzn-stat:? (\w*)=(.*)", proc.stdout)
         for m in matches:
@@ -259,6 +285,6 @@ class Result:
             Optional[Union[int, float]]: best objective found or None
         """
         if self.status.has_solution() and self.instance.method != Method.SATISFY:
-            return self._solutions[-1].get("_objective")
+            return self._solutions[-1].objective
         else:
             return None
