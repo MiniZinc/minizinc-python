@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="minizinc",
-    version="0.1.0-alpha.1",
+    version="0.1.0-alpha.2",
     python_requires='>=3.6',
     author="Jip J. Dekker",
     author_email="jip.dekker@monash.edu",
