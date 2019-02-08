@@ -1,3 +1,4 @@
+from minizinc import load_solver
 from minizinc.instance import Method
 from minizinc.result import Status
 from test_case import InstanceTestCase
@@ -71,3 +72,33 @@ class TestParameter(InstanceTestCase):
         result = self.solver.solve(self.instance)
         assert result.status == Status.SATISFIED
         assert len(result["q"]) == 4
+
+
+class CheckResults(InstanceTestCase):
+    code = """
+        array[1..2] of var 1..10: x;
+        constraint x[1] + 1 = x[2];
+    """
+    other_solver = load_solver("chuffed")
+
+    def test_correct(self):
+        assert self.instance.method == Method.SATISFY
+        result = self.solver.solve(self.instance)
+        assert result.check(self.other_solver)
+
+    def test_incorrect(self):
+        assert self.instance.method == Method.SATISFY
+        result = self.solver.solve(self.instance)
+        result.access_all = True
+        result[0].assignments["x"] = [2, 1]
+        assert not result.check(self.other_solver)
+
+    def test_check_all(self):
+        assert self.instance.method == Method.SATISFY
+        result = self.solver.solve(self.instance, all_solutions=True)
+        assert result.check(self.other_solver, range(len(result)))
+
+    def test_check_specific(self):
+        assert self.instance.method == Method.SATISFY
+        result = self.solver.solve(self.instance, nr_solutions=5)
+        assert result.check(self.other_solver, [1, 2])

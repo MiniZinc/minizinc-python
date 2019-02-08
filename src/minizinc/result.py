@@ -3,11 +3,11 @@ import re
 from datetime import timedelta
 from enum import Enum
 from subprocess import CompletedProcess
-from typing import Dict, List, NamedTuple, Optional, Union
+from typing import Dict, List, NamedTuple, Optional, Sequence, Union
 
-from minizinc.error import parse_error
-
+from .error import MiniZincError, parse_error
 from .instance import Instance, Method
+from .solver import Solver
 
 
 class Status(Enum):
@@ -214,6 +214,43 @@ class Result:
             res.complete = (res.status == Status.OPTIMAL_SOLUTION)
 
         return res
+
+    def check(self, solver: Solver, solution_nrs: Optional[Sequence[int]] = None) -> bool:
+        """Checks the result of the solving process using a solver.
+
+        Check the correctness of the solving process using a (different) solver configuration. An instance is branched
+        and will be assigned all available values from a solution. The solver configuration is now used to confirm is
+        assignment of the variables is correct. By default only the last solution will be checked. A sequence of
+        solution numbers can be provided to check multiple solutions.
+
+        Args:
+            solver (Solver): The solver configuration used to check the solutions.
+            solution_nrs: The index set of solutions to be checked. (default: [-1])
+
+        Returns:
+            bool: True if the given solution are correctly verified.
+        """
+        if solution_nrs is None:
+            solution_nrs = [-1]
+
+        for i in solution_nrs:
+            sol = self._solutions[i]
+            with self.instance.branch() as instance:
+                for k, v in sol.assignments.items():
+                    instance[k] = v
+                try:
+                    res = solver.solve(instance, timeout=timedelta(seconds=1))
+                    if self.status != res.status:
+                        if res.status in [Status.SATISFIED, Status.OPTIMAL_SOLUTION] and \
+                                self.status in [Status.SATISFIED, Status.OPTIMAL_SOLUTION, Status.ALL_SOLUTIONS]:
+                            continue
+                        else:
+                            return False
+                except MiniZincError:
+                    if self.status != Status.ERROR:
+                        return False
+
+        return True
 
     def set_stat(self, name: str, value: str):
         """Set statistical value in the result object.
