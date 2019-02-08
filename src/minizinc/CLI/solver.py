@@ -6,7 +6,13 @@ from ..solver import Solver
 
 
 class CLISolver(Solver):
-    # Solver identifier for MiniZinc driver
+    """Solver configuration usable by a CLIDriver
+
+    Attributes:
+        _id (Optional[str]): Hold the identifier of the solver configuration when its loaded directly from the driver
+            and no changes have been made. When _id does not contain a value, a new id will be generated when solving
+            using the solver configuration.
+    """
     _id: Optional[str]
 
     def __init__(self, name: str, version: str, executable: str, driver=None):
@@ -42,6 +48,16 @@ class CLISolver(Solver):
 
     @contextlib.contextmanager
     def configuration(self) -> str:
+        """Gives the identifier for the current solver configuration.
+
+        Gives an identifier argument that can be used by a CLIDriver to identify the solver configuration. If the
+        configuration was loaded using the driver and is thus already known, then the identifier will be yielded. If the
+        configuration was changed or started from scratch, the configuration will be saved to a file and it will yield
+        the name of the file.
+
+        Yields:
+            str: solver identifier to be used for the ``--solver <id>`` flag.
+        """
         file = None
         if self._id is None:
             file = tempfile.NamedTemporaryFile(prefix="minizinc_solver_", suffix=".msc")
