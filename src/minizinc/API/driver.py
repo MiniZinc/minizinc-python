@@ -1,3 +1,7 @@
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 from ctypes import CDLL, c_bool, c_char_p, c_int
 from datetime import timedelta
 from typing import List, Optional, Tuple, Type
