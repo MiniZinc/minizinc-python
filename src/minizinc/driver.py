@@ -73,7 +73,7 @@ class Driver(ABC):
               processes: Optional[int] = None,
               random_seed: Optional[int] = None,
               free_search: bool = False,
-              all_solutions: bool=False,
+              all_solutions: bool = False,
               ignore_errors=False,
               **kwargs):
         """Solves the Instance using the given solver configuration.
