@@ -11,6 +11,10 @@ class APISolver(Solver):
     _ptr: c_void_p
 
     def __init__(self, name: str, version: str, id: str, executable: str):
+        self._ptr = self.driver._minizinc_solver_init(name.encode(), version.encode(), id.encode(), executable.encode())
+        if self._ptr is None:
+            msg = self.driver._minizinc_error()
+            raise SystemError(msg.decode())
         super().__init__(name, version, id, executable)
 
     def __del__(self):
@@ -32,4 +36,12 @@ class APISolver(Solver):
 
     @classmethod
     def load(cls, path: Path):
-        pass
+        if not path.exists():
+            raise FileNotFoundError
+        solver_ptr = cls.driver._minizinc_solver_load(str(path.absolute()).encode())
+        if solver_ptr is None:
+            msg = cls.driver._minizinc_error()
+            raise ValueError(msg.decode())
+        solver = cls.__new__(cls)
+        solver._ptr = solver_ptr
+        return solver
