@@ -5,7 +5,7 @@
 import pytest
 from minizinc.error import (MiniZincAssertionError, MiniZincSyntaxError,
                             MiniZincTypeError)
-from test_case import InstanceTestCase
+from support import InstanceTestCase
 
 
 class AssertionTest(InstanceTestCase):

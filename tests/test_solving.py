@@ -2,10 +2,10 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from minizinc import load_solver
+from minizinc import Solver
 from minizinc.instance import Method
 from minizinc.result import Status
-from test_case import InstanceTestCase
+from support import InstanceTestCase
 
 
 class TestSatisfy(InstanceTestCase):
@@ -83,7 +83,7 @@ class CheckResults(InstanceTestCase):
         array[1..2] of var 1..10: x;
         constraint x[1] + 1 = x[2];
     """
-    other_solver = load_solver("chuffed")
+    other_solver = Solver.lookup("chuffed")
 
     def test_correct(self):
         assert self.instance.method == Method.SATISFY

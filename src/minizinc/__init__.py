@@ -2,15 +2,14 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from typing import Optional, Callable
+from typing import Optional
 
-from .driver import find_driver, Driver
+from .driver import Driver, find_driver
 from .instance import Instance
 from .solver import Solver
 
 Instance = Instance
 Solver = Solver
-load_solver: Callable[[str], Solver] = None
 
 #: Default MiniZinc driver used by the python package
 default_driver: Optional[Driver] = find_driver()
@@ -20,4 +19,4 @@ else:
     import warnings
     warnings.warn("MiniZinc was not found on the system: no default driver could be initialised", RuntimeWarning)
 
-__all__ = ['default_driver', 'load_solver', 'find_driver', 'Driver', 'Instance', 'Solver']
+__all__ = ['default_driver', 'find_driver', 'Driver', 'Instance', 'Solver']

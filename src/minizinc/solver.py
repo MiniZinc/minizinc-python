@@ -4,10 +4,10 @@
 
 import json
 from abc import ABC, abstractmethod
-from typing import List, Tuple
+from pathlib import Path
+from typing import ClassVar, List, Tuple
 
-import minizinc
-
+from .driver import Driver
 from .instance import Instance
 
 
@@ -15,6 +15,7 @@ class Solver(ABC):
     """The abstract representation of a MiniZinc solver configuration in MiniZinc Python.
 
     Attributes:
+        driver (Driver): MiniZinc driver responsible for interacting with MiniZinc.
         name (str): The name of the solver.
         version (str): The version of the solver.
         id (str): A unique identifier for the solver, “reverse domain name” notation.
@@ -52,8 +53,11 @@ class Solver(ABC):
         isGUIApplication (bool): Whether the solver has its own graphical user interface, which means that MiniZinc will
             detach from the process and not wait for it to finish or to produce any output.
     """
+    driver: ClassVar[Driver] = None
+
     name: str
     version: str
+    id: str
     mznlib: str
     tags: List[str]
     stdFlags: List[str]
@@ -67,16 +71,46 @@ class Solver(ABC):
     isGUIApplication: bool
 
     @abstractmethod
-    def __init__(self, name: str, version: str, executable: str, driver=None):
-        if driver is None:
-            if minizinc.default_driver is None:
-                raise LookupError("Could not initiate instance without a given or default driver")
-            self.driver = minizinc.default_driver
-        self.driver = driver
+    def __init__(self, name: str, version: str, id: str, executable: str):
+        pass
 
-    @property
+    @classmethod
     @abstractmethod
-    def id(self) -> str:
+    def lookup(self, tag: str):
+        """Lookup a solver configuration in the driver registry.
+
+        Access the MiniZinc driver's known solver configuration and find the configuation matching the given tag. Tags
+        are matched in similar to ``minizinc --solver tag``. The order of solver configuration attributes that are
+        considered is: full id, id ending, tags.
+
+        Args:
+            tag (str): tag (or id) of a solver configuration to look up.
+
+        Returns:
+            Solver: MiniZinc solver configuration compatible with the driver.
+
+        Raises:
+            LookupError: No configuration could be located with the given tag.
+        """
+        pass
+
+    @classmethod
+    @abstractmethod
+    def load(self, path: Path):
+        """Loads a solver configuration from a file.
+
+        Load solver configuration from a MiniZinc solver configuration given by the file on the given location.
+
+        Args:
+            path (str): location to the solver configuration file to be loaded.
+
+        Returns:
+            Solver: MiniZinc solver configuration compatible with the driver.
+
+        Raises:
+            FileNotFoundError: Solver configuration file not found.
+            ValueError: File contains an invalid solver configuration.
+        """
         pass
 
     def solve(self, instance: Instance, *args, **kwargs):
@@ -86,7 +120,7 @@ class Solver(ABC):
         solver configuration.
 
         Args:
-            solver (Solver): A MiniZinc solver configuration.
+            instance (Instance): A MiniZinc solver configuration.
             *args: Arguments to be forwarded to the Driver solve method.
             **kwargs: Keyword arguments to be forwarded to the Driver solve method.
 

@@ -63,52 +63,10 @@ class CLIDriver(driver.Driver):
     def __init__(self, executable: Path):
         self.executable = executable
         # Create dynamic classes with the initialised driver
-        self.Instance = type('SpecialisedCLIInstance', (CLIInstance,),
-                             {'__init__': lambda myself, files=None: super(type(myself), myself).__init__(files, self)})
-        self.Solver = type('SpecialisedCLISolver', (CLISolver,), {
-                               '__init__': lambda myself, name, version, executable:
-                               super(type(myself), myself).__init__(name, version, executable, self)
-                           })
+        self.Instance = type('SpecialisedCLIInstance', (CLIInstance,), {"driver": self})
+        self.Solver = type('SpecialisedCLISolver', (CLISolver,), {"driver": self})
 
         super(CLIDriver, self).__init__(executable)
-
-    def load_solver(self, solver: str) -> CLISolver:
-        # Find all available solvers
-        output = subprocess.run([self.executable, "--solvers-json"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                check=True)
-        solvers = json.loads(output.stdout)
-
-        # Find the specified solver
-        info = None
-        names = set()
-        for s in solvers:
-            s_names = [s["id"], s["id"].split(".")[-1]]
-            s_names.extend(s.get("tags", []))
-            names = names.union(set(s_names))
-            if solver in s_names:
-                info = s
-                break
-        if info is None:
-            raise LookupError("No solver id or tag '%s' found, available options: %s"
-                              % (solver, sorted([x for x in names])))
-
-        # Initialize driver
-        ret = CLISolver(info["name"], info["version"], info.get("executable", ""), self)
-
-        # Set all specified options
-        ret.mznlib = info.get("mznlib", ret.mznlib)
-        ret.tags = info.get("tags", ret.mznlib)
-        ret.stdFlags = info.get("stdFlags", ret.mznlib)
-        ret.extraFlags = info.get("extraFlags", ret.extraFlags)
-        ret.supportsMzn = info.get("supportsMzn", ret.mznlib)
-        ret.supportsFzn = info.get("supportsFzn", ret.mznlib)
-        ret.needsSolns2Out = info.get("needsSolns2Out", ret.mznlib)
-        ret.needsMznExecutable = info.get("needsMznExecutable", ret.mznlib)
-        ret.needsStdlibDir = info.get("needsStdlibDir", ret.mznlib)
-        ret.isGUIApplication = info.get("isGUIApplication", ret.mznlib)
-        ret._id = info["id"]
-
-        return ret
 
     def analyse(self, instance: CLIInstance):
         """Discovers basic information about a CLIInstance

@@ -3,8 +3,11 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import contextlib
+import json
+import subprocess
 import tempfile
-from typing import Optional
+from pathlib import Path
+from typing import Any, Dict
 
 from ..solver import Solver
 
@@ -13,23 +16,22 @@ class CLISolver(Solver):
     """Solver configuration usable by a CLIDriver
 
     Attributes:
-        _id (Optional[str]): Hold the identifier of the solver configuration when its loaded directly from the driver
-            and no changes have been made. When _id does not contain a value, a new id will be generated when solving
-            using the solver configuration.
+        _generate (bool): True if the solver needs to be generated
     """
-    _id: Optional[str]
+    _generate: bool
 
-    def __init__(self, name: str, version: str, executable: str, driver=None):
-        super().__init__(name, version, executable, driver)
+    def __init__(self, name: str, version: str, id: str, executable: str):
+        super().__init__(name, version, id, executable)
         from minizinc.CLI import CLIDriver
         if not isinstance(self.driver, CLIDriver):
             raise TypeError(str(type(self.driver)) + " is not an instance of CLIDriver")
 
         # Set required fields
         self.name = name
-        self._id = None
+        self.id = id
         self.version = version
         self.executable = executable
+        self._generate = False
 
         # Initialise optional fields
         self.mznlib = ""
@@ -43,12 +45,63 @@ class CLISolver(Solver):
         self.needsStdlibDir = False
         self.isGUIApplication = False
 
-    @property
-    def id(self) -> str:
-        if self._id is None:
-            return "org.minizinc.python." + self.name.lower()
+    @classmethod
+    def lookup(cls, solver: str):
+        if cls.driver is not None:
+            output = subprocess.run([cls.driver.executable, "--solvers-json"], stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE, check=True)
         else:
-            return self._id
+            raise LookupError("Solver is not linked to a MiniZinc driver")
+        # Find all available solvers
+        solvers = json.loads(output.stdout)
+
+        # Find the specified solver
+        lookup = None
+        names = set()
+        for s in solvers:
+            s_names = [s["id"], s["id"].split(".")[-1]]
+            s_names.extend(s.get("tags", []))
+            names = names.union(set(s_names))
+            if solver in s_names:
+                lookup = s
+                break
+        if lookup is None:
+            raise LookupError("No solver id or tag '%s' found, available options: %s"
+                              % (solver, sorted([x for x in names])))
+
+        return cls._from_dict(lookup)
+
+    @classmethod
+    def load(cls, path: Path):
+        if not path.exists():
+            raise FileNotFoundError
+        info = json.loads(path.read_bytes())
+
+        solver = cls._from_dict(info)
+        solver._generate = True
+
+        return solver
+
+    @classmethod
+    def _from_dict(cls, dict: Dict[str, Any]):
+        if dict.get("id", None) is None or dict.get("name", None) is None or dict.get("version", None) is None:
+            raise ValueError("Invalid solver configuration")
+        # Initialize Solver
+        ret = cls(dict["name"], dict["version"], dict["id"], dict.get("executable", ""))
+
+        # Set all specified options
+        ret.mznlib = dict.get("mznlib", ret.mznlib)
+        ret.tags = dict.get("tags", ret.mznlib)
+        ret.stdFlags = dict.get("stdFlags", ret.mznlib)
+        ret.extraFlags = dict.get("extraFlags", ret.extraFlags)
+        ret.supportsMzn = dict.get("supportsMzn", ret.mznlib)
+        ret.supportsFzn = dict.get("supportsFzn", ret.mznlib)
+        ret.needsSolns2Out = dict.get("needsSolns2Out", ret.mznlib)
+        ret.needsMznExecutable = dict.get("needsMznExecutable", ret.mznlib)
+        ret.needsStdlibDir = dict.get("needsStdlibDir", ret.mznlib)
+        ret.isGUIApplication = dict.get("isGUIApplication", ret.mznlib)
+
+        return ret
 
     @contextlib.contextmanager
     def configuration(self) -> str:
@@ -62,23 +115,23 @@ class CLISolver(Solver):
         Yields:
             str: solver identifier to be used for the ``--solver <id>`` flag.
         """
+        configuration = self.id + "@" + self.version
         file = None
-        if self._id is None:
+        if self._generate is True:
             file = tempfile.NamedTemporaryFile(prefix="minizinc_solver_", suffix=".msc")
             file.write(self.to_json().encode())
             file.flush()
             file.seek(0)
-            self._id = file.name
+            configuration = file.name
         try:
-            yield self._id
+            yield configuration
         finally:
             if file is not None:
                 file.close()
-                self._id = None
 
     def __setattr__(self, key, value):
         if key in ["version", "executable", "mznlib", "tags", "stdFlags", "extraFlags", "supportsMzn", "supportsFzn",
                    "needsSolns2Out", "needsMznExecutable", "needsStdlibDir", "isGUIApplication"] \
                 and getattr(self, key, None) is not value:
-            self._id = None
+            self._generate = True
         return super().__setattr__(key, value)

@@ -19,11 +19,8 @@ class CLIInstance(Instance):
     _code_fragments: List[str]
     _parent: Optional[Instance]
 
-    def __init__(self, files: Optional[List[Union[Path, str]]] = None, driver=None):
-        super().__init__(files, driver)
-        from minizinc.CLI import CLIDriver
-        if not isinstance(self.driver, CLIDriver):
-            raise TypeError(str(type(self.driver)) + " is not an instance of CLIDriver")
+    def __init__(self, files: Optional[List[Union[Path, str]]] = None):
+        super().__init__(files)
         self._parent = None
         self._method = None
         self._input = None

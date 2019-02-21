@@ -44,31 +44,11 @@ class Driver(ABC):
         """
         minizinc.default_driver = self
         minizinc.Solver = self.Solver
-        minizinc.load_solver = self.load_solver
         minizinc.Instance = self.Instance
 
     @abstractmethod
     def __init__(self, driver: Union[Path, CDLL]):
         assert self.check_version()
-
-    @abstractmethod
-    def load_solver(self, tag: str):
-        """Loads a solver configuration from the driver.
-
-        Access the MiniZinc driver's known solver configuration and load the configuation matching the given tag. Tags
-        are matched in similar to ``minizinc --solver tag``. The order of solver configuration attributes that are
-        considered is: full id, id ending, tags.
-
-        Args:
-            tag (str): tag (or id) of a solver configuration to be loaded.
-
-        Returns:
-            Solver: MiniZinc solver configuration compatible with the driver.
-
-        Raises:
-            LookupError: No configuration could be located with the given tag.
-        """
-        pass
 
     @abstractmethod
     def solve(self, solver, instance,

@@ -3,7 +3,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from minizinc.result import Status
-from test_case import InstanceTestCase
+from support import InstanceTestCase
 
 
 class TestAssign(InstanceTestCase):

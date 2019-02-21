@@ -4,7 +4,7 @@
 
 import unittest
 
-from minizinc import Instance, Solver, load_solver
+from minizinc import Instance, Solver
 
 
 class InstanceTestCase(unittest.TestCase):
@@ -13,6 +13,6 @@ class InstanceTestCase(unittest.TestCase):
     solver: Solver
 
     def setUp(self):
-        self.solver = load_solver("gecode")
+        self.solver = Solver.lookup("gecode")
         self.instance = Instance()
         self.instance.add_to_model(self.code)
