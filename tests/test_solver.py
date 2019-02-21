@@ -20,7 +20,7 @@ def test_chuffed():
 
 
 def test_coinbc():
-    coinbc = Solver.lookup("COIN-BC")
+    coinbc = Solver.lookup("coin-bc")
     assert coinbc is not None
     assert coinbc.id.endswith("coin-bc")
     assert coinbc.executable == ""

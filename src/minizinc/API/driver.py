@@ -6,8 +6,9 @@ from ctypes import CDLL, c_bool, c_char_p, c_int, c_void_p
 from datetime import timedelta
 from typing import List, Optional, Tuple, Type
 
-from .solver import APISolver
 from .. import driver
+from .instance import APIInstance
+from .solver import APISolver
 
 
 class APIDriver(driver.Driver):
@@ -21,6 +22,8 @@ class APIDriver(driver.Driver):
         ("minizinc_solver_lookup", [c_char_p], c_void_p),
         ("minizinc_solver_load", [c_char_p], c_void_p),
         ("minizinc_solver_destroy", [c_void_p], c_bool),
+        ("minizinc_instance_init", [], c_void_p),
+        ("minizinc_instance_destroy", [c_void_p], c_bool),
     ]
 
     def __init__(self, library: CDLL):
@@ -33,14 +36,9 @@ class APIDriver(driver.Driver):
             setattr(self, "_" + f_name, func)
 
         self.Solver = type('SpecialisedAPISolver', (APISolver,), {"driver": self})
-        # TODO: IMPLEMENT
-        self.Instance = None
+        self.Instance = type('SpecialisedAPIInstance', (APIInstance,), {"driver": self})
 
         super(APIDriver, self).__init__(library)
-
-    def load_solver(self, tag: str):
-        # TODO: IMPLEMENT
-        pass
 
     def solve(self, solver, instance, timeout: Optional[timedelta] = None, nr_solutions: Optional[int] = None,
               processes: Optional[int] = None, random_seed: Optional[int] = None, free_search: bool = False,

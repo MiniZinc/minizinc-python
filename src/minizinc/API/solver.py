@@ -11,7 +11,7 @@ class APISolver(Solver):
     _ptr: c_void_p
 
     def __init__(self, name: str, version: str, id: str, executable: str):
-        pass
+        super().__init__(name, version, id, executable)
 
     def __del__(self):
         if self._ptr is not None:
