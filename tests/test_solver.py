@@ -9,18 +9,18 @@ def test_gecode():
     gecode = Solver.lookup("gecode")
     assert gecode is not None
     assert gecode.id.endswith("gecode")
-    assert gecode.executable == "fzn-gecode"
+    assert gecode.executable.endswith("fzn-gecode")
 
 
 def test_chuffed():
     chuffed = Solver.lookup("chuffed")
     assert chuffed is not None
     assert chuffed.id.endswith("chuffed")
-    assert chuffed.executable == "fzn-chuffed"
+    assert chuffed.executable.endswith("fzn-chuffed")
 
 
 def test_coinbc():
-    coinbc = Solver.lookup("coinbc")
+    coinbc = Solver.lookup("COIN-BC")
     assert coinbc is not None
-    assert coinbc.id.endswith("coinbc")
+    assert coinbc.id.endswith("coin-bc")
     assert coinbc.executable == ""
