@@ -1,11 +1,9 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from pathlib import Path
 
 from setuptools import find_packages, setup
-
-with open("README.md", "r") as fh:
-    long_description = fh.read()
 
 setup(
     name="minizinc",
@@ -14,7 +12,7 @@ setup(
     author="Jip J. Dekker",
     author_email="jip.dekker@monash.edu",
     description="Access MiniZinc directly from Python",
-    long_description=long_description,
+    long_description=Path("README.md").read_text(),
     long_description_content_type="text/markdown",
     url="http://minizinc.org",
     project_urls={
