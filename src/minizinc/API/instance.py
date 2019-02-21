@@ -16,7 +16,7 @@ class APIInstance(Instance):
         self._ptr = self.driver._minizinc_instance_init()
         if self._ptr is None:
             msg = self.driver._minizinc_error()
-            raise SystemError(msg)
+            raise SystemError(msg.decode())
         super().__init__(files)
 
     def __del__(self):
@@ -24,7 +24,7 @@ class APIInstance(Instance):
             succes = self.driver._minizinc_instance_destroy(self._ptr)
             if not succes:
                 msg = self.driver._minizinc_error()
-                raise SystemError(msg)
+                raise SystemError(msg.decode())
 
     def __setitem__(self, key: str, value: Any):
         pass

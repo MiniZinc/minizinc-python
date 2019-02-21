@@ -18,14 +18,14 @@ class APISolver(Solver):
             succes = self.driver._minizinc_solver_destroy(self._ptr)
             if not succes:
                 msg = self.driver._minizinc_error()
-                raise SystemError(msg)
+                raise SystemError(msg.decode())
 
     @classmethod
     def lookup(cls, tag: str):
         solver_ptr = cls.driver._minizinc_solver_lookup(tag.encode())
         if solver_ptr is None:
             msg = cls.driver._minizinc_error()
-            raise LookupError(msg)
+            raise LookupError(msg.decode())
         solver = cls.__new__(cls)
         solver._ptr = solver_ptr
         return solver
