@@ -19,4 +19,4 @@ else:
     import warnings
     warnings.warn("MiniZinc was not found on the system: no default driver could be initialised", RuntimeWarning)
 
-__all__ = ['default_driver', 'find_driver', 'Driver', 'Instance', 'Solver']
+__all__ = ["default_driver", "find_driver", "Driver", "Instance", "Solver"]

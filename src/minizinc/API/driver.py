@@ -2,10 +2,11 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from ctypes import CDLL, c_bool, c_char_p, c_int
+from ctypes import CDLL, c_bool, c_char_p, c_int, c_void_p
 from datetime import timedelta
 from typing import List, Optional, Tuple, Type
 
+from .solver import APISolver
 from .. import driver
 
 
@@ -15,6 +16,11 @@ class APIDriver(driver.Driver):
         # FUNCTION NAME, ARGUMENT TYPES, RESULT TYPE
         ("minizinc_version", [], c_char_p),
         ("minizinc_check_version", [c_int, c_int, c_int], c_bool),
+        ("minizinc_error", [], c_char_p),
+        ("minizinc_solver_init", [c_char_p, c_char_p, c_char_p, c_char_p], c_void_p),
+        ("minizinc_solver_lookup", [c_char_p], c_void_p),
+        ("minizinc_solver_load", [c_char_p], c_void_p),
+        ("minizinc_solver_destroy", [c_void_p], c_bool),
     ]
 
     def __init__(self, library: CDLL):
@@ -26,8 +32,8 @@ class APIDriver(driver.Driver):
             func.restype = f_res
             setattr(self, "_" + f_name, func)
 
+        self.Solver = type('SpecialisedAPISolver', (APISolver,), {"driver": self})
         # TODO: IMPLEMENT
-        self.Solver = None
         self.Instance = None
 
         super(APIDriver, self).__init__(library)
