@@ -10,12 +10,13 @@ from datetime import timedelta
 from pathlib import Path
 from typing import List, Optional, Type
 
-from .. import driver
+import minizinc
+
+from ..driver import Driver
 from ..error import parse_error
-from ..instance import Method
+from ..instance import Instance, Method
 from ..result import Result
-from .instance import CLIInstance
-from .solver import CLISolver
+from ..solver import Solver
 
 
 def to_python_type(mzn_type: dict) -> Type:
@@ -48,7 +49,7 @@ def to_python_type(mzn_type: dict) -> Type:
     return pytype
 
 
-class CLIDriver(driver.Driver):
+class CLIDriver(Driver):
     """Driver that interfaces with MiniZinc through the command line interface.
 
     The command line driver will interact with MiniZinc and its solvers through the use of a ``minizinc`` executable.
@@ -63,12 +64,16 @@ class CLIDriver(driver.Driver):
     def __init__(self, executable: Path):
         self.executable = executable
         # Create dynamic classes with the initialised driver
-        self.Instance = type('SpecialisedCLIInstance', (CLIInstance,), {"driver": self})
-        self.Solver = type('SpecialisedCLISolver', (CLISolver,), {"driver": self})
 
         super(CLIDriver, self).__init__(executable)
 
-    def analyse(self, instance: CLIInstance):
+    def make_default(self) -> None:
+        from . import CLIInstance, CLISolver
+        minizinc.default_driver = self
+        minizinc.Instance = CLIInstance
+        minizinc.Solver = CLISolver
+
+    def analyse(self, instance: Instance):
         """Discovers basic information about a CLIInstance
 
         Analyses a given instance and discovers basic information about set model such as the solving method, the input
@@ -78,6 +83,8 @@ class CLIDriver(driver.Driver):
         Args:
             instance: The instance to be analysed and filled.
         """
+        from . import CLIInstance
+        assert isinstance(instance, CLIInstance)
         with instance.files() as files:
             # TODO: Fix which files to add
             output = subprocess.run([self.executable, "--allow-multiple-assignments", "--model-interface-only"] + files,
@@ -93,7 +100,7 @@ class CLIDriver(driver.Driver):
         for (key, value) in interface["output"].items():
             instance.output[key] = to_python_type(value)
 
-    def solve(self, solver: CLISolver, instance: CLIInstance,
+    def solve(self, solver: Solver, instance: Instance,
               timeout: Optional[timedelta] = None,
               nr_solutions: Optional[int] = None,
               processes: Optional[int] = None,
@@ -102,6 +109,8 @@ class CLIDriver(driver.Driver):
               free_search: bool = False,
               ignore_errors=False,
               **kwargs):
+        from . import CLIInstance, CLISolver
+        assert isinstance(solver, CLISolver) and isinstance(instance, CLIInstance)
         with solver.configuration() as conf:
             # Set standard command line arguments
             cmd = [self.executable, "--solver", conf, "--output-mode", "json", "--output-time", "--output-objective",
@@ -166,4 +175,4 @@ class CLIDriver(driver.Driver):
         output = subprocess.run([self.executable, "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 check=True)
         match = re.search(rb"version (\d+)\.(\d+)\.(\d+)", output.stdout)
-        return tuple([int(i) for i in match.groups()]) >= driver.required_version
+        return tuple([int(i) for i in match.groups()]) >= minizinc.driver.required_version

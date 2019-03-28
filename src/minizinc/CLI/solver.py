@@ -7,9 +7,12 @@ import json
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+
+import minizinc
 
 from ..solver import Solver
+from .driver import CLIDriver
 
 
 class CLISolver(Solver):
@@ -20,11 +23,10 @@ class CLISolver(Solver):
     """
     _generate: bool
 
-    def __init__(self, name: str, version: str, id: str, executable: str):
-        super().__init__(name, version, id, executable)
+    def __init__(self, name: str, version: str, id: str, executable: str, driver: Optional[CLIDriver] = None):
+        super().__init__(name, version, id, executable, driver)
         from minizinc.CLI import CLIDriver
-        if not isinstance(self.driver, CLIDriver):
-            raise TypeError(str(type(self.driver)) + " is not an instance of CLIDriver")
+        assert isinstance(self.driver, CLIDriver)
 
         # Set required fields
         self.name = name
@@ -46,9 +48,12 @@ class CLISolver(Solver):
         self.isGUIApplication = False
 
     @classmethod
-    def lookup(cls, solver: str):
-        if cls.driver is not None:
-            output = subprocess.run([cls.driver.executable, "--solvers-json"], stdout=subprocess.PIPE,
+    def lookup(cls, solver: str, driver: Optional[CLIDriver] = None):
+        if driver is None:
+            driver = minizinc.default_driver
+        assert isinstance(driver, CLIDriver)
+        if driver is not None:
+            output = subprocess.run([driver.executable, "--solvers-json"], stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE, check=True)
         else:
             raise LookupError("Solver is not linked to a MiniZinc driver")

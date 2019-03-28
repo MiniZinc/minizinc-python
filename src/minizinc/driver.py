@@ -12,8 +12,6 @@ from datetime import timedelta
 from pathlib import Path
 from typing import List, Optional, Type, Union
 
-import minizinc
-
 #: MiniZinc version required by the python package
 required_version = (2, 2, 0)
 
@@ -39,12 +37,11 @@ class Driver(ABC):
         ret.__init__(driver, *args, **kwargs)
         return ret
 
+    @abstractmethod
     def make_default(self) -> None:
         """Method to override the current default MiniZinc Python driver with the current driver.
         """
-        minizinc.default_driver = self
-        minizinc.Solver = self.Solver
-        minizinc.Instance = self.Instance
+        pass
 
     @abstractmethod
     def __init__(self, driver: Union[Path, CDLL]):

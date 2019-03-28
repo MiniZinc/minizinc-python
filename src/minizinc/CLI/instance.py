@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Type, Union
 
 from ..instance import Instance, Method
+from .driver import CLIDriver
 
 
 class CLIInstance(Instance):
@@ -19,8 +20,8 @@ class CLIInstance(Instance):
     _code_fragments: List[str]
     _parent: Optional[Instance]
 
-    def __init__(self, files: Optional[List[Union[Path, str]]] = None):
-        super().__init__(files)
+    def __init__(self, files: Optional[List[Union[Path, str]]] = None, driver: Optional[CLIDriver] = None):
+        super().__init__(files, driver)
         self._parent = None
         self._method = None
         self._input = None

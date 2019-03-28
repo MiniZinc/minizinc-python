@@ -5,7 +5,9 @@
 import json
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import ClassVar, List, Tuple
+from typing import List, Optional, Tuple
+
+import minizinc
 
 from .driver import Driver
 from .instance import Instance
@@ -53,7 +55,7 @@ class Solver(ABC):
         isGUIApplication (bool): Whether the solver has its own graphical user interface, which means that MiniZinc will
             detach from the process and not wait for it to finish or to produce any output.
     """
-    driver: ClassVar[Driver] = None
+    driver: Driver
 
     name: str
     version: str
@@ -71,12 +73,16 @@ class Solver(ABC):
     isGUIApplication: bool
 
     @abstractmethod
-    def __init__(self, name: str, version: str, id: str, executable: str):
-        pass
+    def __init__(self, name: str, version: str, id: str, executable: str, driver: Optional[Driver]):
+        if driver is not None:
+            self.driver = driver
+        else:
+            self.driver = minizinc.default_driver
+        assert self.driver is not None
 
     @classmethod
     @abstractmethod
-    def lookup(self, tag: str):
+    def lookup(self, tag: str, driver: Optional[Driver] = None):
         """Lookup a solver configuration in the driver registry.
 
         Access the MiniZinc driver's known solver configuration and find the configuation matching the given tag. Tags
@@ -85,6 +91,8 @@ class Solver(ABC):
 
         Args:
             tag (str): tag (or id) of a solver configuration to look up.
+            driver (Driver): driver which registry will be searched for the solver. If set to None, then
+                ``default_driver`` will be used.
 
         Returns:
             Solver: MiniZinc solver configuration compatible with the driver.

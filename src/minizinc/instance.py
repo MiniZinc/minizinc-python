@@ -6,7 +6,9 @@ import contextlib
 from abc import ABC, abstractmethod
 from enum import Enum
 from pathlib import Path
-from typing import Any, ClassVar, List, Optional, Union
+from typing import Any, List, Optional, Union
+
+import minizinc
 
 from .driver import Driver
 
@@ -49,11 +51,15 @@ class Instance(ABC):
     Attributes:
         driver (Driver): The Driver used to interact with MiniZinc functionality.
     """
-    driver: ClassVar[Driver]
+    driver: Driver
 
     @abstractmethod
-    def __init__(self, files: Optional[List[Union[Path, str]]] = None):
-        pass
+    def __init__(self, files: Optional[List[Union[Path, str]]] = None, driver: Optional[Driver] = None):
+        if driver is not None:
+            self.driver = driver
+        else:
+            self.driver = minizinc.default_driver
+        assert self.driver is not None
 
     @abstractmethod
     def __setitem__(self, key: str, value: Any):
