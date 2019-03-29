@@ -73,7 +73,7 @@ class Solver(ABC):
     isGUIApplication: bool
 
     @abstractmethod
-    def __init__(self, name: str, version: str, id: str, executable: str, driver: Optional[Driver]):
+    def __init__(self, name: str, version: str, id: str, executable: str, driver: Optional[Driver] = None):
         if driver is not None:
             self.driver = driver
         else:
@@ -104,13 +104,15 @@ class Solver(ABC):
 
     @classmethod
     @abstractmethod
-    def load(self, path: Path):
+    def load(self, path: Path, driver: Optional[Driver] = None):
         """Loads a solver configuration from a file.
 
         Load solver configuration from a MiniZinc solver configuration given by the file on the given location.
 
         Args:
             path (str): location to the solver configuration file to be loaded.
+            driver (Driver): driver used to load the solver configuration. If set to None, then ``default_driver`` will
+                be used.
 
         Returns:
             Solver: MiniZinc solver configuration compatible with the driver.

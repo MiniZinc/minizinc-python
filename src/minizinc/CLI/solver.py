@@ -74,10 +74,10 @@ class CLISolver(Solver):
             raise LookupError("No solver id or tag '%s' found, available options: %s"
                               % (solver, sorted([x for x in names])))
 
-        return cls._from_dict(lookup)
+        return cls._from_dict(lookup, driver)
 
     @classmethod
-    def load(cls, path: Path):
+    def load(cls, path: Path, driver: Optional[CLIDriver] = None):
         if not path.exists():
             raise FileNotFoundError
         info = json.loads(path.read_bytes())
@@ -88,11 +88,11 @@ class CLISolver(Solver):
         return solver
 
     @classmethod
-    def _from_dict(cls, dict: Dict[str, Any]):
+    def _from_dict(cls, dict: Dict[str, Any], driver: Optional[CLIDriver] = None):
         if dict.get("id", None) is None or dict.get("name", None) is None or dict.get("version", None) is None:
             raise ValueError("Invalid solver configuration")
         # Initialize Solver
-        ret = cls(dict["name"], dict["version"], dict["id"], dict.get("executable", ""))
+        ret = cls(dict["name"], dict["version"], dict["id"], dict.get("executable", ""), driver)
 
         # Set all specified options
         ret.mznlib = dict.get("mznlib", ret.mznlib)

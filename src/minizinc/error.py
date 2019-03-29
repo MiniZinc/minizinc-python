@@ -31,7 +31,7 @@ class MiniZincError(Exception):
     location: Optional[Location]
     message: str
 
-    def __init__(self, location: Optional[Location], message: str):
+    def __init__(self, location: Optional[Location] = None, message: str = ""):
         super().__init__(message)
         self.location = location
 

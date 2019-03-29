@@ -26,8 +26,10 @@ class Driver(ABC):
     Solver: Type
     Instance: Type
 
-    def __new__(cls, driver: Union[Path, CDLL], *args, **kwargs):
-        if isinstance(driver, CDLL):
+    def __new__(cls, driver: Optional[Union[Path, CDLL]] = None, *args, **kwargs):
+        if driver is None:
+            return super().__new__(cls, *args, **kwargs)
+        elif isinstance(driver, CDLL):
             from minizinc.API.driver import APIDriver
             cls = APIDriver
         else:
