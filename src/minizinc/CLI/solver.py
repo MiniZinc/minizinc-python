@@ -74,7 +74,9 @@ class CLISolver(Solver):
             raise LookupError("No solver id or tag '%s' found, available options: %s"
                               % (solver, sorted([x for x in names])))
 
-        return cls._from_dict(lookup, driver)
+        ret = cls._from_dict(lookup, driver)
+        ret._generate = False
+        return ret
 
     @classmethod
     def load(cls, path: Path, driver: Optional[CLIDriver] = None):
@@ -83,7 +85,6 @@ class CLISolver(Solver):
         info = json.loads(path.read_bytes())
 
         solver = cls._from_dict(info)
-        solver._generate = True
 
         return solver
 
@@ -122,7 +123,7 @@ class CLISolver(Solver):
         """
         configuration = self.id + "@" + self.version
         file = None
-        if self._generate is True:
+        if self._generate:
             file = tempfile.NamedTemporaryFile(prefix="minizinc_solver_", suffix=".msc")
             file.write(self.to_json().encode())
             file.flush()
