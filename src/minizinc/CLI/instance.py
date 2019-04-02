@@ -8,9 +8,9 @@ import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional, Type
 
-from minizinc.model import Model
-
+from ..dzn_parser import UnknownExpression
 from ..instance import Instance, Method
+from ..model import Model
 from .solver import CLISolver
 
 
@@ -59,19 +59,27 @@ class CLIInstance(Instance):
         files: List[Path] = self._includes.copy()
         fragments = None
         data = None
-        if len(self._code_fragments) > 0:
+        tmp_fragments = fragments[:] if fragments is not None else []
+        if len(self._data) > 0:
+            tmp_data = {}
+            for k, v in self._data.items():
+                if isinstance(v, UnknownExpression):
+                    tmp_fragments.append("%s = %s;" % (k, v))
+                else:
+                    tmp_data[k] = v
+            if len(tmp_data) > 0:
+                data = tempfile.NamedTemporaryFile(prefix="mzn_data", suffix=".json")
+                data.write(json.dumps(tmp_data).encode())
+                data.flush()
+                data.seek(0)
+                files.append(Path(data.name))
+        if len(tmp_fragments) > 0:
             fragments = tempfile.NamedTemporaryFile(prefix="mzn_fragment", suffix=".mzn")
-            for code in self._code_fragments:
+            for code in tmp_fragments:
                 fragments.write(code.encode())
             fragments.flush()
             fragments.seek(0)
             files.append(Path(fragments.name))
-        if len(self._data) > 0:
-            data = tempfile.NamedTemporaryFile(prefix="mzn_data", suffix=".json")
-            data.write(json.dumps(self._data).encode())
-            data.flush()
-            data.seek(0)
-            files.append(Path(data.name))
         try:
             if self._parent is not None:
                 assert isinstance(self._parent, CLIInstance)

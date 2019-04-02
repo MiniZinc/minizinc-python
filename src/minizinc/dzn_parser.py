@@ -1,0 +1,97 @@
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from pathlib import Path
+
+from lark import Lark, Transformer
+
+dzn_grammar = r"""
+    items: item ";"? | item ";" items
+    item: ident "=" value | ident "=" unknown
+    ident: /([A-Za-z][A-Za-z0-9_]*)|(\'[^\']*\')/
+    value: array
+         | array2d
+         | set
+         | int
+         | float
+         | string
+         | "true"       -> true
+         | "false"      -> false
+    list: [value ("," value)*]
+    array: "[" list "]"
+    array2d: "[" "|" [list ("|" list)*] "|" "]"
+    set: "{" list "}"
+
+    int: /-?(0o[0-7]+)|(0x[0-9A-Fa-f]+)|(\d+)/
+    float: /-?(\d+\.\d+)|(\d+\.\d+[Ee][-+]?\d+)|(\d+[Ee][-+]?\d+)/
+    string: ESCAPED_STRING
+
+    unknown: /[^[{;]+[^;]*/
+
+    %import common.ESCAPED_STRING
+    %import common.WS
+    %ignore WS
+    COMMENT: "%" /[^\n]/*
+    %ignore COMMENT
+"""
+
+
+class UnknownExpression(str):
+    pass
+
+
+def arg1_construct(cls):
+    return lambda self, s: cls(s[0])
+
+
+class TreeToDZN(Transformer):
+    @staticmethod
+    def int(s):
+        # TODO: Other bases
+        return int(s[0])
+
+    @staticmethod
+    def items(s):
+        item = s[0]
+        if len(s) == 1:
+            return {item[0]: item[1]}
+        else:
+            s[1][item[0]] = item[1]
+            return s[1]
+
+    @staticmethod
+    def item(s):
+        return s[0], s[1]
+
+    @staticmethod
+    def array2d(s):
+        return [l for l in s]
+
+    @staticmethod
+    def string(s):
+        return str(s[0][1:-1])
+
+    @staticmethod
+    def true(s):
+        return True
+
+    @staticmethod
+    def false(s):
+        return False
+
+    unknown = arg1_construct(UnknownExpression)
+    set = arg1_construct(set)  # TODO: Proper set handling
+    list = list
+    array = arg1_construct(lambda i: i)
+    ident = arg1_construct(str)
+    float = arg1_construct(float)
+    value = arg1_construct(lambda i: i)
+
+
+dzn_parser = Lark(dzn_grammar, start='items', parser='lalr')
+
+
+def parse_dzn(file: Path):
+    tree = dzn_parser.parse(file.read_text())
+    dzn_dict = TreeToDZN().transform(tree)
+    return dzn_dict

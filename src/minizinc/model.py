@@ -3,9 +3,14 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
+import warnings
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
+
+from lark.exceptions import LarkError
+
+from .dzn_parser import parse_dzn
 
 ParPath = Union[Path, str]
 
@@ -60,8 +65,8 @@ class Model:
     def __setitem__(self, key: str, value: Any):
         """Set parameter of Model.
 
-        This method overrides the default implementation of item access (``obj[key] = value``) for instances. Item
-        access on a Instance can be used to set parameters of the Instance.
+        This method overrides the default implementation of item access (``obj[key] = value``) for models. Item
+        access on a Model can be used to set parameters of the Model.
 
         Args:
             key (str): Identifier of the parameter.
@@ -74,6 +79,24 @@ class Model:
                 raise AssertionError("The parameter '%s' cannot be assigned multiple values. If you are changing the "
                                      "model, consider using the branch method before assigning the parameter")
 
+    def __getitem__(self, key: str) -> Any:
+        """Get parameter of Model.
+
+        This method overrides the default implementation of item access (``obj[key]``) for models. Item access on a
+        Model can be used to get parameters of the Model.
+        **Parameters not set through Python can not be accessed.**
+
+        Args:
+            key (str): Identifier of the parameter.
+
+        Returns:
+            The value assigned to the parameter.
+
+        Raises:
+            KeyError: The parameter you are trying to access is not known.
+        """
+        return self._data.__getitem__(key)
+
     def add_file(self, file: ParPath) -> None:
         """Adds a MiniZinc file (``.mzn``, ``.dzn``, or ``.json``) to the Model.
 
@@ -85,9 +108,18 @@ class Model:
         assert file.exists()
         if file.suffix == ".json":
             data = json.load(file.open())
-            for k, v in data:
+            for k, v in data.items():
                 self.__setitem__(k, v)
-        elif file.suffix not in [".mzn", ".dzn"]:
+        elif file.suffix == ".dzn":
+            try:
+                data = parse_dzn(file)
+                for k, v in data.items():
+                    self.__setitem__(k, v)
+            except LarkError:
+                warnings.warn("Could not parse %s. Parameters included within this file are not available in Python"
+                              % file)
+                self._includes.append(file)
+        elif file.suffix != ".mzn":
             raise NameError("Unknown file suffix %s", file.suffix)
         else:
             self._includes.append(file)
