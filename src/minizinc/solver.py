@@ -4,16 +4,14 @@
 
 import json
 from abc import ABC, abstractmethod
+from datetime import timedelta
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-import minizinc
-
 from .driver import Driver
-from .instance import Instance
 
 
-class Solver(ABC):
+class Solver(Driver, ABC):
     """The abstract representation of a MiniZinc solver configuration in MiniZinc Python.
 
     Attributes:
@@ -55,8 +53,6 @@ class Solver(ABC):
         isGUIApplication (bool): Whether the solver has its own graphical user interface, which means that MiniZinc will
             detach from the process and not wait for it to finish or to produce any output.
     """
-    driver: Driver
-
     name: str
     version: str
     id: str
@@ -74,15 +70,11 @@ class Solver(ABC):
 
     @abstractmethod
     def __init__(self, name: str, version: str, id: str, executable: str, driver: Optional[Driver] = None):
-        if driver is not None:
-            self.driver = driver
-        else:
-            self.driver = minizinc.default_driver
-        assert self.driver is not None
+        pass
 
     @classmethod
     @abstractmethod
-    def lookup(self, tag: str, driver: Optional[Driver] = None):
+    def lookup(cls, tag: str, driver: Optional[Driver] = None):
         """Lookup a solver configuration in the driver registry.
 
         Access the MiniZinc driver's known solver configuration and find the configuation matching the given tag. Tags
@@ -104,7 +96,7 @@ class Solver(ABC):
 
     @classmethod
     @abstractmethod
-    def load(self, path: Path, driver: Optional[Driver] = None):
+    def load(cls, path: Path, driver: Optional[Driver] = None):
         """Loads a solver configuration from a file.
 
         Load solver configuration from a MiniZinc solver configuration given by the file on the given location.
@@ -123,26 +115,48 @@ class Solver(ABC):
         """
         pass
 
-    def solve(self, instance: Instance, *args, **kwargs):
-        """Solve supplied instance using solver.
+    @abstractmethod
+    def solve(self, instance,
+              timeout: Optional[timedelta] = None,
+              nr_solutions: Optional[int] = None,
+              processes: Optional[int] = None,
+              random_seed: Optional[int] = None,
+              free_search: bool = False,
+              all_solutions: bool = False,
+              ignore_errors=False,
+              **kwargs):
+        """Solves the Instance using the given solver configuration.
 
-        Solve is a forwarding method to the Driver solve method that will use the supplied instance and the current
-        solver configuration.
+        Find the solutions to the given MiniZinc instance using the given solver configuration. First, the Instance will
+        be ensured to be in a state where the solver specified in the solver configuration can understand the problem
+        and then the solver will be requested to find the appropriate solution(s) to the problem.
 
         Args:
-            instance (Instance): A MiniZinc solver configuration.
-            *args: Arguments to be forwarded to the Driver solve method.
-            **kwargs: Keyword arguments to be forwarded to the Driver solve method.
+            solver (Solver): The solver configuration used to compile and solve the instance
+            instance (Instance): The Instance to solve
+            timeout (Optional[timedelta]): Set the time limit for the process of solving the instance.
+            nr_solutions (Optional[int]): The requested number of solution. (Only available on satisfaction problems and
+                when the ``-n`` flag is supported by the solver).
+            processes (Optional[int]): Set the number of processes the solver can use. (Only available when the ``-p``
+                flag is supported by the solver).
+            random_seed (Optional[int]): Set the random seed for solver. (Only available when the ``-r`` flag is
+                supported by the solver).
+            free_search (bool): Allow the solver to ignore the search definition within the instance. (Only available
+                when the ``-f`` flag is supported by the solver).
+            all_solutions (bool): Request to solver to find all solutions. (Only available on satisfaction problems and
+                when the ``-n`` flag is supported by the solver)
+            ignore_errors (bool): Do not raise exceptions, when an error occurs the ``Result.status`` will be ``ERROR``.
+            **kwargs: Other flags to be passed onto the solver. (TODO: NOT YET IMPLEMENTED)
 
         Returns:
-            Result: A MiniZinc Result object.
-        """
-        if self.driver is not None:
-            return self.driver.solve(self, instance, *args, **kwargs)
-        else:
-            raise LookupError("Solver is not linked to a MiniZinc driver")
+            Result: object containing values assigned and statistical information.
 
-    def to_json(self) -> str:
+        Raises:
+            MiniZincError: An error occurred while compiling or solving the model instance.
+        """
+        pass
+
+    def output_configuration(self) -> str:
         """Formulates a valid JSON specification for the Solver
 
         Formulates a JSON specification of the solver configuration meant to be used by MiniZinc. When stored in a

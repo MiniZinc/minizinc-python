@@ -2,21 +2,16 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import json
 import re
 import subprocess
 import warnings
-from datetime import timedelta
 from pathlib import Path
-from typing import List, Optional, Type
+from typing import List, Type
 
 import minizinc
 
 from ..driver import Driver
 from ..error import parse_error
-from ..instance import Instance, Method
-from ..result import Result
-from ..solver import Solver
 
 
 def to_python_type(mzn_type: dict) -> Type:
@@ -59,13 +54,13 @@ class CLIDriver(Driver):
     Attributes:
         executable (Path): The path to the executable used to access the MiniZinc Driver
     """
-    executable: Path
+    _executable: Path
 
     def __init__(self, executable: Path):
-        self.executable = executable
-        # Create dynamic classes with the initialised driver
+        self._executable = executable
+        assert self._executable.exists()
 
-        super(CLIDriver, self).__init__(executable)
+        super(CLIDriver, self).__init__()
 
     def make_default(self) -> None:
         from . import CLIInstance, CLISolver
@@ -73,106 +68,18 @@ class CLIDriver(Driver):
         minizinc.Instance = CLIInstance
         minizinc.Solver = CLISolver
 
-    def analyse(self, instance: Instance):
-        """Discovers basic information about a CLIInstance
-
-        Analyses a given instance and discovers basic information about set model such as the solving method, the input
-        parameters, and the output parameters. The information found will be stored among the attributes of the
-        instance.
-
-        Args:
-            instance: The instance to be analysed and filled.
-        """
-        from . import CLIInstance
-        assert isinstance(instance, CLIInstance)
-        with instance.files() as files:
-            # TODO: Fix which files to add
-            output = subprocess.run([self.executable, "--allow-multiple-assignments", "--model-interface-only"] + files,
-                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    def _run(self, args: List[str]):
+        output = subprocess.run([self._executable, "--allow-multiple-assignments"] + args, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
         if output.returncode != 0:
             raise parse_error(output.stderr)
-        interface = json.loads(output.stdout)
-        instance._method = Method.from_string(interface["method"])
-        instance.input = {}
-        for key, value in interface["input"].items():
-            instance.input[key] = to_python_type(value)
-        instance.output = {}
-        for (key, value) in interface["output"].items():
-            instance.output[key] = to_python_type(value)
-
-    def solve(self, solver: Solver, instance: Instance,
-              timeout: Optional[timedelta] = None,
-              nr_solutions: Optional[int] = None,
-              processes: Optional[int] = None,
-              random_seed: Optional[int] = None,
-              all_solutions=False,
-              free_search: bool = False,
-              ignore_errors=False,
-              **kwargs):
-        from . import CLIInstance, CLISolver
-        assert isinstance(solver, CLISolver) and isinstance(instance, CLIInstance)
-        with solver.configuration() as conf:
-            # Set standard command line arguments
-            cmd = [self.executable, "--solver", conf, "--output-mode", "json", "--output-time", "--output-objective",
-                   "--allow-multiple-assignments"]
-            # Enable statistics if possible
-            if "-s" in solver.stdFlags:
-                cmd.append("-s")
-
-            # Process number of solutions to be generated
-            if all_solutions:
-                if nr_solutions is not None:
-                    raise ValueError("The number of solutions cannot be limited when looking for all solutions")
-                if instance.method != Method.SATISFY:
-                    raise NotImplementedError("Finding all optimal solutions is not yet implemented")
-                if "-a" not in solver.stdFlags:
-                    raise NotImplementedError("Solver does not support the -a flag")
-                cmd.append("-a")
-            elif nr_solutions is not None:
-                if nr_solutions <= 0:
-                    raise ValueError("The number of solutions can only be set to a positive integer number")
-                if instance.method != Method.SATISFY:
-                    raise NotImplementedError("Finding all optimal solutions is not yet implemented")
-                if "-n" not in solver.stdFlags:
-                    raise NotImplementedError("Solver does not support the -n flag")
-                cmd.extend(["-n", str(nr_solutions)])
-            if "-a" in solver.stdFlags and instance.method != Method.SATISFY:
-                cmd.append("-a")
-            # Set number of processes to be used
-            if processes is not None:
-                if "-p" not in solver.stdFlags:
-                    raise NotImplementedError("Solver does not support the -p flag")
-                cmd.extend(["-p", str(processes)])
-            # Set random seed to be used
-            if random_seed is not None:
-                if "-r" not in solver.stdFlags:
-                    raise NotImplementedError("Solver does not support the -r flag")
-                cmd.extend(["-r", str(random_seed)])
-            # Enable free search if specified
-            if free_search:
-                if "-f" not in solver.stdFlags:
-                    raise NotImplementedError("Solver does not support the -f flag")
-                cmd.append("-f")
-
-            # Set time limit for the MiniZinc solving
-            if timeout is not None:
-                cmd.extend(["--time-limit", str(int(timeout.total_seconds() * 1000))])
-
-            # Add files as last arguments
-            with instance.files() as files:
-                cmd.extend(files)
-                # Run the MiniZinc process
-                output = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-            return Result.from_process(instance, output, ignore_errors)
+        return output
 
     @property
-    def version(self) -> tuple:
-        output = subprocess.run([self.executable, "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                check=True)
-        return output.stdout.decode()
+    def minizinc_version(self) -> tuple:
+        return self._run(["--version"]).stdout.decode()
 
     def check_version(self):
-        output = subprocess.run([self.executable, "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                check=True)
+        output = self._run(["--version"])
         match = re.search(rb"version (\d+)\.(\d+)\.(\d+)", output.stdout)
         return tuple([int(i) for i in match.groups()]) >= minizinc.driver.required_version

@@ -19,7 +19,7 @@ class AssertionTest(InstanceTestCase):
 
     def test_assertion_error(self):
         with pytest.raises(MiniZincAssertionError, match="a not decreasing") as error:
-            self.solver.solve(self.instance)
+            self.instance.solve()
         loc = error.value.location
         assert str(loc.file).endswith(".mzn")
         assert loc.line == 3
@@ -34,7 +34,7 @@ class TypeErrorTest(InstanceTestCase):
 
     def test_type_error(self):
         with pytest.raises(MiniZincTypeError, match="No matching operator found") as error:
-            self.solver.solve(self.instance)
+            self.instance.solve()
         loc = error.value.location
         assert str(loc.file).endswith(".mzn")
         assert loc.line == 3
@@ -46,7 +46,7 @@ class SyntaxErrorTest(InstanceTestCase):
 
     def test_syntax_error(self):
         with pytest.raises(MiniZincSyntaxError, match="unexpected bool literal") as error:
-            self.solver.solve(self.instance)
+            self.instance.solve()
         loc = error.value.location
         assert str(loc.file).endswith(".mzn")
         assert loc.line == 1

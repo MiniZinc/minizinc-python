@@ -6,16 +6,20 @@ import contextlib
 import json
 import subprocess
 import tempfile
+from datetime import timedelta
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import minizinc
 
+from ..instance import Instance
+from ..model import Method
+from ..result import Result
 from ..solver import Solver
-from .driver import CLIDriver
+from .driver import CLIDriver, to_python_type
 
 
-class CLISolver(Solver):
+class CLISolver(Solver, CLIDriver):
     """Solver configuration usable by a CLIDriver
 
     Attributes:
@@ -24,16 +28,12 @@ class CLISolver(Solver):
     _generate: bool
 
     def __init__(self, name: str, version: str, id: str, executable: str, driver: Optional[CLIDriver] = None):
-        super().__init__(name, version, id, executable, driver)
-        from minizinc.CLI import CLIDriver
-        assert isinstance(self.driver, CLIDriver)
-
         # Set required fields
         self.name = name
         self.id = id
         self.version = version
         self.executable = executable
-        self._generate = False
+        self._generate = True
 
         # Initialise optional fields
         self.mznlib = ""
@@ -47,13 +47,19 @@ class CLISolver(Solver):
         self.needsStdlibDir = False
         self.isGUIApplication = False
 
+        if driver is not None:
+            CLIDriver.__init__(self, driver._executable)
+        else:
+            assert isinstance(minizinc.default_driver, CLIDriver)
+            CLIDriver.__init__(self, minizinc.default_driver._executable)
+
     @classmethod
     def lookup(cls, solver: str, driver: Optional[CLIDriver] = None):
         if driver is None:
             driver = minizinc.default_driver
         assert isinstance(driver, CLIDriver)
         if driver is not None:
-            output = subprocess.run([driver.executable, "--solvers-json"], stdout=subprocess.PIPE,
+            output = subprocess.run([driver._executable, "--solvers-json"], stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE, check=True)
         else:
             raise LookupError("Solver is not linked to a MiniZinc driver")
@@ -109,6 +115,96 @@ class CLISolver(Solver):
 
         return ret
 
+    def _run(self, args: List[str]):
+        with self.configuration() as config:
+            return super()._run(["--solver", config] + args)
+
+    def solve(self, instance: Instance,
+              timeout: Optional[timedelta] = None,
+              nr_solutions: Optional[int] = None,
+              processes: Optional[int] = None,
+              random_seed: Optional[int] = None,
+              all_solutions=False,
+              free_search: bool = False,
+              ignore_errors=False,
+              **kwargs):
+        from .instance import CLIInstance
+        assert isinstance(instance, CLIInstance)
+        # Set standard command line arguments
+        cmd = ["--output-mode", "json", "--output-time", "--output-objective"]
+        # Enable statistics if possible
+        if "-s" in self.stdFlags:
+            cmd.append("-s")
+
+        # Process number of solutions to be generated
+        if all_solutions:
+            if nr_solutions is not None:
+                raise ValueError("The number of solutions cannot be limited when looking for all solutions")
+            if instance.method != Method.SATISFY:
+                raise NotImplementedError("Finding all optimal solutions is not yet implemented")
+            if "-a" not in self.stdFlags:
+                raise NotImplementedError("Solver does not support the -a flag")
+            cmd.append("-a")
+        elif nr_solutions is not None:
+            if nr_solutions <= 0:
+                raise ValueError("The number of solutions can only be set to a positive integer number")
+            if instance.method != Method.SATISFY:
+                raise NotImplementedError("Finding all optimal solutions is not yet implemented")
+            if "-n" not in self.stdFlags:
+                raise NotImplementedError("Solver does not support the -n flag")
+            cmd.extend(["-n", str(nr_solutions)])
+        if "-a" in self.stdFlags and instance.method != Method.SATISFY:
+            cmd.append("-a")
+        # Set number of processes to be used
+        if processes is not None:
+            if "-p" not in self.stdFlags:
+                raise NotImplementedError("Solver does not support the -p flag")
+            cmd.extend(["-p", str(processes)])
+        # Set random seed to be used
+        if random_seed is not None:
+            if "-r" not in self.stdFlags:
+                raise NotImplementedError("Solver does not support the -r flag")
+            cmd.extend(["-r", str(random_seed)])
+        # Enable free search if specified
+        if free_search:
+            if "-f" not in self.stdFlags:
+                raise NotImplementedError("Solver does not support the -f flag")
+            cmd.append("-f")
+
+        # Set time limit for the MiniZinc solving
+        if timeout is not None:
+            cmd.extend(["--time-limit", str(int(timeout.total_seconds() * 1000))])
+
+        # Add files as last arguments
+        with instance.files() as files:
+            cmd.extend(files)
+            # Run the MiniZinc process
+            output = self._run(cmd)
+        return Result.from_process(instance, output, ignore_errors)
+
+    def analyse(self, instance: Instance):
+        """Discovers basic information about a CLIInstance
+
+        Analyses a given instance and discovers basic information about set model such as the solving method, the input
+        parameters, and the output parameters. The information found will be stored among the attributes of the
+        instance.
+
+        Args:
+            instance: The instance to be analysed and filled.
+        """
+        from . import CLIInstance
+        assert isinstance(instance, CLIInstance)
+        with instance.files() as files:
+            output = self._run(["--model-interface-only"] + files)
+        interface = json.loads(output.stdout)
+        instance._method = Method.from_string(interface["method"])
+        instance.input = {}
+        for key, value in interface["input"].items():
+            instance.input[key] = to_python_type(value)
+        instance.output = {}
+        for (key, value) in interface["output"].items():
+            instance.output[key] = to_python_type(value)
+
     @contextlib.contextmanager
     def configuration(self) -> str:
         """Gives the identifier for the current solver configuration.
@@ -125,7 +221,7 @@ class CLISolver(Solver):
         file = None
         if self._generate:
             file = tempfile.NamedTemporaryFile(prefix="minizinc_solver_", suffix=".msc")
-            file.write(self.to_json().encode())
+            file.write(self.output_configuration().encode())
             file.flush()
             file.seek(0)
             configuration = file.name

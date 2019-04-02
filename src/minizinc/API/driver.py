@@ -6,9 +6,9 @@ from ctypes import CDLL, c_bool, c_char_p, c_int, c_void_p
 from datetime import timedelta
 from typing import List, Optional, Tuple, Type
 
+import minizinc
+
 from .. import driver
-from .instance import APIInstance
-from .solver import APISolver
 
 
 class APIDriver(driver.Driver):
@@ -35,10 +35,13 @@ class APIDriver(driver.Driver):
             func.restype = f_res
             setattr(self, "_" + f_name, func)
 
-        self.Solver = type('SpecialisedAPISolver', (APISolver,), {"driver": self})
-        self.Instance = type('SpecialisedAPIInstance', (APIInstance,), {"driver": self})
-
         super(APIDriver, self).__init__(library)
+
+    def make_default(self) -> None:
+        from . import APInstance, APISolver
+        minizinc.default_driver = self
+        minizinc.Instance = APInstance
+        minizinc.Solver = APISolver
 
     def solve(self, solver, instance, timeout: Optional[timedelta] = None, nr_solutions: Optional[int] = None,
               processes: Optional[int] = None, random_seed: Optional[int] = None, free_search: bool = False,
@@ -47,7 +50,7 @@ class APIDriver(driver.Driver):
         pass
 
     @property
-    def version(self) -> str:
+    def minizinc_version(self) -> str:
         return self._minizinc_version().decode()
 
     def check_version(self) -> bool:

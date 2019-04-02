@@ -12,8 +12,10 @@ def test_default_driver():
 def test_version():
     # Test normal behaviour
     assert minizinc.default_driver.check_version()
-    assert "MiniZinc" in minizinc.default_driver.version
+    assert "MiniZinc" in minizinc.default_driver.minizinc_version
 
     # Test failure
+    tmp = minizinc.driver.required_version
     minizinc.driver.required_version = (3, 2, 1)
     assert not minizinc.default_driver.check_version()
+    minizinc.driver.required_version = tmp

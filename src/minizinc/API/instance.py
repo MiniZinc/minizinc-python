@@ -19,6 +19,9 @@ class APIInstance(Instance):
             raise SystemError(msg.decode())
         super().__init__(files)
 
+    def solve(self, solver, *args, **kwargs):
+        pass
+
     def __del__(self):
         if self._ptr is not None:
             succes = self.driver._minizinc_instance_destroy(self._ptr)

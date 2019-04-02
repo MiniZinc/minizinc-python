@@ -6,11 +6,10 @@ import os
 import platform
 import shutil
 from abc import ABC, abstractmethod
-from ctypes import CDLL, cdll
+from ctypes import cdll
 from ctypes.util import find_library
-from datetime import timedelta
 from pathlib import Path
-from typing import List, Optional, Type, Union
+from typing import List, Optional, Type
 
 #: MiniZinc version required by the python package
 required_version = (2, 2, 0)
@@ -26,19 +25,6 @@ class Driver(ABC):
     Solver: Type
     Instance: Type
 
-    def __new__(cls, driver: Optional[Union[Path, CDLL]] = None, *args, **kwargs):
-        if driver is None:
-            return super().__new__(cls, *args, **kwargs)
-        elif isinstance(driver, CDLL):
-            from minizinc.API.driver import APIDriver
-            cls = APIDriver
-        else:
-            from minizinc.CLI import CLIDriver
-            cls = CLIDriver
-        ret = super().__new__(cls, *args, **kwargs)
-        ret.__init__(driver, *args, **kwargs)
-        return ret
-
     @abstractmethod
     def make_default(self) -> None:
         """Method to override the current default MiniZinc Python driver with the current driver.
@@ -46,53 +32,12 @@ class Driver(ABC):
         pass
 
     @abstractmethod
-    def __init__(self, driver: Union[Path, CDLL]):
+    def __init__(self):
         assert self.check_version()
-
-    @abstractmethod
-    def solve(self, solver, instance,
-              timeout: Optional[timedelta] = None,
-              nr_solutions: Optional[int] = None,
-              processes: Optional[int] = None,
-              random_seed: Optional[int] = None,
-              free_search: bool = False,
-              all_solutions: bool = False,
-              ignore_errors=False,
-              **kwargs):
-        """Solves the Instance using the given solver configuration.
-
-        Find the solutions to the given MiniZinc instance using the given solver configuration. First, the Instance will
-        be ensured to be in a state where the solver specified in the solver configuration can understand the problem
-        and then the solver will be requested to find the appropriate solution(s) to the problem.
-
-        Args:
-            solver (Solver): The solver configuration used to compile and solve the instance
-            instance (Instance): The Instance to solve
-            timeout (Optional[timedelta]): Set the time limit for the process of solving the instance.
-            nr_solutions (Optional[int]): The requested number of solution. (Only available on satisfaction problems and
-                when the ``-n`` flag is supported by the solver).
-            processes (Optional[int]): Set the number of processes the solver can use. (Only available when the ``-p``
-                flag is supported by the solver).
-            random_seed (Optional[int]): Set the random seed for solver. (Only available when the ``-r`` flag is
-                supported by the solver).
-            free_search (bool): Allow the solver to ignore the search definition within the instance. (Only available
-                when the ``-f`` flag is supported by the solver).
-            all_solutions (bool): Request to solver to find all solutions. (Only available on satisfaction problems and
-                when the ``-n`` flag is supported by the solver)
-            ignore_errors (bool): Do not raise exceptions, when an error occurs the ``Result.status`` will be ``ERROR``.
-            **kwargs: Other flags to be passed onto the solver. (TODO: NOT YET IMPLEMENTED)
-
-        Returns:
-            Result: object containing values assigned and statistical information.
-
-        Raises:
-            MiniZincError: An error occurred while compiling or solving the model instance.
-        """
-        pass
 
     @property
     @abstractmethod
-    def version(self) -> str:
+    def minizinc_version(self) -> str:
         """Reports the version of the MiniZinc Driver
 
         Report the full version of MiniZinc as reported by the driver, including the driver name, the semantic version,
@@ -130,6 +75,7 @@ def find_driver(path: Optional[List[str]] = None, name: str = "minizinc") -> Opt
     Returns:
         Optional[Driver]: Returns a Driver object when found or None.
     """
+    driver = None
     if path is None:
         path_bin = os.environ.get("PATH", "").split(os.pathsep)
         path_lib = os.environ.get("LD_LIBRARY_PATH", "").split(os.pathsep)
@@ -161,14 +107,15 @@ def find_driver(path: Optional[List[str]] = None, name: str = "minizinc") -> Opt
     lib = find_library(name)
     os.environ = env_backup
     if lib and Path(lib).suffix in [".dll", ".dylib", ".so"]:
-        driver = cdll.LoadLibrary(lib)
+        from minizinc.API import APIDriver
+        library = cdll.LoadLibrary(lib)
+        driver = APIDriver(library)
     else:
         # Try to locate the MiniZinc executable
-        driver = shutil.which(name, path=path_bin)
-        if driver is not None:
-            driver = Path(driver)
+        executable = shutil.which(name, path=path_bin)
+        if executable is not None:
+            from minizinc.CLI import CLIDriver
+            executable = Path(executable)
+            driver = CLIDriver(executable)
 
-    if driver is not None:
-        driver = Driver(driver)
-        return driver
-    return None
+    return driver
