@@ -75,7 +75,7 @@ class Model:
                                      "model, consider using the branch method before assigning the parameter")
 
     def add_file(self, file: ParPath) -> None:
-        """Adds a MiniZinc file (``.mzn`` or ``.dzn``) to the model
+        """Adds a MiniZinc file (``.mzn``, ``.dzn``, or ``.json``) to the Model.
 
         Args:
             file (Union[Path, str]): Path to the file to be added

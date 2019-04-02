@@ -14,14 +14,21 @@ Solvers
 ..  autoclass:: minizinc.CLI.CLISolver
     :members:
 
+Models
+------
+
+..  autoclass:: minizinc.model.Method
+
+..  autoclass:: minizinc.model.Model
+    :members:
+    :special-members:  __getitem__, __setitem__
+
 Instances
 ---------
 
 ..  autoclass:: minizinc.instance.Instance
     :members:
     :special-members:  __getitem__, __setitem__
-
-..  autoclass:: minizinc.instance.Method
 
 ..  autoclass:: minizinc.CLI.CLIInstance
     :members:

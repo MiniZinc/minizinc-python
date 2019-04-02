@@ -48,14 +48,13 @@ class CLIInstance(Instance):
 
     @contextlib.contextmanager
     def files(self) -> List[Path]:
-        """Gets list of files of the Model
+        """Gets list of files of the Instance
 
-        Files will create a list of paths to the files that together form the Model. Parts of the Model supplied
-        as files will remain in this form. Code fragments and parameter data that was supplied separately will be saved
-        to files and are only guaranteed to exist while within the created context.
+        Files will create a list of paths to the files that together form the Instance. Parts of the Instance might be
+        saved to files and are only guaranteed to exist while within the created context.
 
         Yields:
-            List of Path to create the Model
+            List of Path objects to existing and created files
         """
         files: List[Path] = self._includes.copy()
         fragments = None

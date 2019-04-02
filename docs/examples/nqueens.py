@@ -1,11 +1,13 @@
 from minizinc import *
 
 # Load n-Queens model from file
-nqueens = Instance(["./nqueens.mzn"])
+nqueens = Model("./nqueens.mzn")
+# Find the MiniZinc solver configuration for Gecode
+gecode = Solver.lookup("gecode")
+# Create an Instance of the n-Queens model for Gecode
+instance = Instance(gecode, nqueens)
 # Assign 4 to n
-nqueens["n"] = 4
-# Solve using the Gecode solver
-gecode = load_solver("gecode")
-result = gecode.solve(nqueens)
+instance["n"] = 4
+result = instance.solve()
 # Output the array q
 print(result["q"])

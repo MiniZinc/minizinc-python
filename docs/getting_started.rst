@@ -39,8 +39,8 @@ programming community. In the MiniZinc Examples we can find the following model 
 The following Python code will use MiniZinc Python to:
 
 1. Load the model from a file (``nqueens.mzn``)
-2. Assign the value 4 to ``n``
-3. Solve the model using Gecode
+2. Create an instance of the model for the Gecode solver
+3. Assign the value 4 to ``n`` in the instance
 4. Print the positions of the Queens store in the array ``q``
 
 ..  literalinclude:: examples/nqueens.py
