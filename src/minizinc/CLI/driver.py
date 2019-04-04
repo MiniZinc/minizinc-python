@@ -68,7 +68,8 @@ class CLIDriver(Driver):
         minizinc.Instance = CLIInstance
         minizinc.Solver = CLISolver
 
-    def _run(self, args: List[str]):
+    def run(self, args: List[str]):
+        # TODO: Add documentation
         output = subprocess.run([self._executable, "--allow-multiple-assignments"] + args, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         if output.returncode != 0:
@@ -77,9 +78,9 @@ class CLIDriver(Driver):
 
     @property
     def minizinc_version(self) -> tuple:
-        return self._run(["--version"]).stdout.decode()
+        return self.run(["--version"]).stdout.decode()
 
     def check_version(self):
-        output = self._run(["--version"])
+        output = self.run(["--version"])
         match = re.search(rb"version (\d+)\.(\d+)\.(\d+)", output.stdout)
         return tuple([int(i) for i in match.groups()]) >= minizinc.driver.required_version

@@ -4,14 +4,14 @@
 
 import json
 from abc import ABC, abstractmethod
-from datetime import timedelta
 from pathlib import Path
 from typing import List, Optional, Tuple
 
 from .driver import Driver
+from .json import MZNJSONEncoder
 
 
-class Solver(Driver, ABC):
+class Solver(ABC):
     """The abstract representation of a MiniZinc solver configuration in MiniZinc Python.
 
     Attributes:
@@ -115,47 +115,6 @@ class Solver(Driver, ABC):
         """
         pass
 
-    @abstractmethod
-    def solve(self, instance,
-              timeout: Optional[timedelta] = None,
-              nr_solutions: Optional[int] = None,
-              processes: Optional[int] = None,
-              random_seed: Optional[int] = None,
-              free_search: bool = False,
-              all_solutions: bool = False,
-              ignore_errors=False,
-              **kwargs):
-        """Solves the Instance using the given solver configuration.
-
-        Find the solutions to the given MiniZinc instance using the given solver configuration. First, the Instance will
-        be ensured to be in a state where the solver specified in the solver configuration can understand the problem
-        and then the solver will be requested to find the appropriate solution(s) to the problem.
-
-        Args:
-            solver (Solver): The solver configuration used to compile and solve the instance
-            instance (Instance): The Instance to solve
-            timeout (Optional[timedelta]): Set the time limit for the process of solving the instance.
-            nr_solutions (Optional[int]): The requested number of solution. (Only available on satisfaction problems and
-                when the ``-n`` flag is supported by the solver).
-            processes (Optional[int]): Set the number of processes the solver can use. (Only available when the ``-p``
-                flag is supported by the solver).
-            random_seed (Optional[int]): Set the random seed for solver. (Only available when the ``-r`` flag is
-                supported by the solver).
-            free_search (bool): Allow the solver to ignore the search definition within the instance. (Only available
-                when the ``-f`` flag is supported by the solver).
-            all_solutions (bool): Request to solver to find all solutions. (Only available on satisfaction problems and
-                when the ``-n`` flag is supported by the solver)
-            ignore_errors (bool): Do not raise exceptions, when an error occurs the ``Result.status`` will be ``ERROR``.
-            **kwargs: Other flags to be passed onto the solver. (TODO: NOT YET IMPLEMENTED)
-
-        Returns:
-            Result: object containing values assigned and statistical information.
-
-        Raises:
-            MiniZincError: An error occurred while compiling or solving the model instance.
-        """
-        pass
-
     def output_configuration(self) -> str:
         """Formulates a valid JSON specification for the Solver
 
@@ -167,21 +126,4 @@ class Solver(Driver, ABC):
         Returns:
             str: JSON string containing the solver specification that can be read by MiniZinc
         """
-        info = {
-            "name": self.name,
-            "version": self.version,
-            "id": self.id,
-            "executable": self.executable,
-            "mznlib": self.mznlib,
-            "tags": self.tags,
-            "stdFlags": self.stdFlags,
-            "extraFlags": self.extraFlags,
-            "supportsMzn": self.supportsMzn,
-            "supportsFzn": self.supportsFzn,
-            "needsSolns2Out": self.needsSolns2Out,
-            "needsMznExecutable": self.needsMznExecutable,
-            "needsStdlibDir": self.needsStdlibDir,
-            "isGUIApplication": self.isGUIApplication,
-        }
-
-        return json.dumps(info, sort_keys=True, indent=4)
+        return json.dumps(self, sort_keys=True, indent=4, cls=MZNJSONEncoder)

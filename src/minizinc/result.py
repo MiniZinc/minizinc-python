@@ -9,9 +9,9 @@ from enum import Enum
 from subprocess import CompletedProcess
 from typing import Dict, List, NamedTuple, Optional, Sequence, Union
 
-from minizinc.json import MZNJSONDecoder
 from .error import MiniZincError, parse_error
 from .instance import Instance, Method
+from .json import MZNJSONDecoder
 from .solver import Solver
 
 

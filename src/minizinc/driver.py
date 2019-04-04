@@ -17,10 +17,6 @@ required_version = (2, 2, 0)
 
 class Driver(ABC):
     """The abstract representation of a MiniZinc driver within MiniZinc Python.
-
-    Attributes:
-        Solver (Type): A specialized Solver class to be used with the Driver
-        Instance (Type): A specialized Instance class to be used with the Driver
     """
     Solver: Type
     Instance: Type

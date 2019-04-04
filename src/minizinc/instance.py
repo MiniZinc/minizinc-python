@@ -29,16 +29,33 @@ class Instance(Model, ABC):
 
     @abstractmethod
     def solve(self, *args, **kwargs):
-        """Solve instance using the solver driver with which it was initialised.
+        """Solves the Instance using its given solver configuration.
 
-        Solve is a forwarding method to the Solver solve method that will use the current instance and the supplied
-        solver configuration.
+        Find the solutions to the given MiniZinc instance using the given solver configuration. First, the Instance will
+        be ensured to be in a state where the solver specified in the solver configuration can understand the problem
+        and then the solver will be requested to find the appropriate solution(s) to the problem.
 
         Args:
-            *args: Arguments to be forwarded to the Driver solve method.
-            **kwargs: Keyword arguments to be forwarded to the Driver solve method.
+            solver (Solver): The solver configuration used to compile and solve the instance
+            instance (Instance): The Instance to solve
+            timeout (Optional[timedelta]): Set the time limit for the process of solving the instance.
+            nr_solutions (Optional[int]): The requested number of solution. (Only available on satisfaction problems and
+                when the ``-n`` flag is supported by the solver).
+            processes (Optional[int]): Set the number of processes the solver can use. (Only available when the ``-p``
+                flag is supported by the solver).
+            random_seed (Optional[int]): Set the random seed for solver. (Only available when the ``-r`` flag is
+                supported by the solver).
+            free_search (bool): Allow the solver to ignore the search definition within the instance. (Only available
+                when the ``-f`` flag is supported by the solver).
+            all_solutions (bool): Request to solver to find all solutions. (Only available on satisfaction problems and
+                when the ``-n`` flag is supported by the solver)
+            ignore_errors (bool): Do not raise exceptions, when an error occurs the ``Result.status`` will be ``ERROR``.
+            **kwargs: Other flags to be passed onto the solver. (TODO: NOT YET IMPLEMENTED)
 
         Returns:
-            Result: A MiniZinc Result object.
+            Result: object containing values assigned and statistical information.
+
+        Raises:
+            MiniZincError: An error occurred while compiling or solving the model instance.
         """
         pass
