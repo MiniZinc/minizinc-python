@@ -8,8 +8,9 @@ import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional, Type
 
-from ..dzn_parser import UnknownExpression
+from ..dzn import UnknownExpression
 from ..instance import Instance, Method
+from ..json import MZNJSONEncoder
 from ..model import Model
 from .solver import CLISolver
 
@@ -69,7 +70,7 @@ class CLIInstance(Instance):
                     tmp_data[k] = v
             if len(tmp_data) > 0:
                 data = tempfile.NamedTemporaryFile(prefix="mzn_data", suffix=".json")
-                data.write(json.dumps(tmp_data).encode())
+                data.write(json.dumps(tmp_data, cls=MZNJSONEncoder).encode())
                 data.flush()
                 data.seek(0)
                 files.append(Path(data.name))

@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from lark.exceptions import LarkError
 
-from .dzn_parser import parse_dzn
+from .dzn import parse_dzn
 
 ParPath = Union[Path, str]
 

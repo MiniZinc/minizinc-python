@@ -9,6 +9,7 @@ from enum import Enum
 from subprocess import CompletedProcess
 from typing import Dict, List, NamedTuple, Optional, Sequence, Union
 
+from minizinc.json import MZNJSONDecoder
 from .error import MiniZincError, parse_error
 from .instance import Instance, Method
 from .solver import Solver
@@ -184,7 +185,7 @@ class Result:
             sol_json = re.sub(rb"^\w*%.*\n?", b"", raw_sol, flags=re.MULTILINE)
             if b"{" not in sol_json:
                 continue
-            dict = json.loads(sol_json)
+            dict = json.loads(sol_json, cls=MZNJSONDecoder)
             asgn = {}
             objective = None
             stats = {}

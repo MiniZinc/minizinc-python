@@ -1,6 +1,7 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 from pathlib import Path
 
 from lark import Lark, Transformer
@@ -72,11 +73,11 @@ class TreeToDZN(Transformer):
         return str(s[0][1:-1])
 
     @staticmethod
-    def true(s):
+    def true(_):
         return True
 
     @staticmethod
-    def false(s):
+    def false(_):
         return False
 
     unknown = arg1_construct(UnknownExpression)

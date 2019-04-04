@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import minizinc
+from minizinc.json import MZNJSONDecoder
 
 from ..instance import Instance
 from ..model import Method
@@ -26,6 +27,8 @@ class CLISolver(Solver, CLIDriver):
         _generate (bool): True if the solver needs to be generated
     """
     _generate: bool
+    FIELDS = ["version", "executable", "mznlib", "tags", "stdFlags", "extraFlags", "supportsMzn", "supportsFzn",
+              "needsSolns2Out", "needsMznExecutable", "needsStdlibDir", "isGUIApplication"]
 
     def __init__(self, name: str, version: str, id: str, executable: str, driver: Optional[CLIDriver] = None):
         # Set required fields
@@ -64,7 +67,7 @@ class CLISolver(Solver, CLIDriver):
         else:
             raise LookupError("Solver is not linked to a MiniZinc driver")
         # Find all available solvers
-        solvers = json.loads(output.stdout)
+        solvers = json.loads(output.stdout)  # TODO: Possibly integrate with the MZNJSONDecoder
 
         # Find the specified solver
         lookup = None
@@ -88,10 +91,9 @@ class CLISolver(Solver, CLIDriver):
     def load(cls, path: Path, driver: Optional[CLIDriver] = None):
         if not path.exists():
             raise FileNotFoundError
-        info = json.loads(path.read_bytes())
-
-        solver = cls._from_dict(info)
-
+        solver = json.loads(path.read_bytes(), cls=MZNJSONDecoder)
+        if isinstance(solver, cls):
+            solver = cls._from_dict(solver)
         return solver
 
     @classmethod
@@ -196,7 +198,7 @@ class CLISolver(Solver, CLIDriver):
         assert isinstance(instance, CLIInstance)
         with instance.files() as files:
             output = self._run(["--model-interface-only"] + files)
-        interface = json.loads(output.stdout)
+        interface = json.loads(output.stdout)  # TODO: Possibly integrate with the MZNJSONDecoder
         instance._method = Method.from_string(interface["method"])
         instance.input = {}
         for key, value in interface["input"].items():
