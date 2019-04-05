@@ -70,8 +70,8 @@ class CLIDriver(Driver):
 
     def run(self, args: List[str]):
         # TODO: Add documentation
-        output = subprocess.run([self._executable, "--allow-multiple-assignments"] + args, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
+        output = subprocess.run([self._executable, "--allow-multiple-assignments"] + args, stdin=None,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if output.returncode != 0:
             raise parse_error(output.stderr)
         return output

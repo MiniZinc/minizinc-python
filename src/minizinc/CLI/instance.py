@@ -33,8 +33,8 @@ class CLIInstance(Instance):
         self._input = None
         self._output = None
         if model is not None:
-            self._includes = model._includes[:]
-            self._code_fragments = model._code_fragments[:]
+            self._includes = model._includes.copy()
+            self._code_fragments = model._code_fragments.copy()
             self._data = dict.copy(model._data)
 
     @contextlib.contextmanager
@@ -65,7 +65,7 @@ class CLIInstance(Instance):
         files: List[Path] = self._includes.copy()
         fragments = None
         data = None
-        tmp_fragments = fragments[:] if fragments is not None else []
+        tmp_fragments = self._code_fragments.copy()
         if len(self._data) > 0:
             tmp_data = {}
             for k, v in self._data.items():
@@ -79,7 +79,7 @@ class CLIInstance(Instance):
                 data.flush()
                 data.seek(0)
                 files.append(Path(data.name))
-        if len(tmp_fragments) > 0:
+        if len(tmp_fragments) > 0 or len(files) == 0:
             fragments = tempfile.NamedTemporaryFile(prefix="mzn_fragment", suffix=".mzn")
             for code in tmp_fragments:
                 fragments.write(code.encode())
@@ -113,6 +113,7 @@ class CLIInstance(Instance):
         instance.
         """
         with self.files() as files:
+            assert len(files) > 0
             output = self._solver.run(["--model-interface-only"] + files)
         interface = json.loads(output.stdout)  # TODO: Possibly integrate with the MZNJSONDecoder
         self._method = Method.from_string(interface["method"])

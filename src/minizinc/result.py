@@ -241,10 +241,11 @@ class Result:
         for i in solution_nrs:
             sol = self._solutions[i]
             with self.instance.branch() as instance:
+                instance._solver = solver  # TODO: This is not allowed behaviour
                 for k, v in sol.assignments.items():
                     instance[k] = v
                 try:
-                    res = solver.solve(instance, timeout=timedelta(seconds=1))
+                    res = instance.solve(timeout=timedelta(seconds=1))
                     if self.status != res.status:
                         if res.status in [Status.SATISFIED, Status.OPTIMAL_SOLUTION] and \
                                 self.status in [Status.SATISFIED, Status.OPTIMAL_SOLUTION, Status.ALL_SOLUTIONS]:
