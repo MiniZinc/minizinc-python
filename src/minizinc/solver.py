@@ -15,7 +15,6 @@ class Solver(ABC):
     """The abstract representation of a MiniZinc solver configuration in MiniZinc Python.
 
     Attributes:
-        driver (Driver): MiniZinc driver responsible for interacting with MiniZinc.
         name (str): The name of the solver.
         version (str): The version of the solver.
         id (str): A unique identifier for the solver, “reverse domain name” notation.
