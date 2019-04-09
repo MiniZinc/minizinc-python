@@ -20,11 +20,11 @@ dzn_grammar = r"""
          | "false"      -> false
     list: [value ("," value)*]
     array: "[" list "]"
-    array2d: "[" "|" [list ("|" list)*] "|" "]"
+    array2d: "[" "|" [ list ("|" list)*] "|" "]"
     set: "{" list "}"
 
-    float: /-?(\d+\.\d+)|(\d+\.\d+[Ee][-+]?\d+)|(\d+[Ee][-+]?\d+)/
     int: /-?((0o[0-7]+)|(0x[0-9A-Fa-f]+)|(\d+))/
+    float: /-?((\d+\.\d+[Ee][-+]?\d+)|(\d+[Ee][-+]?\d+)|(\d+\.\d+))/
     string: ESCAPED_STRING
 
     unknown: /[^[{;]+[^;]*/
