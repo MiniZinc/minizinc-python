@@ -3,11 +3,12 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from pathlib import Path
+from typing import Union
 
 from lark import Lark, Transformer
 
 dzn_grammar = r"""
-    items: [item (";" item)* ";"?]  
+    items: [item (";" item)* ";"?]
     item: ident "=" value | ident "=" unknown
     ident: /([A-Za-z][A-Za-z0-9_]*)|(\'[^\']*\')/
     value: array
@@ -89,7 +90,9 @@ class TreeToDZN(Transformer):
 dzn_parser = Lark(dzn_grammar, start='items', parser='lalr')
 
 
-def parse_dzn(file: Path):
-    tree = dzn_parser.parse(file.read_text())
+def parse_dzn(dzn: Union[Path, str]):
+    if isinstance(dzn, Path):
+        dzn = dzn.read_text()
+    tree = dzn_parser.parse(dzn)
     dzn_dict = TreeToDZN().transform(tree)
     return dzn_dict
