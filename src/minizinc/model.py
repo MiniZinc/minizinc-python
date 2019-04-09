@@ -84,7 +84,6 @@ class Model:
 
         This method overrides the default implementation of item access (``obj[key]``) for models. Item access on a
         Model can be used to get parameters of the Model.
-        **Parameters not set through Python can not be accessed.**
 
         Args:
             key (str): Identifier of the parameter.
