@@ -23,8 +23,8 @@ dzn_grammar = r"""
     array2d: "[" "|" [list ("|" list)*] "|" "]"
     set: "{" list "}"
 
-    int: /-?(0o[0-7]+)|(0x[0-9A-Fa-f]+)|(\d+)/
     float: /-?(\d+\.\d+)|(\d+\.\d+[Ee][-+]?\d+)|(\d+[Ee][-+]?\d+)/
+    int: /-?((0o[0-7]+)|(0x[0-9A-Fa-f]+)|(\d+))/
     string: ESCAPED_STRING
 
     unknown: /[^[{;]+[^;]*/
@@ -49,9 +49,9 @@ class TreeToDZN(Transformer):
     @staticmethod
     def int(s):
         i = s[0]
-        if i.startswith("0o"):
+        if i.startswith("0o") or i.startswith("-0o"):
             return int(i, 8)
-        elif i.startswith("0x"):
+        elif i.startswith("0x") or i.startswith("-0x"):
             return int(i, 16)
         else:
             return int(i)
