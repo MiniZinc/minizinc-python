@@ -49,9 +49,12 @@ class TreeToDZN(Transformer):
     @staticmethod
     def int(s):
         i = s[0]
-        if i.startswith
-        # TODO: Other bases
-        return int(s[0])
+        if i.startswith("0o"):
+            return int(i, 8)
+        elif i.startswith("0x"):
+            return int(i, 16)
+        else:
+            return int(i)
 
     @staticmethod
     def item(s):
@@ -75,7 +78,7 @@ class TreeToDZN(Transformer):
 
     items = dict
     unknown = arg1_construct(UnknownExpression)
-    set = arg1_construct(set)  # TODO: Proper set handling
+    set = arg1_construct(set)
     list = list
     array = arg1_construct(lambda i: i)
     ident = arg1_construct(str)
