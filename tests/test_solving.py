@@ -106,3 +106,13 @@ class CheckResults(InstanceTestCase):
         assert self.instance.method == Method.SATISFY
         result = self.instance.solve(nr_solutions=5)
         assert result.check(self.other_solver, [1, 2])
+
+
+class CheckEmpty(InstanceTestCase):
+    code = """int: x = 5;"""
+
+    def test_empty(self):
+        assert self.instance.method == Method.SATISFY
+        result = self.instance.solve()
+        assert len(result) == 1
+        assert len(result[0]) == 0
