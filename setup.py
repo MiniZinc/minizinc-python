@@ -7,7 +7,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="minizinc",
-    version="0.1.0-alpha.2",
+    version="0.1.0-alpha.3",
     python_requires='>=3.6',
     author="Jip J. Dekker",
     author_email="jip.dekker@monash.edu",
