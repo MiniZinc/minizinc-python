@@ -178,6 +178,13 @@ class CLIInstance(Instance):
         if timeout is not None:
             cmd.extend(["--time-limit", str(int(timeout.total_seconds() * 1000))])
 
+        # TODO: Should we use --fzn-flags??
+        for flag, value in kwargs.items():
+            if "--" + flag in [f[0] for f in self._solver.extraFlags]:  # TODO: Check type
+                cmd.extend([flag, str(value)])
+            else:
+                raise NotImplementedError("Solver does not support the --%s flag" % flag)
+
         # Add files as last arguments
         with self.files() as files:
             cmd.extend(files)
