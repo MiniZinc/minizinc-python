@@ -40,7 +40,8 @@ class MZNJSONDecoder(JSONDecoder):
         from minizinc.CLI import CLISolver
         if len(obj) == 1 and "set" in obj:
             return set(obj["set"])
-        elif all([i in CLISolver.FIELDS for i in obj.keys()]):
+        elif all([i in obj.keys() for i in ["name", "version", "id", "executable"]]) \
+                and all([i in CLISolver.FIELDS for i in obj.keys()]):
             return CLISolver._from_dict(obj)
         else:
             return obj

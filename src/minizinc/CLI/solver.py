@@ -88,7 +88,7 @@ class CLISolver(Solver, CLIDriver):
         if not path.exists():
             raise FileNotFoundError
         solver = json.loads(path.read_bytes(), cls=MZNJSONDecoder)
-        if isinstance(solver, cls):
+        if not isinstance(solver, cls):
             solver = cls._from_dict(solver)
         return solver
 
@@ -101,15 +101,15 @@ class CLISolver(Solver, CLIDriver):
 
         # Set all specified options
         ret.mznlib = dict.get("mznlib", ret.mznlib)
-        ret.tags = dict.get("tags", ret.mznlib)
-        ret.stdFlags = dict.get("stdFlags", ret.mznlib)
+        ret.tags = dict.get("tags", ret.tags)
+        ret.stdFlags = dict.get("stdFlags", ret.stdFlags)
         ret.extraFlags = dict.get("extraFlags", ret.extraFlags)
-        ret.supportsMzn = dict.get("supportsMzn", ret.mznlib)
-        ret.supportsFzn = dict.get("supportsFzn", ret.mznlib)
-        ret.needsSolns2Out = dict.get("needsSolns2Out", ret.mznlib)
-        ret.needsMznExecutable = dict.get("needsMznExecutable", ret.mznlib)
-        ret.needsStdlibDir = dict.get("needsStdlibDir", ret.mznlib)
-        ret.isGUIApplication = dict.get("isGUIApplication", ret.mznlib)
+        ret.supportsMzn = dict.get("supportsMzn", ret.supportsMzn)
+        ret.supportsFzn = dict.get("supportsFzn", ret.supportsFzn)
+        ret.needsSolns2Out = dict.get("needsSolns2Out", ret.needsSolns2Out)
+        ret.needsMznExecutable = dict.get("needsMznExecutable", ret.needsMznExecutable)
+        ret.needsStdlibDir = dict.get("needsStdlibDir", ret.needsStdlibDir)
+        ret.isGUIApplication = dict.get("isGUIApplication", ret.isGUIApplication)
 
         return ret
 
