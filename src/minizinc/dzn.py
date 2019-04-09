@@ -7,7 +7,7 @@ from pathlib import Path
 from lark import Lark, Transformer
 
 dzn_grammar = r"""
-    items: item ";"? | item ";" items
+    items: [item (";" item)* ";"?]  
     item: ident "=" value | ident "=" unknown
     ident: /([A-Za-z][A-Za-z0-9_]*)|(\'[^\']*\')/
     value: array
@@ -48,17 +48,10 @@ def arg1_construct(cls):
 class TreeToDZN(Transformer):
     @staticmethod
     def int(s):
+        i = s[0]
+        if i.startswith
         # TODO: Other bases
         return int(s[0])
-
-    @staticmethod
-    def items(s):
-        item = s[0]
-        if len(s) == 1:
-            return {item[0]: item[1]}
-        else:
-            s[1][item[0]] = item[1]
-            return s[1]
 
     @staticmethod
     def item(s):
@@ -80,6 +73,7 @@ class TreeToDZN(Transformer):
     def false(_):
         return False
 
+    items = dict
     unknown = arg1_construct(UnknownExpression)
     set = arg1_construct(set)  # TODO: Proper set handling
     list = list
