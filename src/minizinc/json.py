@@ -39,7 +39,15 @@ class MZNJSONDecoder(JSONDecoder):
     def object_hook(obj):
         from minizinc.CLI import CLISolver
         if len(obj) == 1 and "set" in obj:
-            return set(obj["set"])
+            li = []
+            for item in obj["set"]:
+                if isinstance(item, list):
+                    assert len(item) == 2
+                    li.extend([i for i in range(item[0], item[1]+1)])
+                else:
+                    assert isinstance(item, int)
+                    li.append(item)
+            return set(li)
         elif all([i in obj.keys() for i in ["name", "version", "id", "executable"]]) \
                 and all([i in CLISolver.FIELDS for i in obj.keys()]):
             return CLISolver._from_dict(obj)
