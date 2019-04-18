@@ -77,7 +77,7 @@ class Model:
         else:
             if self._data[key] != value:
                 raise AssertionError("The parameter '%s' cannot be assigned multiple values. If you are changing the "
-                                     "model, consider using the branch method before assigning the parameter")
+                                     "model, consider using the branch method before assigning the parameter" % key)
 
     def __getitem__(self, key: str) -> Any:
         """Get parameter of Model.
