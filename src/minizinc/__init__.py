@@ -10,7 +10,6 @@ from .model import Method, Model
 from .solver import Solver
 
 Instance = Instance
-Solver = Solver
 
 #: Default MiniZinc driver used by the python package
 default_driver: Optional[Driver] = find_driver()

@@ -6,12 +6,13 @@ import re
 import subprocess
 import warnings
 from pathlib import Path
-from typing import List, Type
+from typing import List, Optional, Type
 
 import minizinc
 
 from ..driver import Driver
 from ..error import parse_error
+from ..solver import Solver
 
 
 def to_python_type(mzn_type: dict) -> Type:
@@ -63,15 +64,19 @@ class CLIDriver(Driver):
         super(CLIDriver, self).__init__()
 
     def make_default(self) -> None:
-        from . import CLIInstance, CLISolver
+        from . import CLIInstance
         minizinc.default_driver = self
         minizinc.Instance = CLIInstance
-        minizinc.Solver = CLISolver
 
-    def run(self, args: List[str]):
+    def run(self, args: List[str], solver: Optional[Solver] = None):
         # TODO: Add documentation
-        output = subprocess.run([self._executable, "--allow-multiple-assignments"] + args, stdin=None,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if solver is None:
+            output = subprocess.run([self._executable, "--allow-multiple-assignments"] + args, stdin=None,
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        else:
+            with solver.configuration() as conf:
+                output = subprocess.run([self._executable, "--solver", conf, "--allow-multiple-assignments"] + args,
+                                        stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if output.returncode != 0:
             raise parse_error(output.stderr)
         return output

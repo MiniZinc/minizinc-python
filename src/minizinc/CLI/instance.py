@@ -9,23 +9,26 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Type
 
+import minizinc
+
 from ..dzn import UnknownExpression
 from ..instance import Instance, Method
 from ..json import MZNJSONEncoder
 from ..model import Model
 from ..result import Result
-from .driver import to_python_type
-from .solver import CLISolver
+from ..solver import Solver
+from .driver import CLIDriver, to_python_type
 
 
 class CLIInstance(Instance):
-    _solver: CLISolver
+    _driver: CLIDriver
+    _solver: Solver
     _input: Optional[Dict[str, Type]]
     _output: Optional[Dict[str, Type]]
     _method: Optional[Method]
     _parent: Optional[Instance]
 
-    def __init__(self, solver: CLISolver, model: Optional[Model] = None):
+    def __init__(self, solver: Solver, model: Optional[Model] = None, driver: Optional[CLIDriver] = None):
         super().__init__(solver, model)
         self._solver = solver
         self._parent = None
@@ -36,6 +39,11 @@ class CLIInstance(Instance):
             self._includes = model._includes.copy()
             self._code_fragments = model._code_fragments.copy()
             self._data = dict.copy(model._data)
+        if driver is not None:
+            self._driver = driver
+        else:
+            self._driver = minizinc.default_driver
+        assert isinstance(self._driver, CLIDriver)
 
     @contextlib.contextmanager
     def branch(self) -> Instance:  # TODO: Self reference
@@ -114,7 +122,7 @@ class CLIInstance(Instance):
         """
         with self.files() as files:
             assert len(files) > 0
-            output = self._solver.run(["--model-interface-only"] + files)
+            output = self._driver.run(["--model-interface-only"] + files, self._solver)
         interface = json.loads(output.stdout)  # TODO: Possibly integrate with the MZNJSONDecoder
         self._method = Method.from_string(interface["method"])
         self._input = {}
@@ -189,5 +197,5 @@ class CLIInstance(Instance):
         with self.files() as files:
             cmd.extend(files)
             # Run the MiniZinc process
-            output = self._solver.run(cmd)
+            output = self._driver.run(cmd, self._solver)
         return Result.from_process(self, output, ignore_errors)

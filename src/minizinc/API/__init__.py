@@ -4,6 +4,5 @@
 
 from .driver import APIDriver
 from .instance import APIInstance
-from .solver import APISolver
 
-__all__ = [APIDriver, APIInstance, APISolver]
+__all__ = [APIDriver, APIInstance]
