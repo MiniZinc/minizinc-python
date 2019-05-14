@@ -4,6 +4,7 @@
 
 import contextlib
 import json
+import re
 import tempfile
 from datetime import timedelta
 from pathlib import Path
@@ -15,7 +16,7 @@ from ..dzn import UnknownExpression
 from ..instance import Instance, Method
 from ..json import MZNJSONEncoder
 from ..model import Model
-from ..result import Result
+from ..result import Result, set_stat
 from ..solver import Solver
 from .driver import CLIDriver, to_python_type
 
@@ -199,3 +200,35 @@ class CLIInstance(Instance):
             # Run the MiniZinc process
             output = self._driver.run(cmd, self._solver)
         return Result.from_process(self, output, ignore_errors)
+
+    @contextlib.contextmanager
+    def flat(self):
+        """Produce a FlatZinc file for the instance.
+
+        Yields:
+            Tuple containing the files of the FlatZinc model, the output model and a dictionary the statistics of
+            flattening
+        """
+        cmd = ["--compile", "--statistics"]
+
+        fzn = tempfile.NamedTemporaryFile(prefix="fzn_", suffix=".fzn")
+        cmd.extend(["--fzn", fzn.name])
+        ozn = tempfile.NamedTemporaryFile(prefix="ozn_", suffix=".fzn")
+        cmd.extend(["--ozn", ozn.name])
+
+        # Add files as last arguments
+        with self.files() as files:
+            cmd.extend(files)
+            # Run the MiniZinc process
+            output = self._driver.run(cmd, self._solver)
+
+        statistics = {}
+        matches = re.findall(rb"%%%mzn-stat:? (\w*)=(.*)", output.stdout)
+        for m in matches:
+            set_stat(statistics, m[0].decode(), m[1].decode())
+
+        try:
+            yield (fzn, ozn, statistics)
+        finally:
+            fzn.close()
+            ozn.close()
