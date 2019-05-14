@@ -7,10 +7,10 @@ from json import JSONDecoder, JSONEncoder
 
 class MZNJSONEncoder(JSONEncoder):
     def default(self, o):
-        from minizinc.CLI import CLISolver
+        from .solver import Solver
         if isinstance(o, set):
             return {"set": [i for i in o]}
-        elif isinstance(o, CLISolver):
+        elif isinstance(o, Solver):
             return {
                 "name": o.name,
                 "version": o.version,
