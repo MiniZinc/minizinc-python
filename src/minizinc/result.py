@@ -14,6 +14,59 @@ from .instance import Instance, Method
 from .json import MZNJSONDecoder
 from .solver import Solver
 
+StatisticTypes = {
+    "nodes": int,  # Number of search nodes
+    "failures": int,  # Number of leaf nodes that were failed
+    "restarts": int,  # Number of times the solver restarted the search
+    "variables": int,  # Number of variables
+    "intVariables": int,  # Number of integer variables created by the solver
+    "boolVariables": int,  # Number of Boolean variables created by the solver
+    "floatVariables": int,  # Number of floating point variables created by the solver
+    "setVariables": int,  # Number of set variables created by the solver
+    "propagators": int,  # Number of propagators created by the solver
+    "propagations": int,  # Number of propagator invocations
+    "peakDepth": int,  # Peak depth of search tree
+    "nogoods": int,  # Number of nogoods created
+    "backjumps": int,  # Number of backjumps
+    "peakMem": float,  # Peak memory (in Mbytes)
+    "initTime": timedelta,  # Initialisation time
+    "solveTime": timedelta,  # Solving time
+    "flatTime": timedelta,  # Flattening time
+    "paths": int,  # Number of paths generated
+    "flatBoolVars": int,  # Number of Boolean variables in the flat model
+    "flatFloatVars": int,  # Number of floating point variables in the flat model
+    "flatIntVars": int,  # Number of integer variables in the flat model
+    "flatSetVars": int,  # Number of set variables in the flat model
+    "flatBoolConstraints": int,  # Number of Boolean constraints in the flat model
+    "flatFloatConstraints": int,  # Number of floating point constraints in the flat model
+    "flatIntConstraints": int,  # Number of integer constraints in the flat model
+    "flatSetConstraints": int,  # Number of set constraints in the flat model
+    "method": str,  # Optimisation method in the Flat Model
+}
+
+
+def set_stat(stats: Dict[str, Union[float, int, timedelta]], name: str, value: str):
+    """Set statistical value in the result object.
+
+    Set solving statiscal value within the result object. This value is converted from string to the appropriate
+    type as suggested by the statistical documentation in MiniZinc. Timing statistics, expressed through floating
+    point numbers in MiniZinc, will be converted to timedelta objects.
+
+    Args:
+        stats: The dictionary to be extended with the new statistical value
+        name: The name under which the statistical value will be stored.
+        value: The value for the statistical value to be converted and stored.
+    """
+    tt = StatisticTypes.get(name, str)
+    if tt is timedelta:
+        time_us = int(float(value) * 1000000)
+        stats[name] = timedelta(microseconds=time_us)
+    elif tt is str and ("time" in name or "Time" in name):
+        time_us = int(float(value) * 1000000)
+        stats[name] = timedelta(microseconds=time_us)
+    else:
+        stats[name] = tt(value)
+
 
 class Status(Enum):
     """Enumeration to represent the status of the solving process.
@@ -120,25 +173,6 @@ class Result:
     complete: bool
     _solutions: List[Solution]
 
-    StatisticTypes = {
-        "nodes": int,  # Number of search nodes
-        "failures": int,  # Number of leaf nodes that were failed
-        "restarts": int,  # Number of times the solver restarted the search
-        "variables": int,  # Number of variables
-        "intVariables": int,  # Number of integer variables created
-        "boolVariables": int,  # Number of bool variables created
-        "floatVariables": int,  # Number of float variables created
-        "setVariables": int,  # Number of set variables created
-        "propagators": int,  # Number of propagators created
-        "propagations": int,  # Number of propagator invocations
-        "peakDepth": int,  # Peak depth of search tree
-        "nogoods": int,  # Number of nogoods created
-        "backjumps": int,  # Number of backjumps
-        "peakMem": float,  # Peak memory (in Mbytes)
-        "initTime": timedelta,  # Initialisation time (in seconds)
-        "solveTime": timedelta,  # Solving time (in seconds)
-    }
-
     def __init__(self):
         self.status = Status.ERROR
         self.error = None
@@ -202,7 +236,7 @@ class Result:
 
         matches = re.findall(rb"%%%mzn-stat:? (\w*)=(.*)", proc.stdout)
         for m in matches:
-            res.set_stat(m[0].decode(), m[1].decode())
+            set_stat(res.stats, m[0].decode(), m[1].decode())
 
         # Determine if the solver completed all work
         if instance.method == Method.SATISFY:
@@ -257,24 +291,6 @@ class Result:
                         return False
 
         return True
-
-    def set_stat(self, name: str, value: str):
-        """Set statistical value in the result object.
-
-        Set solving statiscal value within the result object. This value is converted from string to the appropriate
-        type as suggested by the statistical documentation in MiniZinc. Timing statistics, expressed through floating
-        point numbers in MiniZinc, will be converted to timedelta objects.
-
-        Args:
-            name: The name under which the statistical value will be stored.
-            value: The value for the statistical value to be converted and stored.
-        """
-        tt = self.StatisticTypes.get(name, str)
-        if tt is timedelta:
-            time_us = int(float(value) * 1000000)
-            self.stats[name] = timedelta(microseconds=time_us)
-        else:
-            self.stats[name] = tt(value)
 
     def __getitem__(self, key):
         """Retrieves solution or a member of a solution.
