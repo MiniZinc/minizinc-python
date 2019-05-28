@@ -96,15 +96,19 @@ class Model:
         """
         return self._data.__getitem__(key)
 
-    def add_file(self, file: ParPath) -> None:
+    def add_file(self, file: ParPath, parse_data: bool = True) -> None:
         """Adds a MiniZinc file (``.mzn``, ``.dzn``, or ``.json``) to the Model.
 
         Args:
             file (Union[Path, str]): Path to the file to be added
+            parse_data (bool): Signal if the data should be parsed for usage within Python.
         """
         if not isinstance(file, Path):
             file = Path(file)
         assert file.exists()
+        if not parse_data:
+            self._includes.append(file)
+            return
         if file.suffix == ".json":
             data = json.load(file.open())
             for k, v in data.items():
