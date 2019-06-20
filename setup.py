@@ -16,9 +16,9 @@ setup(
     long_description_content_type="text/markdown",
     url="http://minizinc.org",
     project_urls={
-        'Bug Tracker': 'https://gitlab.com/minizinc/python/issues',
+        'Bug Tracker': 'https://gitlab.com/minizinc/minizinc-python/issues',
         "Documentation": "https://minizinc-python.readthedocs.io",
-        'Source': 'https://gitlab.com/minizinc/python',
+        'Source': 'https://gitlab.com/minizinc/minizinc-python',
     },
     packages=find_packages(where="src"),
     package_dir={'': 'src'},
