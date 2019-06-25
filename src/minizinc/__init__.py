@@ -5,6 +5,7 @@
 from typing import Optional
 
 from .driver import Driver, find_driver
+from .error import MiniZincError
 from .instance import Instance
 from .model import Method, Model
 from .solver import Solver
@@ -19,4 +20,4 @@ else:
     import warnings
     warnings.warn("MiniZinc was not found on the system: no default driver could be initialised", RuntimeWarning)
 
-__all__ = ["default_driver", "find_driver", "Driver", "Instance", "Method", "Model", "Solver"]
+__all__ = ["default_driver", "find_driver", "Driver", "Instance", "Method", "MiniZincError", "Model", "Solver"]
