@@ -17,6 +17,6 @@ before_script:
 test:
   script:
     - pip install tox
-    - tox -e check,py36,docs
+    - tox -e check,py37,docs
   artifacts:
     paths: [dist/]
