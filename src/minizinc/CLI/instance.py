@@ -13,6 +13,7 @@ from typing import Dict, List, Optional, Type
 import minizinc
 
 from ..dzn import UnknownExpression
+from ..error import parse_error
 from ..instance import Instance, Method
 from ..json import MZNJSONEncoder
 from ..model import Model
@@ -199,7 +200,18 @@ class CLIInstance(Instance):
             cmd.extend(files)
             # Run the MiniZinc process
             output = self._driver.run(cmd, self._solver)
-        return Result.from_process(self, output, ignore_errors)
+
+        # Raise error if required
+        if output.returncode != 0:
+            err = parse_error(output.stderr)
+            if ignore_errors:
+                res = Result()
+                res.error = err
+                return res
+            else:
+                raise err
+
+        return Result.from_output(self, output.stdout, all_solutions, nr_solutions)
 
     @contextlib.contextmanager
     def flat(self):
