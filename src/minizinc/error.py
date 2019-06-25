@@ -88,11 +88,6 @@ def parse_error(error_txt: bytes) -> MiniZincError:
             columns = (int(match[4].decode()), int(match[5].decode()))
         location = Location(Path(match[1].decode()), int(match[2].decode()), columns)
 
-    message = ""
-    lst = error_txt.split(b"\n")
-    if lst:
-        while len(lst) > 1 and lst[-1] == b"":
-            lst.pop()
-        message = lst[-1].split(b"rror:", 1)[-1].strip()
+    message = error_txt
 
     return error(location, message.decode())
