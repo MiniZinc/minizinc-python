@@ -11,9 +11,6 @@ Solvers
 ..  autoclass:: minizinc.solver.Solver
     :members:
 
-..  autoclass:: minizinc.CLI.CLISolver
-    :members:
-
 Models
 ------
 
