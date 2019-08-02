@@ -4,6 +4,7 @@
 
 import contextlib
 import json
+import os
 import re
 import tempfile
 from datetime import timedelta
@@ -84,17 +85,15 @@ class CLIInstance(Instance):
                 else:
                     tmp_data[k] = v
             if len(tmp_data) > 0:
-                data = tempfile.NamedTemporaryFile(prefix="mzn_data", suffix=".json")
+                data = tempfile.NamedTemporaryFile(prefix="mzn_data", suffix=".json", delete=False)
                 data.write(json.dumps(tmp_data, cls=MZNJSONEncoder).encode())
-                data.flush()
-                data.seek(0)
+                data.close()
                 files.append(Path(data.name))
         if len(tmp_fragments) > 0 or len(files) == 0:
-            fragments = tempfile.NamedTemporaryFile(prefix="mzn_fragment", suffix=".mzn")
+            fragments = tempfile.NamedTemporaryFile(prefix="mzn_fragment", suffix=".mzn", delete=False)
             for code in tmp_fragments:
                 fragments.write(code.encode())
-            fragments.flush()
-            fragments.seek(0)
+            fragments.close()
             files.append(Path(fragments.name))
         try:
             if self._parent is not None:
@@ -105,9 +104,9 @@ class CLIInstance(Instance):
                 yield files
         finally:
             if fragments is not None:
-                fragments.close()
+                os.remove(fragments.name)
             if data is not None:
-                data.close()
+                os.remove(data.name)
 
     @property
     def input(self):
@@ -192,7 +191,8 @@ class CLIInstance(Instance):
             if not flag.startswith("-"):
                 flag = "--" + flag
             if type(value) is bool:
-                if value: cmd.append(flag)
+                if value:
+                    cmd.append(flag)
             else:
                 cmd.extend([flag, str(value)])
 
