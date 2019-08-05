@@ -200,7 +200,8 @@ class CLIInstance(Instance):
         with self.files() as files:
             cmd.extend(files)
             # Run the MiniZinc process
-            output = self._driver.run(cmd, solver=self._solver, timeout=(timeout + timedelta(seconds=2)))
+            hard_timeout = timeout + timedelta(seconds=2) if timeout is not None else None
+            output = self._driver.run(cmd, solver=self._solver, timeout=hard_timeout)
 
         # Raise error if required
         if output.returncode != 0:
