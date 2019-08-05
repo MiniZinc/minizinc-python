@@ -200,7 +200,7 @@ class CLIInstance(Instance):
         with self.files() as files:
             cmd.extend(files)
             # Run the MiniZinc process
-            output = self._driver.run(cmd, self._solver)
+            output = self._driver.run(cmd, solver=self._solver, timeout=(timeout + timedelta(seconds=2)))
 
         # Raise error if required
         if output.returncode != 0:
@@ -215,8 +215,12 @@ class CLIInstance(Instance):
         return Result.from_output(self, output.stdout, all_solutions, nr_solutions)
 
     @contextlib.contextmanager
-    def flat(self):
+    def flat(self, timeout: Optional[timedelta] = None):
         """Produce a FlatZinc file for the instance.
+
+        Args:
+            timeout (Optional[timedelta]): Set the time limit for the process of flattening the instance.
+                TODO: An exception is raised if the timeout is reached.
 
         Yields:
             Tuple containing the files of the FlatZinc model, the output model and a dictionary the statistics of
@@ -233,7 +237,7 @@ class CLIInstance(Instance):
         with self.files() as files:
             cmd.extend(files)
             # Run the MiniZinc process
-            output = self._driver.run(cmd, self._solver)
+            output = self._driver.run(cmd, solver=self._solver, timeout=timeout)
 
         statistics = {}
         matches = re.findall(rb"%%%mzn-stat:? (\w*)=(.*)", output.stdout)

@@ -5,6 +5,7 @@
 import re
 import subprocess
 import warnings
+from datetime import timedelta
 from pathlib import Path
 from typing import List, Optional, Type
 
@@ -68,15 +69,18 @@ class CLIDriver(Driver):
         minizinc.default_driver = self
         minizinc.Instance = CLIInstance
 
-    def run(self, args: List[str], solver: Optional[Solver] = None):
+    def run(self, args: List[str], solver: Optional[Solver] = None, timeout: Optional[timedelta] = None):
         # TODO: Add documentation
+        if timeout is not None:
+            timeout = timeout.total_seconds()
         if solver is None:
             output = subprocess.run([self._executable, "--allow-multiple-assignments"] + args, stdin=None,
-                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
         else:
             with solver.configuration() as conf:
                 output = subprocess.run([self._executable, "--solver", conf, "--allow-multiple-assignments"] + args,
-                                        stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                        stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                        timeout=timeout)
         if output.returncode != 0:
             raise parse_error(output.stderr)
         return output
