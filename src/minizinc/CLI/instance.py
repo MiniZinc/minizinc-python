@@ -6,6 +6,7 @@ import contextlib
 import json
 import os
 import re
+import subprocess
 import tempfile
 from datetime import timedelta
 from pathlib import Path
@@ -201,11 +202,19 @@ class CLIInstance(Instance):
             cmd.extend(files)
             # Run the MiniZinc process
             hard_timeout = timeout + timedelta(seconds=2) if timeout is not None else None
-            output = self._driver.run(cmd, solver=self._solver, timeout=hard_timeout)
+            try:
+                output = self._driver.run(cmd, solver=self._solver, timeout=hard_timeout)
+                code = output.returncode
+                stdout = output.stdout
+                stderr = output.stderr
+            except subprocess.TimeoutExpired as e:
+                code = 0
+                stdout = e.stdout
+                stderr = e.stderr
 
         # Raise error if required
-        if output.returncode != 0:
-            err = parse_error(output.stderr)
+        if code != 0:
+            err = parse_error(stderr)
             if ignore_errors:
                 res = Result()
                 res.error = err
@@ -213,7 +222,7 @@ class CLIInstance(Instance):
             else:
                 raise err
 
-        return Result.from_output(self, output.stdout, all_solutions, nr_solutions)
+        return Result.from_output(self, stdout, all_solutions, nr_solutions)
 
     @contextlib.contextmanager
     def flat(self, timeout: Optional[timedelta] = None):
