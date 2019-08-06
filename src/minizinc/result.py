@@ -5,7 +5,7 @@
 import json
 import re
 from datetime import timedelta
-from enum import Enum
+from enum import Enum, auto
 from typing import Dict, List, NamedTuple, Optional, Sequence, Union
 
 from .error import MiniZincError
@@ -79,13 +79,13 @@ class Status(Enum):
         ALL_SOLUTIONS: All solutions in the search space have been found.
         OPTIMAL_SOLUTION: A solution has been found that is optimal according to the objective.
     """
-    ERROR = 0
-    UNKNOWN = 1
-    UNBOUNDED = 2
-    UNSATISFIABLE = 3
-    SATISFIED = 4
-    ALL_SOLUTIONS = 5
-    OPTIMAL_SOLUTION = 6
+    ERROR = auto()
+    UNKNOWN = auto()
+    UNBOUNDED = auto()
+    UNSATISFIABLE = auto()
+    SATISFIED = auto()
+    ALL_SOLUTIONS = auto()
+    OPTIMAL_SOLUTION = auto()
 
     @classmethod
     def from_output(cls, output: bytes, method: Method):
@@ -122,6 +122,9 @@ class Status(Enum):
             elif b"----------" in output:
                 s = cls.SATISFIED
         return s
+
+    def __str__(self):
+        return self.name
 
     def has_solution(self) -> bool:
         """Returns true if the status suggest that a solution has been found."""
