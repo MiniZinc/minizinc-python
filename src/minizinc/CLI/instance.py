@@ -229,10 +229,12 @@ class CLIInstance(Instance):
         """
         cmd = ["--compile", "--statistics"]
 
-        fzn = tempfile.NamedTemporaryFile(prefix="fzn_", suffix=".fzn")
+        fzn = tempfile.NamedTemporaryFile(prefix="fzn_", suffix=".fzn", delete=False)
         cmd.extend(["--fzn", fzn.name])
-        ozn = tempfile.NamedTemporaryFile(prefix="ozn_", suffix=".fzn")
+        fzn.close()
+        ozn = tempfile.NamedTemporaryFile(prefix="ozn_", suffix=".fzn", delete=False)
         cmd.extend(["--ozn", ozn.name])
+        ozn.close()
 
         # Add files as last arguments
         with self.files() as files:
@@ -248,5 +250,5 @@ class CLIInstance(Instance):
         try:
             yield (fzn, ozn, statistics)
         finally:
-            fzn.close()
-            ozn.close()
+            os.remove(fzn.name)
+            os.remove(ozn.name)
