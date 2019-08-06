@@ -201,7 +201,10 @@ class Solver:
         Yields:
             str: solver identifier to be used for the ``--solver <id>`` flag.
         """
-        configuration = self.id + "@" + self.version
+        if self.version == "<unknown version>":
+            configuration = self.id
+        else:
+            configuration = self.id + "@" + self.version
         file = None
         if self._generate:
             file = tempfile.NamedTemporaryFile(prefix="minizinc_solver_", suffix=".msc")
