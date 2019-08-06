@@ -118,7 +118,7 @@ class Solver:
         from .CLI.driver import CLIDriver
         assert isinstance(driver, CLIDriver)
         if driver is not None:
-            output = subprocess.run([driver._executable, "--solvers-json"], stdout=subprocess.PIPE,
+            output = subprocess.run([str(driver._executable), "--solvers-json"], stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE, check=True)
         else:
             raise LookupError("Solver is not linked to a MiniZinc driver")

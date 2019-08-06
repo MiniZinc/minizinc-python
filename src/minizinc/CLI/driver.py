@@ -74,11 +74,11 @@ class CLIDriver(Driver):
         if timeout is not None:
             timeout = timeout.total_seconds()
         if solver is None:
-            output = subprocess.run([self._executable, "--allow-multiple-assignments"] + args, stdin=None,
+            output = subprocess.run([str(self._executable), "--allow-multiple-assignments"] + args, stdin=None,
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
         else:
             with solver.configuration() as conf:
-                output = subprocess.run([self._executable, "--solver", conf, "--allow-multiple-assignments"] + args,
+                output = subprocess.run([str(self._executable), "--solver", conf, "--allow-multiple-assignments"] + args,
                                         stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                         timeout=timeout)
         if output.returncode != 0:
