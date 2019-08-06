@@ -140,3 +140,4 @@ class Model:
         copy._includes = self._includes[:]
         copy._code_fragments = self._code_fragments[:]
         copy._data = dict.copy(self._data)
+        return copy
