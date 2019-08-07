@@ -1,7 +1,7 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+import contextlib
 from abc import ABC, abstractmethod
 from typing import Optional
 
@@ -57,5 +57,20 @@ class Instance(Model, ABC):
 
         Raises:
             MiniZincError: An error occurred while compiling or solving the model instance.
+        """
+        pass
+
+    @abstractmethod
+    @contextlib.contextmanager
+    def branch(self):  # TODO: Self reference
+        """Create a branch of the current instance
+
+        Branches from the current instance and yields a child instance. Any changes made to the child instance can not
+        influence the current instance. WARNING: The branch method assumes that no changes will be made to the parent
+        method while the child instance is still alive. If the parent instance is changed, then it is undefined if these
+        changes will occur in the child instance.
+
+        Yields:
+            Instance: branched child instance
         """
         pass
