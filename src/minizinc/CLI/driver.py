@@ -78,8 +78,8 @@ class CLIDriver(Driver):
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
         else:
             with solver.configuration() as conf:
-                output = subprocess.run([str(self._executable), "--solver", conf, "--allow-multiple-assignments"] + args,
-                                        stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                output = subprocess.run([str(self._executable), "--solver", conf, "--allow-multiple-assignments"]
+                                        + args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                         timeout=timeout)
         if output.returncode != 0:
             raise parse_error(output.stderr)
