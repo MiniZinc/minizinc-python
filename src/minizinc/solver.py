@@ -4,7 +4,6 @@
 
 import contextlib
 import json
-import subprocess
 import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
@@ -118,8 +117,7 @@ class Solver:
         from .CLI.driver import CLIDriver
         assert isinstance(driver, CLIDriver)
         if driver is not None:
-            output = subprocess.run([str(driver._executable), "--solvers-json"], stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE, check=True)
+            output = driver.run(["--solvers-json"])
         else:
             raise LookupError("Solver is not linked to a MiniZinc driver")
         # Find all available solvers
