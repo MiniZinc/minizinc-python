@@ -50,7 +50,8 @@ class Instance(Model, ABC):
             all_solutions (bool): Request to solver to find all solutions. (Only available on satisfaction problems and
                 when the ``-n`` flag is supported by the solver)
             ignore_errors (bool): Do not raise exceptions, when an error occurs the ``Result.status`` will be ``ERROR``.
-            **kwargs: Other flags to be passed onto the solver. (TODO: NOT YET IMPLEMENTED)
+            **kwargs: Other flags to be passed onto the solver. ``--`` can be omitted in the name of the flag. If the
+            type of the flag is Boolean, then its value signifies its occurrence.
 
         Returns:
             Result: object containing values assigned and statistical information.
