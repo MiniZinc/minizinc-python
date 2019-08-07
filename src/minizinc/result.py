@@ -41,6 +41,10 @@ StatisticTypes = {
     "flatIntConstraints": int,  # Number of integer constraints in the flat model
     "flatSetConstraints": int,  # Number of set constraints in the flat model
     "method": str,  # Optimisation method in the Flat Model
+    "evaluatedReifiedConstraints": int,  # Number of reified constraints evaluated during flattening
+    "evaluatedHalfReifiedConstraints": int,  # Number of half-reified constraints evaluated during flattening
+    "eliminatedImplications": int,  # Number of implications removed through chain compression
+    "eliminatedLinearConstraints": int,  # Number of linear constraints removed through chain compression
 }
 
 
