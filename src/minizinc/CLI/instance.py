@@ -145,9 +145,8 @@ class CLIInstance(Instance):
               **kwargs):
         # Set standard command line arguments
         cmd = ["--output-mode", "json", "--output-time", "--output-objective"]
-        # Enable statistics if possible
-        if "-s" in self._solver.stdFlags:
-            cmd.append("-s")
+        # Enable statistics
+        cmd.append("-s")
 
         # Process number of solutions to be generated
         if all_solutions:
