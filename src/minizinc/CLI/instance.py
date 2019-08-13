@@ -54,7 +54,8 @@ class CLIInstance(Instance):
         child = self.__class__(self._solver)
         child._parent = self
         try:
-            yield child
+            with self._lock:
+                yield child
         finally:
             del child
 

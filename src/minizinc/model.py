@@ -3,6 +3,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import json
+import threading
 import warnings
 from enum import Enum
 from pathlib import Path
@@ -51,11 +52,13 @@ class Model:
     _data: Dict[str, Any]
     _includes: List[Path]
     _code_fragments: List[str]
+    _lock: threading.Lock
 
     def __init__(self, files: Optional[Union[ParPath, List[ParPath]]] = None):
         self._data = {}
         self._includes = []
         self._code_fragments = []
+        self._lock = threading.Lock()
         if isinstance(files, Path) or isinstance(files, str):
             self.add_file(files)
         elif files is not None:
@@ -72,12 +75,13 @@ class Model:
             key (str): Identifier of the parameter.
             value (Any): Value to be assigned to the parameter.
         """
-        if self._data.get(key, None) is None:
-            self._data.__setitem__(key, value)
-        else:
-            if self._data[key] != value:
-                raise AssertionError("The parameter '%s' cannot be assigned multiple values. If you are changing the "
-                                     "model, consider using the branch method before assigning the parameter" % key)
+        with self._lock:
+            if self._data.get(key, None) is None:
+                self._data.__setitem__(key, value)
+            else:
+                if self._data[key] != value:
+                    raise AssertionError("The parameter '%s' cannot be assigned multiple values. If you are changing the "
+                                        "model, consider using the branch method before assigning the parameter" % key)
 
     def __getitem__(self, key: str) -> Any:
         """Get parameter of Model.
@@ -107,7 +111,8 @@ class Model:
             file = Path(file)
         assert file.exists()
         if not parse_data:
-            self._includes.append(file)
+            with self._lock:
+                self._includes.append(file)
             return
         if file.suffix == ".json":
             data = json.load(file.open())
@@ -121,11 +126,13 @@ class Model:
             except LarkError:
                 warnings.warn("Could not parse %s. Parameters included within this file are not available in Python"
                               % file)
-                self._includes.append(file)
+                with self._lock:
+                    self._includes.append(file)
         elif file.suffix != ".mzn":
             raise NameError("Unknown file suffix %s", file.suffix)
         else:
-            self._includes.append(file)
+            with self._lock:
+                self._includes.append(file)
 
     def add_string(self, code: str) -> None:
         """Adds a string of MiniZinc code to the Model.
@@ -133,7 +140,8 @@ class Model:
         Args:
             code (str): A string contain MiniZinc code
         """
-        self._code_fragments.append(code)
+        with self._lock:
+            self._code_fragments.append(code)
 
     def __copy__(self):
         copy = self.__class__()

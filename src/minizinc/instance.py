@@ -68,8 +68,8 @@ class Instance(Model, ABC):
 
         Branches from the current instance and yields a child instance. Any changes made to the child instance can not
         influence the current instance. WARNING: The branch method assumes that no changes will be made to the parent
-        method while the child instance is still alive. If the parent instance is changed, then it is undefined if these
-        changes will occur in the child instance.
+        method while the child instance is still alive. Changes to the parent model are locked until the child method
+        are destroyed.
 
         Yields:
             Instance: branched child instance
