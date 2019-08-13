@@ -4,9 +4,10 @@
 
 import json
 import re
+from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum, auto
-from typing import Dict, List, NamedTuple, Optional, Sequence, Union
+from typing import Dict, List, Optional, Sequence, Union
 
 from .error import MiniZincError
 from .instance import Instance, Method
@@ -137,7 +138,8 @@ class Status(Enum):
         return False
 
 
-class Solution(NamedTuple):
+@dataclass
+class Solution:
     """Representation of a MiniZinc solution in Python
 
     Attributes:
@@ -146,16 +148,13 @@ class Solution(NamedTuple):
         statistics (Dict[str, Union[float, int, timedelta]]): Statistical information generated during the search for
             the Solution
     """
-    assignments: Dict[str, Union[bool, float, int]] = {}
-    objective: Optional[Union[float, int]] = None
-    statistics: Dict[str, Union[float, int, timedelta]] = {}
+    assignments: Dict[str, Union[bool, float, int]] = field(default_factory=dict)
+    objective: Optional[Union[float, int]] = field(default_factory=dict)
+    statistics: Dict[str, Union[float, int, timedelta]] = field(default_factory=dict)
 
     def __getitem__(self, key):
         """Overrides the default implementation of item access (obj[key]) to directly access the assignments."""
-        if isinstance(key, str):
-            return self.assignments.__getitem__(key)
-        else:
-            return super().__getitem__(key)
+        return self.assignments.__getitem__(key)
 
 
 class Result:

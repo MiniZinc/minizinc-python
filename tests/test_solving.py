@@ -115,4 +115,4 @@ class CheckEmpty(InstanceTestCase):
         assert self.instance.method == Method.SATISFY
         result = self.instance.solve()
         assert len(result) == 1
-        assert len(result[0]) == 0
+        assert len(result._solutions[0].assignments) == 0
