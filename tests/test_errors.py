@@ -3,8 +3,11 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import pytest
-from minizinc.error import (MiniZincAssertionError, MiniZincSyntaxError,
-                            MiniZincTypeError)
+from minizinc.error import (
+    MiniZincAssertionError,
+    MiniZincSyntaxError,
+    MiniZincTypeError,
+)
 from support import InstanceTestCase
 
 
@@ -33,7 +36,9 @@ class TypeErrorTest(InstanceTestCase):
     """
 
     def test_type_error(self):
-        with pytest.raises(MiniZincTypeError, match="No matching operator found") as error:
+        with pytest.raises(
+            MiniZincTypeError, match="No matching operator found"
+        ) as error:
             self.instance.solve()
         loc = error.value.location
         assert str(loc.file).endswith(".mzn")
@@ -45,7 +50,9 @@ class SyntaxErrorTest(InstanceTestCase):
     code = "constrain true;"
 
     def test_syntax_error(self):
-        with pytest.raises(MiniZincSyntaxError, match="unexpected bool literal") as error:
+        with pytest.raises(
+            MiniZincSyntaxError, match="unexpected bool literal"
+        ) as error:
             self.instance.solve()
         loc = error.value.location
         assert str(loc.file).endswith(".mzn")

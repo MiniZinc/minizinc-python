@@ -24,6 +24,7 @@ class Method(Enum):
         MINIMIZE: Represents a minimization problem.
         MAXIMIZE: Represents a maximization problem.
     """
+
     SATISFY = 1
     MINIMIZE = 2
     MAXIMIZE = 3
@@ -45,7 +46,9 @@ class Method(Enum):
         elif s == "max":
             return cls.MAXIMIZE
         else:
-            raise ValueError("Unknown Method %r, valid options are 'sat', 'min', or 'max'" % s)
+            raise ValueError(
+                "Unknown Method %r, valid options are 'sat', 'min', or 'max'" % s
+            )
 
 
 class Model:
@@ -68,26 +71,35 @@ class Model:
     def __setitem__(self, key: str, value: Any):
         """Set parameter of Model.
 
-        This method overrides the default implementation of item access (``obj[key] = value``) for models. Item
-        access on a Model can be used to set parameters of the Model.
+        This method overrides the default implementation of item access
+        (``obj[key] = value``) for models. Item access on a Model can be used to
+        set parameters of the Model.
 
         Args:
             key (str): Identifier of the parameter.
             value (Any): Value to be assigned to the parameter.
+
         """
         with self._lock:
             if self._data.get(key, None) is None:
                 self._data.__setitem__(key, value)
             else:
                 if self._data[key] != value:
-                    raise AssertionError("The parameter '%s' cannot be assigned multiple values. If you are changing the "
-                                        "model, consider using the branch method before assigning the parameter" % key)
+                    raise AssertionError(
+                        """
+                        The parameter '%s' cannot be assigned multiple values.
+                        If you are changing the model, consider using the branch
+                        method before assigning the parameter
+                        """
+                        % key
+                    )
 
     def __getitem__(self, key: str) -> Any:
         """Get parameter of Model.
 
-        This method overrides the default implementation of item access (``obj[key]``) for models. Item access on a
-        Model can be used to get parameters of the Model.
+        This method overrides the default implementation of item access
+        (``obj[key]``) for models. Item access on a Model can be used to get
+        parameters of the Model.
 
         Args:
             key (str): Identifier of the parameter.
@@ -97,6 +109,7 @@ class Model:
 
         Raises:
             KeyError: The parameter you are trying to access is not known.
+
         """
         return self._data.__getitem__(key)
 
@@ -105,7 +118,9 @@ class Model:
 
         Args:
             file (Union[Path, str]): Path to the file to be added
-            parse_data (bool): Signal if the data should be parsed for usage within Python.
+            parse_data (bool): Signal if the data should be parsed for usage
+                within Python.
+
         """
         if not isinstance(file, Path):
             file = Path(file)
@@ -124,8 +139,10 @@ class Model:
                 for k, v in data.items():
                     self.__setitem__(k, v)
             except LarkError:
-                warnings.warn("Could not parse %s. Parameters included within this file are not available in Python"
-                              % file)
+                warnings.warn(
+                    "Could not parse %s. Parameters included within this file are"
+                    "not available in Python" % file
+                )
                 with self._lock:
                     self._includes.append(file)
         elif file.suffix != ".mzn":

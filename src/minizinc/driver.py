@@ -18,12 +18,14 @@ required_version = (2, 2, 0)
 class Driver(ABC):
     """The abstract representation of a MiniZinc driver within MiniZinc Python.
     """
+
     Solver: Type
     Instance: Type
 
     @abstractmethod
     def make_default(self) -> None:
-        """Method to override the current default MiniZinc Python driver with the current driver.
+        """Method to override the current default MiniZinc Python driver with the
+        current driver.
         """
         pass
 
@@ -36,11 +38,13 @@ class Driver(ABC):
     def minizinc_version(self) -> str:
         """Reports the version of the MiniZinc Driver
 
-        Report the full version of MiniZinc as reported by the driver, including the driver name, the semantic version,
-        the build reference, and its authors.
+        Report the full version of MiniZinc as reported by the driver,
+        including the driver name, the semantic version, the build reference,
+        and its authors.
 
         Returns:
             str: the version of as reported by the MiniZinc driver
+
         """
         pass
 
@@ -48,21 +52,25 @@ class Driver(ABC):
     def check_version(self) -> bool:
         """Check if the MiniZinc version is compatible with MiniZinc Python.
 
-        Check if the semantic version of the MiniZinc driver is compatible with the required version of the MiniZinc
-        Python driver backend.
+        Check if the semantic version of the MiniZinc driver is compatible with
+        the required version of the MiniZinc Python driver back-end.
 
         Returns:
             bool: The compatibility of the driver.
+
         """
         pass
 
 
-def find_driver(path: Optional[List[str]] = None, name: str = "minizinc") -> Optional[Driver]:
+def find_driver(
+    path: Optional[List[str]] = None, name: str = "minizinc"
+) -> Optional[Driver]:
     """Finds MiniZinc Driver on default or specified path.
 
-    Find driver will look for the the MiniZinc API or the MiniZinc executable to create a Driver for MiniZinc Python. If
-    no path is specified, then the paths given by the environment variables appended by MiniZinc's default locations
-    will be tried.
+    Find driver will look for the the MiniZinc API or the MiniZinc executable
+    to create a Driver for MiniZinc Python. If no path is specified, then the
+    paths given by the environment variables appended by MiniZinc's default
+    locations will be tried.
 
     Args:
         path: List of locations to search.
@@ -70,6 +78,7 @@ def find_driver(path: Optional[List[str]] = None, name: str = "minizinc") -> Opt
 
     Returns:
         Optional[Driver]: Returns a Driver object when found or None.
+
     """
     driver = None
     if path is None:
@@ -77,16 +86,24 @@ def find_driver(path: Optional[List[str]] = None, name: str = "minizinc") -> Opt
         path_lib = os.environ.get("LD_LIBRARY_PATH", "").split(os.pathsep)
         path_lib.extend(os.environ.get("DYLD_LIBRARY_PATH", "").split(os.pathsep))
         # Add default MiniZinc locations to the path
-        if platform.system() == 'Darwin':
-            MAC_LOCATIONS = [str(Path('/Applications/MiniZincIDE.app/Contents/Resources')),
-                             str(Path('~/Applications/MiniZincIDE.app/Contents/Resources').expanduser())]
+        if platform.system() == "Darwin":
+            MAC_LOCATIONS = [
+                str(Path("/Applications/MiniZincIDE.app/Contents/Resources")),
+                str(
+                    Path(
+                        "~/Applications/MiniZincIDE.app/Contents/Resources"
+                    ).expanduser()
+                ),
+            ]
             path_bin.extend(MAC_LOCATIONS)
             path_lib.extend(MAC_LOCATIONS)
-        elif platform.system() == 'Windows':
-            WIN_LOCATIONS = [str(Path('c:/Program Files/MiniZinc')),
-                             str(Path('c:/Program Files/MiniZinc IDE (bundled)')),
-                             str(Path('c:/Program Files (x86)/MiniZinc')),
-                             str(Path('c:/Program Files (x86)/MiniZinc IDE (bundled)'))]
+        elif platform.system() == "Windows":
+            WIN_LOCATIONS = [
+                str(Path("c:/Program Files/MiniZinc")),
+                str(Path("c:/Program Files/MiniZinc IDE (bundled)")),
+                str(Path("c:/Program Files (x86)/MiniZinc")),
+                str(Path("c:/Program Files (x86)/MiniZinc IDE (bundled)")),
+            ]
             path_bin.extend(WIN_LOCATIONS)
             path_lib.extend(WIN_LOCATIONS)
     else:
@@ -101,9 +118,11 @@ def find_driver(path: Optional[List[str]] = None, name: str = "minizinc") -> Opt
     os.environ["LD_LIBRARY_PATH"] = path_lib
     os.environ["DYLD_LIBRARY_PATH"] = path_lib
     lib = find_library(name)
-    os.environ = env_backup
+    os.environ.clear()
+    os.environ.update(env_backup)
     if lib and Path(lib).suffix in [".dll", ".dylib", ".so"]:
         from minizinc.API import APIDriver
+
         library = cdll.LoadLibrary(lib)
         driver = APIDriver(library)
     else:
@@ -111,6 +130,7 @@ def find_driver(path: Optional[List[str]] = None, name: str = "minizinc") -> Opt
         executable = shutil.which(name, path=path_bin)
         if executable is not None:
             from minizinc.CLI import CLIDriver
+
             executable = Path(executable)
             driver = CLIDriver(executable)
 

@@ -18,6 +18,19 @@ if default_driver is not None:
     default_driver.make_default()
 else:
     import warnings
-    warnings.warn("MiniZinc was not found on the system: no default driver could be initialised", RuntimeWarning)
 
-__all__ = ["default_driver", "find_driver", "Driver", "Instance", "Method", "MiniZincError", "Model", "Solver"]
+    warnings.warn(
+        "MiniZinc was not found on the system: no default driver could be initialised",
+        RuntimeWarning,
+    )
+
+__all__ = [
+    "default_driver",
+    "find_driver",
+    "Driver",
+    "Instance",
+    "Method",
+    "MiniZincError",
+    "Model",
+    "Solver",
+]

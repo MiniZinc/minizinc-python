@@ -32,7 +32,12 @@ class CLIInstance(Instance):
     _method: Optional[Method]
     _parent: Optional[Instance]
 
-    def __init__(self, solver: Solver, model: Optional[Model] = None, driver: Optional[CLIDriver] = None):
+    def __init__(
+        self,
+        solver: Solver,
+        model: Optional[Model] = None,
+        driver: Optional[CLIDriver] = None,
+    ):
         super().__init__(solver, model)
         self._solver = solver
         self._parent = None
@@ -69,11 +74,13 @@ class CLIInstance(Instance):
     def files(self) -> List[Path]:
         """Gets list of files of the Instance
 
-        Files will create a list of paths to the files that together form the Instance. Parts of the Instance might be
-        saved to files and are only guaranteed to exist while within the created context.
+        Files will create a list of paths to the files that together form the
+        Instance. Parts of the Instance might be saved to files and are only
+        guaranteed to exist while within the created context.
 
         Yields:
             List of Path objects to existing and created files
+
         """
         files: List[Path] = self._includes.copy()
         fragments = None
@@ -87,12 +94,16 @@ class CLIInstance(Instance):
                 else:
                     tmp_data[k] = v
             if len(tmp_data) > 0:
-                data = tempfile.NamedTemporaryFile(prefix="mzn_data", suffix=".json", delete=False)
+                data = tempfile.NamedTemporaryFile(
+                    prefix="mzn_data", suffix=".json", delete=False
+                )
                 data.write(json.dumps(tmp_data, cls=MZNJSONEncoder).encode())
                 data.close()
                 files.append(Path(data.name))
         if len(tmp_fragments) > 0 or len(files) == 0:
-            fragments = tempfile.NamedTemporaryFile(prefix="mzn_fragment", suffix=".mzn", delete=False)
+            fragments = tempfile.NamedTemporaryFile(
+                prefix="mzn_fragment", suffix=".mzn", delete=False
+            )
             for code in tmp_fragments:
                 fragments.write(code.encode())
             fragments.close()
@@ -119,14 +130,17 @@ class CLIInstance(Instance):
     def analyse(self):
         """Discovers basic information about a CLIInstance
 
-        Analyses a given instance and discovers basic information about set model such as the solving method, the input
-        parameters, and the output parameters. The information found will be stored among the attributes of the
-        instance.
+        Analyses a given instance and discovers basic information about set
+        model such as the solving method, the input parameters, and the output
+        parameters. The information found will be stored among the attributes
+        of the instance.
         """
         with self.files() as files:
             assert len(files) > 0
             output = self._driver.run(["--model-interface-only"] + files, self._solver)
-        interface = json.loads(output.stdout)  # TODO: Possibly integrate with the MZNJSONDecoder
+        interface = json.loads(
+            output.stdout
+        )  # TODO: Possibly integrate with the MZNJSONDecoder
         self._method = Method.from_string(interface["method"])
         self._input = {}
         for key, value in interface["input"].items():
@@ -135,15 +149,17 @@ class CLIInstance(Instance):
         for (key, value) in interface["output"].items():
             self._output[key] = to_python_type(value)
 
-    def solve(self,
-              timeout: Optional[timedelta] = None,
-              nr_solutions: Optional[int] = None,
-              processes: Optional[int] = None,
-              random_seed: Optional[int] = None,
-              all_solutions=False,
-              free_search: bool = False,
-              ignore_errors=False,
-              **kwargs):
+    def solve(
+        self,
+        timeout: Optional[timedelta] = None,
+        nr_solutions: Optional[int] = None,
+        processes: Optional[int] = None,
+        random_seed: Optional[int] = None,
+        all_solutions=False,
+        free_search: bool = False,
+        ignore_errors=False,
+        **kwargs,
+    ):
         # Set standard command line arguments
         cmd = ["--output-mode", "json", "--output-time", "--output-objective"]
         # Enable statistics
@@ -152,17 +168,27 @@ class CLIInstance(Instance):
         # Process number of solutions to be generated
         if all_solutions:
             if nr_solutions is not None:
-                raise ValueError("The number of solutions cannot be limited when looking for all solutions")
+                raise ValueError(
+                    "The number of solutions cannot be limited when looking "
+                    "for all solutions"
+                )
             if self.method != Method.SATISFY:
-                raise NotImplementedError("Finding all optimal solutions is not yet implemented")
+                raise NotImplementedError(
+                    "Finding all optimal solutions is not yet implemented"
+                )
             if "-a" not in self._solver.stdFlags:
                 raise NotImplementedError("Solver does not support the -a flag")
             cmd.append("-a")
         elif nr_solutions is not None:
             if nr_solutions <= 0:
-                raise ValueError("The number of solutions can only be set to a positive integer number")
+                raise ValueError(
+                    "The number of solutions can only be set to a positive "
+                    "integer number"
+                )
             if self.method != Method.SATISFY:
-                raise NotImplementedError("Finding all optimal solutions is not yet implemented")
+                raise NotImplementedError(
+                    "Finding all optimal solutions is not yet implemented"
+                )
             if "-n" not in self._solver.stdFlags:
                 raise NotImplementedError("Solver does not support the -n flag")
             cmd.extend(["-n", str(nr_solutions)])
@@ -201,9 +227,13 @@ class CLIInstance(Instance):
         with self.files() as files:
             cmd.extend(files)
             # Run the MiniZinc process
-            hard_timeout = timeout + timedelta(seconds=2) if timeout is not None else None
+            hard_timeout = (
+                timeout + timedelta(seconds=2) if timeout is not None else None
+            )
             try:
-                output = self._driver.run(cmd, solver=self._solver, timeout=hard_timeout)
+                output = self._driver.run(
+                    cmd, solver=self._solver, timeout=hard_timeout
+                )
                 code = output.returncode
                 stdout = output.stdout
                 stderr = output.stderr
@@ -229,12 +259,14 @@ class CLIInstance(Instance):
         """Produce a FlatZinc file for the instance.
 
         Args:
-            timeout (Optional[timedelta]): Set the time limit for the process of flattening the instance.
-                TODO: An exception is raised if the timeout is reached.
+            timeout (Optional[timedelta]): Set the time limit for the process
+                of flattening the instance. TODO: An exception is raised if the
+                timeout is reached.
 
         Yields:
-            Tuple containing the files of the FlatZinc model, the output model and a dictionary the statistics of
-            flattening
+            Tuple containing the files of the FlatZinc model, the output model
+            and a dictionary the statistics of flattening
+
         """
         cmd = ["--compile", "--statistics"]
 

@@ -13,9 +13,12 @@ class Location(NamedTuple):
 
     Attributes:
         file (Optional[Path]): Path to the file
-        line (int): Line within the file (default: 0)
-        columns (Tuple[int,int]): Columns on the line, from/to (default: (0, 0))
+        line (int): Line within the file (default: ``0``)
+        columns (Tuple[int,int]): Columns on the line, from/to (default:
+            ``(0, 0)``)
+
     """
+
     file: Optional[Path]
     line: int = 0
     columns: Tuple[int, int] = (0, 0)
@@ -28,6 +31,7 @@ class MiniZincError(Exception):
         location (Optional[Location]): File location of the error
         message (str): Explanation of the error
     """
+
     location: Optional[Location]
     message: str
 
@@ -37,38 +41,47 @@ class MiniZincError(Exception):
 
 
 class EvaluationError(MiniZincError):
-    """Exception raised for errors due to an error during instance evaluation by the MiniZinc Driver"""
+    """Exception raised for errors due to an error during instance evaluation by
+    the MiniZinc Driver"""
+
     pass
 
 
 class MiniZincAssertionError(EvaluationError):
-    """Exception raised for MiniZinc assertions that failed during instance evaluation"""
+    """Exception raised for MiniZinc assertions that failed during instance
+    evaluation"""
+
     pass
 
 
 class MiniZincTypeError(MiniZincError):
     """Exception raised for type errors found in an MiniZinc Instance"""
+
     pass
 
 
 class MiniZincSyntaxError(MiniZincError):
     """Exception raised for syntax errors found in an MiniZinc Instance"""
+
     pass
 
 
 def parse_error(error_txt: bytes) -> MiniZincError:
     """Parse error from bytes array (raw string)
 
-    Parse error scans the output from a MiniZinc driver to generate the appropriate MiniZincError. It will make the
-    distinction between different kinds of errors as found by MiniZinc and tries to parse the relevant information to
-    the error. The different kinds of errors are represented by different sub-classes of MiniZincError.
+    Parse error scans the output from a MiniZinc driver to generate the
+    appropriate MiniZincError. It will make the distinction between different
+    kinds of errors as found by MiniZinc and tries to parse the relevant
+    information to the error. The different kinds of errors are represented by
+    different sub-classes of MiniZincError.
 
     Args:
-        error_txt (bytes): raw string containing a MiniZinc error. Generally this should be the error stream of a
-            driver.
+        error_txt (bytes): raw string containing a MiniZinc error. Generally
+            this should be the error stream of a driver.
 
     Returns:
         An error generated from the string
+
     """
     error = MiniZincError
     if b"MiniZinc: evaluation error:" in error_txt:

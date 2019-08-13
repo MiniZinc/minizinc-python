@@ -8,7 +8,7 @@ from setuptools import find_packages, setup
 setup(
     name="minizinc",
     version="0.1.0-alpha.3",
-    python_requires='>=3.6',
+    python_requires=">=3.6",
     author="Jip J. Dekker",
     author_email="jip.dekker@monash.edu",
     description="Access MiniZinc directly from Python",
@@ -16,24 +16,21 @@ setup(
     long_description_content_type="text/markdown",
     url="http://minizinc.org",
     project_urls={
-        'Bug Tracker': 'https://gitlab.com/minizinc/minizinc-python/issues',
+        "Bug Tracker": "https://gitlab.com/minizinc/minizinc-python/issues",
         "Documentation": "https://minizinc-python.readthedocs.io",
-        'Source': 'https://gitlab.com/minizinc/minizinc-python',
+        "Source": "https://gitlab.com/minizinc/minizinc-python",
     },
     packages=find_packages(where="src"),
-    package_dir={'': 'src'},
+    package_dir={"": "src"},
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 3",
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Topic :: Scientific/Engineering :: Mathematics",
     ],
-    install_requires=[
-        'dataclasses;python_version<"3.7"',
-        'lark-parser',
-    ]
+    install_requires=["dataclasses;python_version<'3.7'", "lark-parser"],
 )

@@ -87,7 +87,7 @@ class TreeToDZN(Transformer):
     value = arg1_construct(lambda i: i)
 
 
-dzn_parser = Lark(dzn_grammar, start='items', parser='lalr')
+dzn_parser = Lark(dzn_grammar, start="items", parser="lalr")
 
 
 def parse_dzn(dzn: Union[Path, str]):

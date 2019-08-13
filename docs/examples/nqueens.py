@@ -1,4 +1,4 @@
-from minizinc import *
+from minizinc import Instance, Model, Solver
 
 # Load n-Queens model from file
 nqueens = Model("./nqueens.mzn")

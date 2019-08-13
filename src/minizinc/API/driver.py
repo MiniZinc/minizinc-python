@@ -39,13 +39,24 @@ class APIDriver(driver.Driver):
 
     def make_default(self) -> None:
         from . import APInstance, APISolver
+
         minizinc.default_driver = self
         minizinc.Instance = APInstance
         minizinc.Solver = APISolver
 
-    def solve(self, solver, instance, timeout: Optional[timedelta] = None, nr_solutions: Optional[int] = None,
-              processes: Optional[int] = None, random_seed: Optional[int] = None, free_search: bool = False,
-              all_solutions=False, ignore_errors=False, **kwargs):
+    def solve(
+        self,
+        solver,
+        instance,
+        timeout: Optional[timedelta] = None,
+        nr_solutions: Optional[int] = None,
+        processes: Optional[int] = None,
+        random_seed: Optional[int] = None,
+        free_search: bool = False,
+        all_solutions=False,
+        ignore_errors=False,
+        **kwargs,
+    ):
         # TODO: IMPLEMENT
         pass
 

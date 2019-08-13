@@ -36,10 +36,10 @@ def test_dzn_float():
 
 
 def test_dzn_string():
-    assert parse_dzn("x = \"\"") == {"x": ""}
-    assert parse_dzn("x = \"test string\"") == {"x": "test string"}
-    assert parse_dzn("x = \"ކ\"") == {"x": "ކ"}
-    assert parse_dzn("x = \"🐛\"") == {"x": "🐛"}
+    assert parse_dzn('x = ""') == {"x": ""}
+    assert parse_dzn('x = "test string"') == {"x": "test string"}
+    assert parse_dzn('x = "ކ"') == {"x": "ކ"}
+    assert parse_dzn('x = "🐛"') == {"x": "🐛"}
 
 
 def test_dzn_set():
@@ -56,7 +56,7 @@ def test_dzn_array():
     assert parse_dzn("x = [1,2,3,4]") == {"x": [1, 2, 3, 4]}
     assert parse_dzn("x = [2.1]") == {"x": [2.1]}
     assert parse_dzn("x = [2.1,3.2,4.2]") == {"x": [2.1, 3.2, 4.2]}
-    assert parse_dzn("x = [\"str1\", \"str2\"]") == {"x": ["str1", "str2"]}
+    assert parse_dzn('x = ["str1", "str2"]') == {"x": ["str1", "str2"]}
     assert parse_dzn("x = [{1,2,3}, {1,2}]") == {"x": [{1, 2, 3}, {1, 2}]}
 
 
@@ -64,12 +64,15 @@ def test_dzn_array2d():
     assert parse_dzn("x = [||]") == {"x": []}
     assert parse_dzn("x = [|1|2|3|]") == {"x": [[1], [2], [3]]}
     assert parse_dzn("x = [|1,4|2,5|3,6|]") == {"x": [[1, 4], [2, 5], [3, 6]]}
-    assert parse_dzn("x = [|1.1,4.4|2.2,5.5|3.3,6.6|]") == {"x": [[1.1, 4.4], [2.2, 5.5], [3.3, 6.6]]}
+    assert parse_dzn("x = [|1.1,4.4|2.2,5.5|3.3,6.6|]") == {
+        "x": [[1.1, 4.4], [2.2, 5.5], [3.3, 6.6]]
+    }
 
 
 def test_dzn_unknown():
-    assert parse_dzn("x = array2d(index1,1..2,[4, 3, 4, 5, 3, 6]);") == \
-           {"x": UnknownExpression("array2d(index1,1..2,[4, 3, 4, 5, 3, 6])")}
+    assert parse_dzn("x = array2d(index1,1..2,[4, 3, 4, 5, 3, 6]);") == {
+        "x": UnknownExpression("array2d(index1,1..2,[4, 3, 4, 5, 3, 6])")
+    }
 
 
 def test_dzn_semicolon():
@@ -77,4 +80,8 @@ def test_dzn_semicolon():
     assert parse_dzn("x = 1") == {"x": 1}
     assert parse_dzn("x = 1; y = 2") == {"x": 1, "y": 2}
     assert parse_dzn("x = 1; y = 2;") == {"x": 1, "y": 2}
-    assert parse_dzn("x = -20; y = 2e3; z = \"string\"") == {"x": -20, "y": 2e3, "z": "string"}
+    assert parse_dzn('x = -20; y = 2e3; z = "string"') == {
+        "x": -20,
+        "y": 2e3,
+        "z": "string",
+    }

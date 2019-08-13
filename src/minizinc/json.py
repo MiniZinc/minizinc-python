@@ -8,6 +8,7 @@ from json import JSONDecoder, JSONEncoder
 class MZNJSONEncoder(JSONEncoder):
     def default(self, o):
         from .solver import Solver
+
         if isinstance(o, set):
             return {"set": [i for i in o]}
         elif isinstance(o, Solver):
@@ -38,18 +39,20 @@ class MZNJSONDecoder(JSONDecoder):
     @staticmethod
     def object_hook(obj):
         from .solver import Solver
+
         if len(obj) == 1 and "set" in obj:
             li = []
             for item in obj["set"]:
                 if isinstance(item, list):
                     assert len(item) == 2
-                    li.extend([i for i in range(item[0], item[1]+1)])
+                    li.extend([i for i in range(item[0], item[1] + 1)])
                 else:
                     assert isinstance(item, int)
                     li.append(item)
             return set(li)
-        elif all([i in obj.keys() for i in ["name", "version", "id", "executable"]]) \
-                and all([i in Solver.FIELDS for i in obj.keys()]):
+        elif all(
+            [i in obj.keys() for i in ["name", "version", "id", "executable"]]
+        ) and all([i in Solver.FIELDS for i in obj.keys()]):
             return Solver._from_dict(obj)
         else:
             return obj
