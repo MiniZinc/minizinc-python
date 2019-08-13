@@ -6,13 +6,13 @@ variables:
 cache:
   paths:
     - .cache/pip
-    - venv/
+    - .venv/
 
 before_script:
   - apk add python3
   - python3 -V               # Print out python version for debugging
   - python3 -m venv .venv
-  - source venv/bin/activate
+  - source .venv/bin/activate
 
 test:
   script:
