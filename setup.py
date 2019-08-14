@@ -14,7 +14,7 @@ setup(
     description="Access MiniZinc directly from Python",
     long_description=Path("README.md").read_text(),
     long_description_content_type="text/markdown",
-    url="http://minizinc.org",
+    url="https://www.minizinc.org/",
     project_urls={
         "Bug Tracker": "https://gitlab.com/minizinc/minizinc-python/issues",
         "Documentation": "https://minizinc-python.readthedocs.io",
