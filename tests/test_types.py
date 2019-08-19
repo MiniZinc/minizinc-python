@@ -2,10 +2,9 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from minizinc import Instance, Solver
-from minizinc.instance import Method
-from minizinc.result import Status
+from minizinc import Instance
 from support import InstanceTestCase
+
 
 class TestEnum(InstanceTestCase):
     code = """
@@ -23,7 +22,8 @@ class TestEnum(InstanceTestCase):
         self.instance.add_string("var DAY: d2;")
         self.instance.add_string("constraint d < d2;")
         result = self.instance.solve()
-        assert type(result["d"]) == type(result["d2"])
+        assert isinstance(result["d"], str)
+        assert isinstance(result["d2"], str)
         # TODO: assert result["d"] < result["d2"]
 
     def test_cmp_between_instances(self):
@@ -34,15 +34,18 @@ class TestEnum(InstanceTestCase):
         inst = Instance(self.solver)
         inst.add_string(self.code + append)
         result2 = inst.solve()
-        assert type(result["d"]) == type(result2["d"])
+        assert isinstance(result["d"], str)
+        assert isinstance(result2["d"], str)
         assert result["d"] == result2["d"]
 
         inst = Instance(self.solver)
-        inst.add_string( """
+        inst.add_string(
+            """
           enum DAY = {Mo, Tu, We, Th, Fr};
           var DAY: d;
-          """ + append)
+          """
+            + append
+        )
         result2 = inst.solve()
         # TODO: assert type(result["d"]) != type(result2["d"])
         # TODO: assert result["d"] == result2["d"]
-
