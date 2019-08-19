@@ -13,6 +13,6 @@ class InstanceTestCase(unittest.TestCase):
     solver: Solver
 
     def setUp(self):
-        gecode = Solver.lookup("gecode")
-        self.instance = Instance(gecode)
+        self.solver = Solver.lookup("gecode")
+        self.instance = Instance(self.solver)
         self.instance.add_string(self.code)

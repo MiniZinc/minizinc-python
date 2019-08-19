@@ -50,6 +50,8 @@ class MZNJSONDecoder(JSONDecoder):
                     assert isinstance(item, int)
                     li.append(item)
             return set(li)
+        elif len(obj) == 1 and "e" in obj:
+            return obj["e"]
         elif all(
             [i in obj.keys() for i in ["name", "version", "id", "executable"]]
         ) and all([i in Solver.FIELDS for i in obj.keys()]):
