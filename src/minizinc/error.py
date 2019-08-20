@@ -5,7 +5,7 @@
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import NamedTuple, Optional, Tuple
+from typing import Optional, Tuple
 
 
 @dataclass
