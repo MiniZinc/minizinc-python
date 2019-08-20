@@ -3,9 +3,9 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import NamedTuple, Optional, Tuple
-from dataclasses import dataclass
 
 
 @dataclass
@@ -19,6 +19,7 @@ class Location:
             ``(0, 0)``)
 
     """
+
     file: Optional[Path]
     line: int = 0
     columns: Tuple[int, int] = (0, 0)
