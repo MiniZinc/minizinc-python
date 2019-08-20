@@ -2,6 +2,7 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import asyncio
 import re
 import subprocess
 import warnings
@@ -114,6 +115,39 @@ class CLIDriver(Driver):
         if output.returncode != 0:
             raise parse_error(output.stderr)
         return output
+
+    @staticmethod
+    def list_to_str(li):
+        return [str(i) for i in li]
+
+    async def create_process(self, args: List[str], solver: Optional[Solver] = None):
+        # TODO: Add documentation
+        if solver is None:
+            proc = await asyncio.create_subprocess_exec(
+                *self.list_to_str(
+                    [self._executable, "--allow-multiple-assignments"] + args
+                ),
+                stdin=None,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+        else:
+            with solver.configuration() as conf:
+                proc = await asyncio.create_subprocess_exec(
+                    *self.list_to_str(
+                        [
+                            self._executable,
+                            "--solver",
+                            conf,
+                            "--allow-multiple-assignments",
+                        ]
+                        + args
+                    ),
+                    stdin=None,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+        return proc
 
     @property
     def minizinc_version(self) -> tuple:

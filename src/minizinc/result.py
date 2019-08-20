@@ -7,7 +7,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum, auto
-from typing import Dict, List, Optional, Sequence, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 from .error import MiniZincError
 from .instance import Instance, Method
@@ -146,10 +146,10 @@ class Status(Enum):
                 problem.
 
         Returns:
-            Status: Status that could be determined from the output.
+            Optional[Status]: Status that could be determined from the output.
 
         """
-        s = cls.UNKNOWN
+        s = None
         if b"=====ERROR=====" in output:
             s = cls.ERROR
         elif b"=====UNKNOWN=====" in output:
@@ -204,6 +204,38 @@ class Solution:
         """Overrides the default implementation of item access (obj[key]) to directly
         access the assignments."""
         return self.assignments.__getitem__(key)
+
+
+def parse_solution(raw: bytes) -> Tuple[Optional[Dict], Dict]:
+    # Parse statistics
+    statistics = {}
+    matches = re.findall(rb"%%%mzn-stat:? (\w*)=(.*)", raw)
+    for m in matches:
+        set_stat(statistics, m[0].decode(), m[1].decode())
+    match = re.search(rb"% time elapsed: (\d+.\d+) s", raw)
+    if match:
+        time_us = int(float(match[1]) * 1000000)
+        statistics["time"] = timedelta(microseconds=time_us)
+
+    # Parse solution
+    solution = None
+    raw = re.sub(
+        rb"^-{10}|={5}(ERROR|UNKNOWN|UNSATISFIABLE|UNSATorUNBOUNDED|UNBOUNDED|)?={5}",
+        b"",
+        raw,
+        flags=re.MULTILINE,
+    )
+    raw = re.sub(rb"^\w*%.*\n?", b"", raw, flags=re.MULTILINE)
+    if b"{" in raw:
+        solution = {}
+        dict = json.loads(raw, cls=MZNJSONDecoder)
+        for k, v in dict.items():
+            if not k.startswith("_"):
+                solution[k] = v
+            elif k == "objective":
+                solution["objective"] = v
+
+    return solution, statistics
 
 
 class Result:
