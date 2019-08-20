@@ -8,6 +8,7 @@ from .driver import Driver, find_driver
 from .error import MiniZincError
 from .instance import Instance
 from .model import Method, Model
+from .result import Result, Status
 from .solver import Solver
 
 Instance = Instance
@@ -32,5 +33,7 @@ __all__ = [
     "Method",
     "MiniZincError",
     "Model",
+    "Result",
     "Solver",
+    "Status",
 ]

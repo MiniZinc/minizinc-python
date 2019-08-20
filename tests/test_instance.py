@@ -21,8 +21,8 @@ class TestAssign(InstanceTestCase):
         self.instance["n"] = 14
         result = self.instance.solve(all_solutions=True)
         assert result.status == Status.ALL_SOLUTIONS
-        assert len(result) == 1
-        assert result[0]["x"] == [i for i in range(2, 5 + 1)]
+        assert len(result.solution) == 1
+        assert result.solution[0]["x"] == [i for i in range(2, 5 + 1)]
 
     def test_reassign(self):
         self.instance["n"] = 14
@@ -42,36 +42,36 @@ class TestBranch(InstanceTestCase):
     def test_add_data(self):
         result = self.instance.solve(all_solutions=True)
         assert result.status == Status.ALL_SOLUTIONS
-        assert len(result) == 12
+        assert len(result.solution) == 12
         with self.instance.branch() as child:
             child["n"] = 15
             result = child.solve(all_solutions=True)
             assert result.status == Status.ALL_SOLUTIONS
-            assert len(result) == 5
+            assert len(result.solution) == 5
         with self.instance.branch() as child:
             child["n"] = 14
             result = child.solve(all_solutions=True)
             assert result.status == Status.ALL_SOLUTIONS
-            assert len(result) == 7
+            assert len(result.solution) == 7
 
     def test_extra_constraint(self):
         self.instance["n"] = 14
         result = self.instance.solve(all_solutions=True)
         assert result.status == Status.ALL_SOLUTIONS
-        assert len(result) == 7
+        assert len(result.solution) == 7
         with self.instance.branch() as child:
             child.add_string("constraint all_different(x);")
             result = child.solve(all_solutions=True)
             assert result.status == Status.ALL_SOLUTIONS
-            assert len(result) == 1
+            assert len(result.solution) == 1
 
     def test_replace_data(self):
         self.instance["n"] = 14
         result = self.instance.solve(all_solutions=True)
         assert result.status == Status.ALL_SOLUTIONS
-        assert len(result) == 7
+        assert len(result.solution) == 7
         with self.instance.branch() as child:
             child["n"] = 15
             result = child.solve(all_solutions=True)
             assert result.status == Status.UNSATISFIABLE
-            assert len(result) == 0
+            assert len(result.solution) == 0

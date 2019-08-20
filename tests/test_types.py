@@ -14,14 +14,14 @@ class TestEnum(InstanceTestCase):
 
     def test_value(self):
         self.instance.add_string("constraint d == Mo;")
-        result = self.instance.solve()
+        (_, result, _) = self.instance.solve()
         assert isinstance(result["d"], str)
         assert result["d"] == "Mo"
 
     def test_cmp_in_instance(self):
         self.instance.add_string("var DAY: d2;")
         self.instance.add_string("constraint d < d2;")
-        result = self.instance.solve()
+        (_, result, _) = self.instance.solve()
         assert isinstance(result["d"], str)
         assert isinstance(result["d2"], str)
         # TODO: assert result["d"] < result["d2"]
@@ -29,11 +29,11 @@ class TestEnum(InstanceTestCase):
     def test_cmp_between_instances(self):
         append = "constraint d == Mo;"
         self.instance.add_string(append)
-        result = self.instance.solve()
+        (_, result, _) = self.instance.solve()
 
         inst = Instance(self.solver)
         inst.add_string(self.code + append)
-        result2 = inst.solve()
+        (_, result2, _) = inst.solve()
         assert isinstance(result["d"], str)
         assert isinstance(result2["d"], str)
         assert result["d"] == result2["d"]
@@ -46,6 +46,6 @@ class TestEnum(InstanceTestCase):
           """
             + append
         )
-        result2 = inst.solve()
+        (_, result2, _) = inst.solve()
         # TODO: assert type(result["d"]) != type(result2["d"])
         # TODO: assert result["d"] == result2["d"]

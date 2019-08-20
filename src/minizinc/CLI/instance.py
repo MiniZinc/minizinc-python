@@ -19,7 +19,7 @@ from ..error import parse_error
 from ..instance import Instance, Method
 from ..json import MZNJSONEncoder
 from ..model import Model
-from ..result import Status, parse_solution, set_stat
+from ..result import Result, Status, parse_solution, set_stat
 from ..solver import Solver
 from .driver import CLIDriver, to_python_type
 
@@ -244,7 +244,7 @@ class CLIInstance(Instance):
                     elif line_status is Status.SATISFIED:
                         status = line_status
                         solution, statistics = parse_solution(raw_sol)
-                        yield status, solution, statistics
+                        yield Result(status, solution, statistics)
                         raw_sol = b""
                     # Search is complete or an error has occurred
                     else:
@@ -261,7 +261,7 @@ class CLIInstance(Instance):
                 raw_sol += await proc.stdout.read()
                 solution, statistics = parse_solution(raw_sol)
                 assert solution is None
-                yield status, solution, statistics
+                yield Result(status, solution, statistics)
 
                 # Raise error if required
                 if code != 0 or status == Status.ERROR:
@@ -283,7 +283,11 @@ class CLIInstance(Instance):
             status = Status.UNKNOWN
             solution = None
             statistics = {}
-            if all_solutions or intermediate_solutions:
+
+            multiple_solutions = (
+                all_solutions or intermediate_solutions or nr_solutions is not None
+            )
+            if multiple_solutions:
                 solution = []
 
             async for (_status, _solution, _statistics) in self.solution_stream(
@@ -298,11 +302,11 @@ class CLIInstance(Instance):
                 status = _status
                 statistics.update(_statistics)
                 if _solution is not None:
-                    if all_solutions or intermediate_solutions:
+                    if multiple_solutions:
                         solution.append(_solution)
                     else:
                         solution = _solution
-            return status, solution, statistics
+            return Result(status, solution, statistics)
 
         # TODO: This is paraphrased code from asyncio.run(), but that is not available
         # in Python 3.6

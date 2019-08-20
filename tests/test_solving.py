@@ -2,7 +2,6 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from minizinc import Solver
 from minizinc.instance import Method
 from minizinc.result import Status
 from support import InstanceTestCase
@@ -13,22 +12,21 @@ class TestSatisfy(InstanceTestCase):
 
     def test_solve(self):
         assert self.instance.method == Method.SATISFY
-        result = self.instance.solve()
-        assert result.status == Status.SATISFIED
-        assert result["x"] in range(1, 5 + 1)
-        assert len(result) == 1
+        (status, solution, _) = self.instance.solve()
+        assert status == Status.SATISFIED
+        assert solution["x"] in range(1, 5 + 1)
 
     def test_all_solution(self):
-        result = self.instance.solve(all_solutions=True)
-        assert result.status == Status.ALL_SOLUTIONS
-        assert len(result) == 5
-        assert sorted([sol["x"] for sol in result]) == [i for i in range(1, 5 + 1)]
+        (status, solutions, _) = self.instance.solve(all_solutions=True)
+        assert status == Status.ALL_SOLUTIONS
+        assert len(solutions) == 5
+        assert sorted([sol["x"] for sol in solutions]) == [i for i in range(1, 5 + 1)]
 
     def test_nr_solutions(self):
-        result = self.instance.solve(nr_solutions=3)
-        assert result.status == Status.SATISFIED
-        assert len(result) == 3
-        for sol in result:
+        (status, solutions, _) = self.instance.solve(nr_solutions=3)
+        assert status == Status.SATISFIED
+        assert len(solutions) == 3
+        for sol in solutions:
             assert sol["x"] in range(1, 5 + 1)
 
 
@@ -43,13 +41,11 @@ class TestMaximise(InstanceTestCase):
         result = self.instance.solve()
         assert result.status == Status.OPTIMAL_SOLUTION
         assert result.objective == 25
-        assert len(result) == 1
 
     def test_intermediate(self):
-        result = self.instance.solve()
-        result.access_all = True
-        assert len(result) == 21
-        assert result[len(result) - 1].objective == 25
+        result = self.instance.solve(intermediate_solutions=True)
+        assert len(result.solution) == 21
+        assert result.objective == 25
 
 
 class TestParameter(InstanceTestCase):
@@ -75,37 +71,7 @@ class TestParameter(InstanceTestCase):
         assert self.instance.method == Method.SATISFY
         result = self.instance.solve()
         assert result.status == Status.SATISFIED
-        assert len(result["q"]) == 4
-
-
-class CheckResults(InstanceTestCase):
-    code = """
-        array[1..2] of var 1..10: x;
-        constraint x[1] + 1 = x[2];
-    """
-    other_solver = Solver.lookup("chuffed")
-
-    def test_correct(self):
-        assert self.instance.method == Method.SATISFY
-        result = self.instance.solve()
-        assert result.check(self.other_solver)
-
-    def test_incorrect(self):
-        assert self.instance.method == Method.SATISFY
-        result = self.instance.solve()
-        result.access_all = True
-        result[0].assignments["x"] = [2, 1]
-        assert not result.check(self.other_solver)
-
-    def test_check_all(self):
-        assert self.instance.method == Method.SATISFY
-        result = self.instance.solve(all_solutions=True)
-        assert result.check(self.other_solver, range(len(result)))
-
-    def test_check_specific(self):
-        assert self.instance.method == Method.SATISFY
-        result = self.instance.solve(nr_solutions=5)
-        assert result.check(self.other_solver, [1, 2])
+        assert len(result.solution["q"]) == 4
 
 
 class CheckEmpty(InstanceTestCase):
@@ -114,5 +80,5 @@ class CheckEmpty(InstanceTestCase):
     def test_empty(self):
         assert self.instance.method == Method.SATISFY
         result = self.instance.solve()
-        assert len(result) == 1
-        assert len(result._solutions[0].assignments) == 0
+        assert len(result.solution) == 0
+        assert result.status == Status.SATISFIED
