@@ -2,11 +2,11 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import asyncio
 import contextlib
 import json
 import os
 import re
-import subprocess
 import tempfile
 from datetime import timedelta
 from pathlib import Path
@@ -19,7 +19,7 @@ from ..error import parse_error
 from ..instance import Instance, Method
 from ..json import MZNJSONEncoder
 from ..model import Model
-from ..result import Result, Status, parse_solution, set_stat
+from ..result import Status, parse_solution, set_stat
 from ..solver import Solver
 from .driver import CLIDriver, to_python_type
 
@@ -236,17 +236,19 @@ class CLIInstance(Instance):
             try:
                 while not proc.stdout.at_eof():
                     line = await proc.stdout.readline()  # TODO: Add hard timeout
-                    status = Status.from_output(line, self.method)
+                    line_status = Status.from_output(line, self.method)
                     # In the middle of a solution, keep reading
-                    if status is None:
+                    if line_status is None:
                         raw_sol += line
                     # End of a solution, parse and yield
-                    elif status is Status.SATISFIED:
-                        (solution, statistics) = parse_solution(raw_sol)
-                        yield (status, solution, statistics)
+                    elif line_status is Status.SATISFIED:
+                        status = line_status
+                        solution, statistics = parse_solution(raw_sol)
+                        yield status, solution, statistics
                         raw_sol = b""
                     # Search is complete or an error has occurred
                     else:
+                        status = line_status
                         break
 
                 code = await proc.wait()
@@ -257,9 +259,9 @@ class CLIInstance(Instance):
 
                 # Read remaining text in buffer and parse the remaining statistics
                 raw_sol += await proc.stdout.read()
-                (solution, statistics) = parse_solution(raw_sol)
+                solution, statistics = parse_solution(raw_sol)
                 assert solution is None
-                yield (status, solution, statistics)
+                yield status, solution, statistics
 
                 # Raise error if required
                 if code != 0 or status == Status.ERROR:
@@ -273,104 +275,44 @@ class CLIInstance(Instance):
         processes: Optional[int] = None,
         random_seed: Optional[int] = None,
         all_solutions=False,
+        intermediate_solutions=False,
         free_search: bool = False,
-        ignore_errors=False,
         **kwargs,
     ):
-        # TODO: use solution_stream() method
-        # Set standard command line arguments
-        cmd = ["--output-mode", "json", "--output-time", "--output-objective"]
-        # Enable statistics
-        cmd.append("-s")
+        async def read_stream():
+            status = Status.UNKNOWN
+            solution = None
+            statistics = {}
+            if all_solutions or intermediate_solutions:
+                solution = []
 
-        # Process number of solutions to be generated
-        if all_solutions:
-            if nr_solutions is not None:
-                raise ValueError(
-                    "The number of solutions cannot be limited when looking "
-                    "for all solutions"
-                )
-            if self.method != Method.SATISFY:
-                raise NotImplementedError(
-                    "Finding all optimal solutions is not yet implemented"
-                )
-            if "-a" not in self._solver.stdFlags:
-                raise NotImplementedError("Solver does not support the -a flag")
-            cmd.append("-a")
-        elif nr_solutions is not None:
-            if nr_solutions <= 0:
-                raise ValueError(
-                    "The number of solutions can only be set to a positive "
-                    "integer number"
-                )
-            if self.method != Method.SATISFY:
-                raise NotImplementedError(
-                    "Finding all optimal solutions is not yet implemented"
-                )
-            if "-n" not in self._solver.stdFlags:
-                raise NotImplementedError("Solver does not support the -n flag")
-            cmd.extend(["-n", str(nr_solutions)])
-        if "-a" in self._solver.stdFlags and self.method != Method.SATISFY:
-            cmd.append("-a")
-        # Set number of processes to be used
-        if processes is not None:
-            if "-p" not in self._solver.stdFlags:
-                raise NotImplementedError("Solver does not support the -p flag")
-            cmd.extend(["-p", str(processes)])
-        # Set random seed to be used
-        if random_seed is not None:
-            if "-r" not in self._solver.stdFlags:
-                raise NotImplementedError("Solver does not support the -r flag")
-            cmd.extend(["-r", str(random_seed)])
-        # Enable free search if specified
-        if free_search:
-            if "-f" not in self._solver.stdFlags:
-                raise NotImplementedError("Solver does not support the -f flag")
-            cmd.append("-f")
+            async for (_status, _solution, _statistics) in self.solution_stream(
+                timeout=timeout,
+                nr_solutions=nr_solutions,
+                processes=processes,
+                random_seed=random_seed,
+                all_solutions=all_solutions,
+                free_search=free_search,
+                **kwargs,
+            ):
+                status = _status
+                statistics.update(_statistics)
+                if _solution is not None:
+                    if all_solutions or intermediate_solutions:
+                        solution.append(_solution)
+                    else:
+                        solution = _solution
+            return status, solution, statistics
 
-        # Set time limit for the MiniZinc solving
-        if timeout is not None:
-            cmd.extend(["--time-limit", str(int(timeout.total_seconds() * 1000))])
-
-        for flag, value in kwargs.items():
-            if not flag.startswith("-"):
-                flag = "--" + flag
-            if type(value) is bool:
-                if value:
-                    cmd.append(flag)
-            else:
-                cmd.extend([flag, str(value)])
-
-        # Add files as last arguments
-        with self.files() as files:
-            cmd.extend(files)
-            # Run the MiniZinc process
-            hard_timeout = (
-                timeout + timedelta(seconds=2) if timeout is not None else None
-            )
-            try:
-                output = self._driver.run(
-                    cmd, solver=self._solver, timeout=hard_timeout
-                )
-                code = output.returncode
-                stdout = output.stdout
-                stderr = output.stderr
-            except subprocess.TimeoutExpired as e:
-                code = 0
-                stdout = e.stdout
-                stderr = e.stderr
-
-        # Raise error if required
-        if code != 0:
-            err = parse_error(stderr)
-            if ignore_errors:
-                res = Result()
-                res.error = err
-                return res
-            else:
-                raise err
-
-        return Result.from_output(self, stdout, all_solutions, nr_solutions)
+        # TODO: This is paraphrased code from asyncio.run(), but that is not available
+        # in Python 3.6
+        loop = asyncio.events.new_event_loop()
+        try:
+            asyncio.events.set_event_loop(loop)
+            return loop.run_until_complete(read_stream())
+        finally:
+            asyncio.events.set_event_loop(None)
+            loop.close()
 
     @contextlib.contextmanager
     def flat(self, timeout: Optional[timedelta] = None):
