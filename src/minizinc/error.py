@@ -5,10 +5,11 @@
 import re
 from pathlib import Path
 from typing import NamedTuple, Optional, Tuple
+from dataclasses import dataclass
 
 
-# TODO: Python 3.7 -> @dataclass
-class Location(NamedTuple):
+@dataclass
+class Location:
     """Representation of a location within a file
 
     Attributes:
@@ -18,7 +19,6 @@ class Location(NamedTuple):
             ``(0, 0)``)
 
     """
-
     file: Optional[Path]
     line: int = 0
     columns: Tuple[int, int] = (0, 0)
