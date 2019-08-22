@@ -231,37 +231,30 @@ class CLIInstance(Instance):
             proc = await self._driver.create_process(cmd, solver=self._solver)
 
             status = Status.UNKNOWN
-            raw_sol = b""
             code = 0
             try:
                 while not proc.stdout.at_eof():
-                    line = await proc.stdout.readline()  # TODO: Add hard timeout
-                    line_status = Status.from_output(line, self.method)
-                    # In the middle of a solution, keep reading
-                    if line_status is None:
-                        raw_sol += line
-                    # End of a solution, parse and yield
-                    elif line_status is Status.SATISFIED:
-                        status = line_status
-                        solution, statistics = parse_solution(raw_sol)
-                        yield Result(status, solution, statistics)
-                        raw_sol = b""
-                    # Search is complete or an error has occurred
-                    else:
-                        status = line_status
-                        break
+                    # TODO: Add hard timeout
+                    raw_sol = await proc.stdout.readuntil(b"----------\n")
+                    status = Status.SATISFIED
+                    solution, statistics = parse_solution(raw_sol)
+                    yield Result(Status.SATISFIED, solution, statistics)
 
                 code = await proc.wait()
-
+            except asyncio.IncompleteReadError as err:
+                # End of Stream has been reached
+                # Read remaining text in buffer and parse the remaining statistics
+                remainder = err.partial
+                final_status = Status.from_output(remainder, self.method)
+                if final_status is not None:
+                    status = final_status
+                solution, statistics = parse_solution(remainder)
+                assert solution is None
+                yield Result(status, solution, statistics)
+                code = await proc.wait()
             finally:
                 if proc.returncode is None:
                     proc.terminate()
-
-                # Read remaining text in buffer and parse the remaining statistics
-                raw_sol += await proc.stdout.read()
-                solution, statistics = parse_solution(raw_sol)
-                assert solution is None
-                yield Result(status, solution, statistics)
 
                 # Raise error if required
                 if code != 0 or status == Status.ERROR:
