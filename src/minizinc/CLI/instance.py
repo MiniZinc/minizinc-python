@@ -8,7 +8,7 @@ import json
 import os
 import re
 import tempfile
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Type
 
@@ -149,7 +149,7 @@ class CLIInstance(Instance):
         for (key, value) in interface["output"].items():
             self._output[key] = to_python_type(value)
 
-    async def solution_stream(
+    async def solutions(
         self,
         timeout: Optional[timedelta] = None,
         nr_solutions: Optional[int] = None,
@@ -232,10 +232,19 @@ class CLIInstance(Instance):
 
             status = Status.UNKNOWN
             code = 0
+            deadline = None
+            if timeout is not None:
+                deadline = datetime.now() + timeout + timedelta(seconds=2)
+
             try:
                 while not proc.stdout.at_eof():
-                    # TODO: Add hard timeout
-                    raw_sol = await proc.stdout.readuntil(b"----------\n")
+                    if deadline is None:
+                        raw_sol = await proc.stdout.readuntil(b"----------\n")
+                    else:
+                        t = deadline - datetime.now()
+                        raw_sol = await asyncio.wait_for(
+                            proc.stdout.readuntil(b"----------\n"), t.total_seconds()
+                        )
                     status = Status.SATISFIED
                     solution, statistics = parse_solution(raw_sol)
                     yield Result(Status.SATISFIED, solution, statistics)
@@ -250,7 +259,8 @@ class CLIInstance(Instance):
                     status = final_status
                 solution, statistics = parse_solution(remainder)
                 assert solution is None
-                yield Result(status, solution, statistics)
+                if status != Status.SATISFIED or len(statistics) > 0:
+                    yield Result(status, solution, statistics)
                 code = await proc.wait()
             finally:
                 if proc.returncode is None:
@@ -283,7 +293,7 @@ class CLIInstance(Instance):
             if multiple_solutions:
                 solution = []
 
-            async for (_status, _solution, _statistics) in self.solution_stream(
+            async for (_status, _solution, _statistics) in self.solutions(
                 timeout=timeout,
                 nr_solutions=nr_solutions,
                 processes=processes,
