@@ -89,7 +89,8 @@ class CLIDriver(Driver):
             timeout = timeout.total_seconds()
         if solver is None:
             output = subprocess.run(
-                [str(self._executable), "--allow-multiple-assignments"] + args,
+                [str(self._executable), "--allow-multiple-assignments"]
+                + [str(arg) for arg in args],
                 stdin=None,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -104,7 +105,7 @@ class CLIDriver(Driver):
                         conf,
                         "--allow-multiple-assignments",
                     ]
-                    + args,
+                    + [str(arg) for arg in args],
                     stdin=None,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
