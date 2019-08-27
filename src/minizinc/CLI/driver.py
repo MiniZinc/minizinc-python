@@ -116,17 +116,13 @@ class CLIDriver(Driver):
             raise parse_error(output.stderr)
         return output
 
-    @staticmethod
-    def list_to_str(li):
-        return [str(i) for i in li]
-
     async def create_process(self, args: List[str], solver: Optional[Solver] = None):
         # TODO: Add documentation
         if solver is None:
             proc = await asyncio.create_subprocess_exec(
-                *self.list_to_str(
-                    [self._executable, "--allow-multiple-assignments"] + args
-                ),
+                str(self._executable),
+                "--allow-multiple-assignments",
+                *[str(arg) for arg in args],
                 stdin=None,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
@@ -134,15 +130,11 @@ class CLIDriver(Driver):
         else:
             with solver.configuration() as conf:
                 proc = await asyncio.create_subprocess_exec(
-                    *self.list_to_str(
-                        [
-                            self._executable,
-                            "--solver",
-                            conf,
-                            "--allow-multiple-assignments",
-                        ]
-                        + args
-                    ),
+                    str(self._executable),
+                    "--solver",
+                    conf,
+                    "--allow-multiple-assignments",
+                    *[str(arg) for arg in args],
                     stdin=None,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
