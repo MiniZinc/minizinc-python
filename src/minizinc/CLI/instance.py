@@ -264,7 +264,8 @@ class CLIInstance(Instance):
                 code = await proc.wait()
             finally:
                 if proc.returncode is None:
-                    proc.terminate()
+                    proc.kill()
+                    await proc.wait()
 
                 # Raise error if required
                 if code != 0 or status == Status.ERROR:
