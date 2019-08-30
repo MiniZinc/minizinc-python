@@ -22,6 +22,7 @@ This part of the documentation guides you through all of the library’s usage p
     :maxdepth: 2
 
     getting_started
+    advanced_usage
     library_structure
 
 API Reference
