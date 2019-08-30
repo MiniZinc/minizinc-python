@@ -188,7 +188,7 @@ class CLIInstance(Instance):
                 )
             if self.method != Method.SATISFY:
                 raise NotImplementedError(
-                    "Finding all optimal solutions is not yet implemented"
+                    "Finding multiple optimal solutions is not yet implemented"
                 )
             if "-n" not in self._solver.stdFlags:
                 raise NotImplementedError("Solver does not support the -n flag")
@@ -259,11 +259,11 @@ class CLIInstance(Instance):
                     status = final_status
                 solution, statistics = parse_solution(remainder)
                 assert solution is None
-                if status != Status.SATISFIED or len(statistics) > 0:
-                    yield Result(status, solution, statistics)
+                yield Result(status, solution, statistics)
                 code = await proc.wait()
             finally:
                 if proc.returncode is None:
+                    # TODO: Ensure all child watchers are being disposed of correctly
                     proc.kill()
                     await proc.wait()
 
@@ -272,7 +272,7 @@ class CLIInstance(Instance):
                     stderr = await proc.stderr.read()
                     raise parse_error(stderr)
 
-    def solve(
+    async def solve_async(
         self,
         timeout: Optional[timedelta] = None,
         nr_solutions: Optional[int] = None,
@@ -283,44 +283,33 @@ class CLIInstance(Instance):
         free_search: bool = False,
         **kwargs,
     ):
-        async def read_stream():
-            status = Status.UNKNOWN
-            solution = None
-            statistics = {}
+        status = Status.UNKNOWN
+        solution = None
+        statistics = {}
 
-            multiple_solutions = (
-                all_solutions or intermediate_solutions or nr_solutions is not None
-            )
-            if multiple_solutions:
-                solution = []
+        multiple_solutions = (
+            all_solutions or intermediate_solutions or nr_solutions is not None
+        )
+        if multiple_solutions:
+            solution = []
 
-            async for (_status, _solution, _statistics) in self.solutions(
-                timeout=timeout,
-                nr_solutions=nr_solutions,
-                processes=processes,
-                random_seed=random_seed,
-                all_solutions=all_solutions,
-                free_search=free_search,
-                **kwargs,
-            ):
-                status = _status
-                statistics.update(_statistics)
-                if _solution is not None:
-                    if multiple_solutions:
-                        solution.append(_solution)
-                    else:
-                        solution = _solution
-            return Result(status, solution, statistics)
-
-        # TODO: This is paraphrased code from asyncio.run(), but that is not available
-        # in Python 3.6
-        loop = asyncio.events.new_event_loop()
-        try:
-            asyncio.events.set_event_loop(loop)
-            return loop.run_until_complete(read_stream())
-        finally:
-            asyncio.events.set_event_loop(None)
-            loop.close()
+        async for (_status, _solution, _statistics) in self.solutions(
+            timeout=timeout,
+            nr_solutions=nr_solutions,
+            processes=processes,
+            random_seed=random_seed,
+            all_solutions=all_solutions,
+            free_search=free_search,
+            **kwargs,
+        ):
+            status = _status
+            statistics.update(_statistics)
+            if _solution is not None:
+                if multiple_solutions:
+                    solution.append(_solution)
+                else:
+                    solution = _solution
+        return Result(status, solution, statistics)
 
     @contextlib.contextmanager
     def flat(self, timeout: Optional[timedelta] = None):

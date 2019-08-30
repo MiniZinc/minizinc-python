@@ -1,8 +1,11 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import asyncio
 import contextlib
+import sys
 from abc import ABC, abstractmethod
+from datetime import timedelta
 from typing import Optional
 
 from .model import Method, Model
@@ -27,8 +30,17 @@ class Instance(Model, ABC):
         """
         pass
 
-    @abstractmethod
-    def solve(self, *args, **kwargs):
+    def solve(
+        self,
+        timeout: Optional[timedelta] = None,
+        nr_solutions: Optional[int] = None,
+        processes: Optional[int] = None,
+        random_seed: Optional[int] = None,
+        all_solutions: bool = False,
+        intermediate_solutions: bool = False,
+        free_search: bool = False,
+        **kwargs,
+    ):
         """Solves the Instance using its given solver configuration.
 
         Find the solutions to the given MiniZinc instance using the given solver
@@ -52,20 +64,104 @@ class Instance(Model, ABC):
                 within the instance. (Only available when the ``-f`` flag is
                 supported by the solver).
             all_solutions (bool): Request to solver to find all solutions. (Only
-                available on satisfaction problems and when the ``-n`` flag is
+                available on satisfaction problems and when the ``-a`` flag is
                 supported by the solver)
-            intermediate_solutions (bool): TODO
+            intermediate_solutions (bool): Request the solver to output any
+                intermediate solutions that are found during the solving
+                process. (Only available on optimisation problems and when the
+                ``-a`` flag is supported by the solver)
             **kwargs: Other flags to be passed onto the solver. ``--`` can be
                 omitted in the name of the flag. If the type of the flag is
                 Boolean, then its value signifies its occurrence.
 
         Returns:
-            Tuple[Status, Optional[Dict], Dict]: tuple containing solving
-                status, values assigned, and statistical information.
+            Tuple[Status, Optional[Union[List[Dict], Dict]], Dict]:
+                tuple containing solving status, values assigned in the
+                solution, and statistical information. If no solutions is found
+                the second member of the tuple is ``None``.
 
         Raises:
             MiniZincError: An error occurred while compiling or solving the
                 model instance.
+
+        """
+        coroutine = self.solve_async(
+            timeout=timeout,
+            nr_solutions=nr_solutions,
+            processes=processes,
+            random_seed=random_seed,
+            all_solutions=all_solutions,
+            intermediate_solutions=intermediate_solutions,
+            free_search=free_search,
+            **kwargs,
+        )
+        if sys.version_info >= (3, 7):
+            return asyncio.run(coroutine)
+        else:
+            loop = asyncio.events.new_event_loop()
+            try:
+                asyncio.events.set_event_loop(loop)
+                return loop.run_until_complete(coroutine)
+            finally:
+                asyncio.events.set_event_loop(None)
+                loop.close()
+
+    @abstractmethod
+    async def solve_async(
+        self,
+        timeout: Optional[timedelta] = None,
+        nr_solutions: Optional[int] = None,
+        processes: Optional[int] = None,
+        random_seed: Optional[int] = None,
+        all_solutions=False,
+        intermediate_solutions=False,
+        free_search: bool = False,
+        **kwargs,
+    ):
+        """Solves the Instance using its given solver configuration in a coroutine.
+
+        This method returns a coroutine that finds solutions to the given
+        MiniZinc instance. For more information regarding this methods and its
+        arguments, see the documentation of :func:`~MiniZinc.Instance.solve`.
+
+        Returns:
+            Tuple[Status, Optional[Union[List[Dict], Dict]], Dict]:
+                tuple containing solving status, values assigned, and
+                statistical information.
+
+        Raises:
+            MiniZincError: An error occurred while compiling or solving the
+                model instance.
+
+        """
+        pass
+
+    @abstractmethod
+    async def solutions(
+        self,
+        timeout: Optional[timedelta] = None,
+        nr_solutions: Optional[int] = None,
+        processes: Optional[int] = None,
+        random_seed: Optional[int] = None,
+        all_solutions=False,
+        intermediate_solutions=False,
+        free_search: bool = False,
+        ignore_errors=False,
+        **kwargs,
+    ):
+        """An asynchronous generator for solutions of the MiniZinc instance.
+
+        This method provides an asynchronous generator for the solutions of the
+        MiniZinc instance. Every (intermediate) solution is yielded one at a
+        time, the last item yielded from the generator will not contain a new
+        solution, but will return the final Status and all remaining
+        statistical values. For more information regarding this methods and its
+        arguments, see the documentation of :func:`~MiniZinc.Instance.solve`.
+
+        Yields:
+            Tuple[Status, Optional[Dict], Dict]:
+                tuple containing solving status, values assigned, and
+                statistical information.
 
         """
         pass
@@ -84,6 +180,5 @@ class Instance(Model, ABC):
 
         Yields:
             Instance: branched child instance
-
         """
         pass
