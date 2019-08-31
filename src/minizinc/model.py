@@ -5,7 +5,7 @@
 import json
 import threading
 import warnings
-from enum import Enum
+from enum import Enum, EnumMeta
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -55,12 +55,14 @@ class Model:
     _data: Dict[str, Any]
     _includes: List[Path]
     _code_fragments: List[str]
+    _enum_map: Dict[str, Enum]
     _lock: threading.Lock
 
     def __init__(self, files: Optional[Union[ParPath, List[ParPath]]] = None):
         self._data = {}
         self._includes = []
         self._code_fragments = []
+        self._enum_map = {}
         self._lock = threading.Lock()
         if isinstance(files, Path) or isinstance(files, str):
             self.add_file(files)
@@ -82,6 +84,8 @@ class Model:
         """
         with self._lock:
             if self._data.get(key, None) is None:
+                if isinstance(value, EnumMeta):
+                    self._register_enum_values(value)
                 self._data.__setitem__(key, value)
             else:
                 if self._data[key] != value:
@@ -93,6 +97,16 @@ class Model:
                         """
                         % key
                     )
+
+    def _register_enum_values(self, t: EnumMeta):
+        for name in t.__members__:
+            if name in self._enum_map:
+                raise AssertionError(
+                    "Identifier '%s' is used in multiple enumerated types within "
+                    "the same model. Identifiers in enumerated types have to be unique"
+                    % name
+                )
+            self._enum_map[name] = t.__members__[name]
 
     def __getitem__(self, key: str) -> Any:
         """Get parameter of Model.

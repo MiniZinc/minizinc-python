@@ -1,6 +1,7 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import enum
 
 from minizinc import Instance
 from support import InstanceTestCase
@@ -49,6 +50,21 @@ class TestEnum(InstanceTestCase):
         (_, result2, _) = inst.solve()
         # TODO: assert type(result["d"]) != type(result2["d"])
         # TODO: assert result["d"] == result2["d"]
+
+    def test_assign(self):
+        self.instance = Instance(self.solver)
+        self.instance.add_string(
+            """
+            enum TT;
+            var TT: t1;
+            """
+        )
+        TT = enum.Enum("TT", ["one"])
+        self.instance["TT"] = TT
+        (_, result, _) = self.instance.solve()
+
+        assert isinstance(result["t1"], TT)
+        assert result["t1"] is TT.one
 
 
 class TestSets(InstanceTestCase):

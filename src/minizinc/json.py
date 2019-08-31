@@ -2,6 +2,7 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from enum import Enum
 from json import JSONDecoder, JSONEncoder
 
 
@@ -11,8 +12,10 @@ class MZNJSONEncoder(JSONEncoder):
 
         if isinstance(o, set):
             return {"set": [i for i in o]}
-        if isinstance(o, range):
+        elif isinstance(o, range):
             return {"set": [i for i in o]}
+        elif isinstance(o, Enum):
+            return {"e": o.name}
         elif isinstance(o, Solver):
             return {
                 "name": o.name,
@@ -35,11 +38,14 @@ class MZNJSONEncoder(JSONEncoder):
 
 
 class MZNJSONDecoder(JSONDecoder):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, enum_map=None, *args, **kwargs):
+        if enum_map is None:
+            self.enum_map = {}
+        else:
+            self.enum_map = enum_map
         JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
 
-    @staticmethod
-    def object_hook(obj):
+    def object_hook(self, obj):
         from .solver import Solver
 
         if len(obj) == 1 and "set" in obj:
@@ -57,7 +63,7 @@ class MZNJSONDecoder(JSONDecoder):
                     li.append(item)
             return set(li)
         elif len(obj) == 1 and "e" in obj:
-            return obj["e"]
+            return self.enum_map.get(obj["e"], obj["e"])
         elif all(
             [i in obj.keys() for i in ["name", "version", "id", "executable"]]
         ) and all([i in Solver.FIELDS for i in obj.keys()]):

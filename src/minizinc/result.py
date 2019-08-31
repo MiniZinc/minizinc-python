@@ -213,7 +213,9 @@ class Result(namedtuple("Result", ["status", "solution", "statistics"])):
             return None
 
 
-def parse_solution(raw: bytes) -> Tuple[Optional[Dict], Dict]:
+def parse_solution(
+    raw: bytes, enum_map: Dict[str, Enum]
+) -> Tuple[Optional[Dict], Dict]:
     """Parses a solution from the output of a MiniZinc process.
 
     Parses the MiniZinc output between solution separators. The solution is
@@ -226,6 +228,8 @@ def parse_solution(raw: bytes) -> Tuple[Optional[Dict], Dict]:
     Args:
         raw (bytes): The output on stdout for one solution of the process
             solving the MiniZinc instance.
+        enum_map (Dict[str, Enum]): A map to map enumeration identifiers to
+            the internal values used in Python
 
     Returns:
         Tuple[Optional[Dict], Dict]: A tuple containing the parsed solution
@@ -253,7 +257,7 @@ def parse_solution(raw: bytes) -> Tuple[Optional[Dict], Dict]:
     raw = re.sub(rb"^\w*%.*\n?", b"", raw, flags=re.MULTILINE)
     if b"{" in raw:
         solution = {}
-        dict = json.loads(raw, cls=MZNJSONDecoder)
+        dict = json.loads(raw, enum_map=enum_map, cls=MZNJSONDecoder)
         for k, v in dict.items():
             if not k.startswith("_"):
                 solution[k] = v

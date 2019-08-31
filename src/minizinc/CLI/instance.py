@@ -9,6 +9,7 @@ import os
 import re
 import tempfile
 from datetime import datetime, timedelta
+from enum import EnumMeta
 from pathlib import Path
 from typing import Dict, List, Optional, Type
 
@@ -48,6 +49,7 @@ class CLIInstance(Instance):
             self._includes = model._includes.copy()
             self._code_fragments = model._code_fragments.copy()
             self._data = dict.copy(model._data)
+            self._enum_map = dict.copy(model._enum_map)
         if driver is not None:
             self._driver = driver
         else:
@@ -91,6 +93,10 @@ class CLIInstance(Instance):
             for k, v in self._data.items():
                 if isinstance(v, UnknownExpression):
                     tmp_fragments.append("%s = %s;\n" % (k, v))
+                elif isinstance(v, EnumMeta):
+                    tmp_fragments.append(
+                        "%s = { %s };\n" % (k, ", ".join([i for i in v.__members__]))
+                    )
                 else:
                     tmp_data[k] = v
             if len(tmp_data) > 0:
@@ -246,7 +252,7 @@ class CLIInstance(Instance):
                             proc.stdout.readuntil(b"----------\n"), t.total_seconds()
                         )
                     status = Status.SATISFIED
-                    solution, statistics = parse_solution(raw_sol)
+                    solution, statistics = parse_solution(raw_sol, self._enum_map)
                     yield Result(Status.SATISFIED, solution, statistics)
 
                 code = await proc.wait()
@@ -257,7 +263,7 @@ class CLIInstance(Instance):
                 final_status = Status.from_output(remainder, self.method)
                 if final_status is not None:
                     status = final_status
-                solution, statistics = parse_solution(remainder)
+                solution, statistics = parse_solution(remainder, self._enum_map)
                 assert solution is None
                 yield Result(status, solution, statistics)
                 code = await proc.wait()
