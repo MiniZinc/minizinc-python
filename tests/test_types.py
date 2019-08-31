@@ -41,11 +41,27 @@ class TestEnum(InstanceTestCase):
         inst = Instance(self.solver)
         inst.add_string(
             """
-          enum DAY = {Mo, Tu, We, Th, Fr};
-          var DAY: d;
-          """
+            enum DAY = {Mo, Tu, We, Th, Fr};
+            var DAY: d;
+            """
             + append
         )
         (_, result2, _) = inst.solve()
         # TODO: assert type(result["d"]) != type(result2["d"])
         # TODO: assert result["d"] == result2["d"]
+
+
+class TestSets(InstanceTestCase):
+    def test_ranges(self):
+        self.instance.add_string(
+            """
+            var set of 0..10: s;
+            set of int: s1;
+            constraint s1 = s;
+            """
+        )
+
+        self.instance["s1"] = range(1, 4)
+        (_, result, _) = self.instance.solve()
+        assert isinstance(result["s"], range)
+        assert result["s"] == range(1, 4)

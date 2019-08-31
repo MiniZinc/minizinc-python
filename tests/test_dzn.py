@@ -43,11 +43,16 @@ def test_dzn_string():
 
 
 def test_dzn_set():
+    # Set literals
     assert parse_dzn("x = {}") == {"x": set()}
     assert parse_dzn("x = {1}") == {"x": {1}}
     assert parse_dzn("x = {1,2,3}") == {"x": {1, 2, 3}}
     assert parse_dzn("x = {1,1,2}") == {"x": {1, 1, 2}}
     assert parse_dzn("x = {1.2,2.1}") == {"x": {1.2, 2.1}}
+
+    # Set Ranges
+    assert parse_dzn("x = 1..1") == {"x": range(1, 1)}
+    assert parse_dzn("x = 1..3") == {"x": range(1, 3)}
 
 
 def test_dzn_array():

@@ -23,6 +23,7 @@ dzn_grammar = r"""
     array: "[" list "]"
     array2d: "[" "|" [ list ("|" list)*] "|" "]"
     set: "{" list "}"
+       | int ".." int
 
     int: /-?((0o[0-7]+)|(0x[0-9A-Fa-f]+)|(\d+))/
     float: /-?((\d+\.\d+[Ee][-+]?\d+)|(\d+[Ee][-+]?\d+)|(\d+\.\d+))/
@@ -66,6 +67,13 @@ class TreeToDZN(Transformer):
         return [l for l in s]
 
     @staticmethod
+    def set(s):
+        if len(s) == 1:
+            return set(s[0])
+        else:
+            return range(s[0], s[1])
+
+    @staticmethod
     def string(s):
         return str(s[0][1:-1])
 
@@ -79,7 +87,6 @@ class TreeToDZN(Transformer):
 
     items = dict
     unknown = arg1_construct(UnknownExpression)
-    set = arg1_construct(set)
     list = list
     array = arg1_construct(lambda i: i)
     ident = arg1_construct(str)

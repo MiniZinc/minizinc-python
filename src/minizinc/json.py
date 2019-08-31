@@ -11,6 +11,8 @@ class MZNJSONEncoder(JSONEncoder):
 
         if isinstance(o, set):
             return {"set": [i for i in o]}
+        if isinstance(o, range):
+            return {"set": [i for i in o]}
         elif isinstance(o, Solver):
             return {
                 "name": o.name,
@@ -41,6 +43,10 @@ class MZNJSONDecoder(JSONDecoder):
         from .solver import Solver
 
         if len(obj) == 1 and "set" in obj:
+            if len(obj["set"]) == 1 and isinstance(obj["set"][0], list):
+                assert len(obj["set"][0]) == 2
+                return range(obj["set"][0][0], obj["set"][0][1] + 1)
+
             li = []
             for item in obj["set"]:
                 if isinstance(item, list):
