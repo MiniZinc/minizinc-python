@@ -3,7 +3,8 @@ API
 
 .. module:: minizinc
 
-This part of the documentation lists the full API reference of all public classes and functions.
+This part of the documentation lists the full API reference of all public
+classes and functions.
 
 Solvers
 -------
