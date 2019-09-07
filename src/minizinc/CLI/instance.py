@@ -8,6 +8,7 @@ import json
 import os
 import re
 import tempfile
+from collections import namedtuple
 from datetime import datetime, timedelta
 from enum import EnumMeta
 from pathlib import Path
@@ -17,9 +18,9 @@ import minizinc
 
 from ..dzn import UnknownExpression
 from ..error import parse_error
-from ..instance import Instance, Method
+from ..instance import Instance
 from ..json import MZNJSONEncoder
-from ..model import Model
+from ..model import Method, Model
 from ..result import Result, Status, parse_solution, set_stat
 from ..solver import Solver
 from .driver import CLIDriver, to_python_type
@@ -30,6 +31,7 @@ class CLIInstance(Instance):
     _solver: Solver
     _input: Optional[Dict[str, Type]]
     _output: Optional[Dict[str, Type]]
+    _output_type: Optional[Type]
     _method: Optional[Method]
     _parent: Optional[Instance]
 
@@ -45,6 +47,7 @@ class CLIInstance(Instance):
         self._method = None
         self._input = None
         self._output = None
+        self._output_type = None
         if model is not None:
             self._includes = model._includes.copy()
             self._code_fragments = model._code_fragments.copy()
@@ -133,6 +136,12 @@ class CLIInstance(Instance):
             self.analyse()
         return self._input
 
+    @property
+    def output_type(self):
+        if self._output_type is None:
+            self.analyse()
+        return self._output_type
+
     def analyse(self):
         """Discovers basic information about a CLIInstance
 
@@ -154,6 +163,14 @@ class CLIInstance(Instance):
         self._output = {}
         for (key, value) in interface["output"].items():
             self._output[key] = to_python_type(value)
+
+        keys = (
+            ["objective" for _ in range(int(self._method is not Method.SATISFY))]
+            + list(self._output.keys())
+            + ["as_str"]
+        )
+        self._output_type = namedtuple("Solution", keys)
+        self._output_type.__str__ = lambda self: self.as_str
 
     async def solutions(
         self,
@@ -252,7 +269,9 @@ class CLIInstance(Instance):
                             proc.stdout.readuntil(b"----------\n"), t.total_seconds()
                         )
                     status = Status.SATISFIED
-                    solution, statistics = parse_solution(raw_sol, self._enum_map)
+                    solution, statistics = parse_solution(
+                        raw_sol, self.output_type, self._enum_map
+                    )
                     yield Result(Status.SATISFIED, solution, statistics)
 
                 code = await proc.wait()
@@ -263,7 +282,10 @@ class CLIInstance(Instance):
                 final_status = Status.from_output(remainder, self.method)
                 if final_status is not None:
                     status = final_status
-                solution, statistics = parse_solution(remainder, self._enum_map)
+                solution, statistics = parse_solution(
+                    remainder, self.output_type, self._enum_map
+                )
+                print(solution)
                 assert solution is None
                 yield Result(status, solution, statistics)
                 code = await proc.wait()
@@ -299,7 +321,7 @@ class CLIInstance(Instance):
         if multiple_solutions:
             solution = []
 
-        async for (_status, _solution, _statistics) in self.solutions(
+        async for result in self.solutions(
             timeout=timeout,
             nr_solutions=nr_solutions,
             processes=processes,
@@ -308,13 +330,13 @@ class CLIInstance(Instance):
             free_search=free_search,
             **kwargs,
         ):
-            status = _status
-            statistics.update(_statistics)
-            if _solution is not None:
+            status = result.status
+            statistics.update(result.statistics)
+            if result.solution is not None:
                 if multiple_solutions:
-                    solution.append(_solution)
+                    solution.append(result.solution)
                 else:
-                    solution = _solution
+                    solution = result.solution
         return Result(status, solution, statistics)
 
     @contextlib.contextmanager

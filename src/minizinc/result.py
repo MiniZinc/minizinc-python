@@ -6,8 +6,9 @@ import json
 import re
 from collections import namedtuple
 from datetime import timedelta
+from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, Optional, Tuple, Union, Type
 
 from .instance import Method
 from .json import MZNJSONDecoder
@@ -180,17 +181,21 @@ class Status(Enum):
         return False
 
 
-class Result(namedtuple("Result", ["status", "solution", "statistics"])):
+@dataclass
+class Result:
     """Representation of a MiniZinc solution in Python
 
     Attributes:
         status (Status): The solving status of the MiniZinc instance
-        solution (Dict[str, Union[bool, float, int]]): Variable assignments
+        solution (Tuple): Variable assignments
             made to form the solution
         statistics (Dict[str, Union[float, int, timedelta]]): Statistical
             information generated during the search for the Solution
 
     """
+    status: Status
+    solution: Tuple
+    statistics: Dict[str, Union[float, int, timedelta]]
 
     @property
     def objective(self) -> Optional[Union[int, float]]:
@@ -206,15 +211,71 @@ class Result(namedtuple("Result", ["status", "solution", "statistics"])):
         """
         if self.solution is not None:
             if isinstance(self.solution, list):
-                return self.solution[-1].get("objective", None)
+                return getattr(self.solution[-1], "objective", None)
             else:
-                return self.solution.get("objective", None)
+                return getattr(self.solution, "objective", None)
         else:
             return None
 
+    def __getitem__(self, key):
+        """Retrieves solution or a member of a solution.
+
+        Overrides the default implementation of item access (obj[key]) to
+        retrieve a solution object or member of a solution from the result
+        object.
+        - If the Result object does not contain any solutions, then a
+          KeyError will always be raised.
+        - If the Result object contains a single solutions, then the names of a
+          variable can be used in this method to retrieve its value in the
+          solution.
+        - If the Result object contains multiple solutions, then a single
+          integer can be used to retrieve the solution object or a tuple of an
+          integer and the name of a variable can be used to retrieve the value
+          of that variable in the numbered solution object.
+
+        Args:
+            key: solution number or name of the solution member.
+
+        Returns:
+            Solution object or the value of the member in the solution.
+
+        Raises:
+            KeyError: No solution was found, solution number is out of range,
+                or no solution member with this name exists.
+
+        """
+        try:
+            if self.solution is not None:
+                if isinstance(self.solution, list):
+                    if isinstance(key, tuple):
+                        return getattr(self.solution.__getitem__(key[0]), key[1])
+                    else:
+                        return self.solution.__getitem__(key)
+                else:
+                    return getattr(self.solution, key)
+            else:
+                raise KeyError
+        except AttributeError:
+            raise KeyError
+
+    def __len__(self):
+        """Returns the number of solutions included in the Result object
+
+        Returns:
+            int: number of solution that can be accessed
+
+        """
+        if self.solution is None:
+            return 0
+        elif isinstance(self.solution, list):
+            return len(self.solution)
+        else:
+            return 1
+
+
 
 def parse_solution(
-    raw: bytes, enum_map: Dict[str, Enum]
+    raw: bytes, output_type: Type, enum_map: Dict[str, Enum]
 ) -> Tuple[Optional[Dict], Dict]:
     """Parses a solution from the output of a MiniZinc process.
 
@@ -228,6 +289,7 @@ def parse_solution(
     Args:
         raw (bytes): The output on stdout for one solution of the process
             solving the MiniZinc instance.
+        output_type (Type): The type used for every solution
         enum_map (Dict[str, Enum]): A map to map enumeration identifiers to
             the internal values used in Python
 
@@ -256,12 +318,10 @@ def parse_solution(
     )
     raw = re.sub(rb"^\w*%.*\n?", b"", raw, flags=re.MULTILINE)
     if b"{" in raw:
-        solution = {}
-        dict = json.loads(raw, enum_map=enum_map, cls=MZNJSONDecoder)
-        for k, v in dict.items():
-            if not k.startswith("_"):
-                solution[k] = v
-            elif k == "_objective":
-                solution["objective"] = v
+        tmp = json.loads(raw, enum_map=enum_map, cls=MZNJSONDecoder)
+        tmp["as_str"] = tmp.pop("_output", str(raw))
+        if "_objective" in tmp:
+            tmp["objective"] = tmp.pop("_objective")
+        solution = output_type(**tmp)
 
     return solution, statistics

@@ -24,7 +24,7 @@ class CheckResults(InstanceTestCase):
         assert self.instance.method == Method.SATISFY
         result = self.instance.solve()
         result.access_all = True
-        result.solution["x"] = [2, 1]
+        result.solution = self.instance.output_type(x=[2,1], as_str="")
         assert not check_solution(self.instance, result, self.other_solver)
 
     def test_check_all(self):

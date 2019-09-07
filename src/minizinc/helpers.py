@@ -42,8 +42,9 @@ def check_solution(
     for i in solution_nrs:
         sol = solutions[i]
         with instance.branch() as child:
-            for k, v in sol.items():
-                child[k] = v
+            for k, v in sol._asdict().items():
+                if k not in ("objective", "as_str"):
+                    child[k] = v
             try:
                 check = child.solve(timeout=timedelta(seconds=1))
                 print(result)
