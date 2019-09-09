@@ -92,10 +92,10 @@ class CLIInstance(Instance):
             tmp_data = {}
             for k, v in self._data.items():
                 if isinstance(v, UnknownExpression):
-                    tmp_fragments.append("%s = %s;\n" % (k, v))
+                    tmp_fragments.append(f"{k} = {v};\n")
                 elif isinstance(v, EnumMeta):
                     tmp_fragments.append(
-                        "%s = { %s };\n" % (k, ", ".join([i for i in v.__members__]))
+                        f"{k} = {{{', '.join([i for i in v.__members__])}}};\n"
                     )
                 else:
                     tmp_data[k] = v

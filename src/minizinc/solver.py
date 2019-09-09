@@ -170,8 +170,8 @@ class Solver:
                 break
         if lookup is None:
             raise LookupError(
-                "No solver id or tag '%s' found, available options: %s"
-                % (tag, sorted([x for x in names]))
+                f"No solver id or tag '{tag}' found, available options: "
+                f"{sorted([x for x in names])}"
             )
 
         ret = cls._from_dict(lookup)

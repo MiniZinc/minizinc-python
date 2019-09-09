@@ -47,7 +47,7 @@ class Method(Enum):
             return cls.MAXIMIZE
         else:
             raise ValueError(
-                "Unknown Method %r, valid options are 'sat', 'min', or 'max'" % s
+                f"Unknown Method {s}, valid options are 'sat', 'min', or 'max'"
             )
 
 
@@ -90,21 +90,18 @@ class Model:
             else:
                 if self._data[key] != value:
                     raise AssertionError(
-                        """
-                        The parameter '%s' cannot be assigned multiple values.
-                        If you are changing the model, consider using the branch
-                        method before assigning the parameter
-                        """
-                        % key
+                        f"The parameter '%s' cannot be assigned multiple values. "
+                        f"If you are changing the model, consider using the branch "
+                        f"method before assigning the parameter."
                     )
 
     def _register_enum_values(self, t: EnumMeta):
         for name in t.__members__:
             if name in self._enum_map:
                 raise AssertionError(
-                    "Identifier '%s' is used in multiple enumerated types within "
-                    "the same model. Identifiers in enumerated types have to be unique"
-                    % name
+                    f"Identifier '{name}' is used in multiple enumerated types"
+                    f"within the same model. Identifiers in enumerated types "
+                    f"have to be unique."
                 )
             self._enum_map[name] = t.__members__[name]
 
@@ -154,8 +151,8 @@ class Model:
                     self.__setitem__(k, v)
             except LarkError:
                 warnings.warn(
-                    "Could not parse %s. Parameters included within this file are"
-                    "not available in Python" % file
+                    f"Could not parse {file}. Parameters included within this file are "
+                    f"not available in Python"
                 )
                 with self._lock:
                     self._includes.append(file)
