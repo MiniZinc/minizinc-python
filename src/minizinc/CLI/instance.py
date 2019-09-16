@@ -147,6 +147,24 @@ class CLIInstance(Instance):
             self.analyse()
         return self._output_type
 
+    @output_type.setter
+    def output_type(self, ntype: Type):
+        """Set the type used to stored solutions from the model.
+
+        This method fixes the type used to store the solution values created in
+        the process of solving the Instance. This method is particularly
+        helpful when comparing the results of multiple instances together. The
+        type must support initialisation with the assignments returned by
+        MiniZinc. These assignments currently always include "__output_item"
+        and include "objective" if the instance is not a satisfaction problem.
+
+        Args:
+            ntype (Type): The type of which new values will be initialised
+                for every solution found during the solving process.
+
+        """
+        self._output_type = ntype
+
     def analyse(self):
         """Discovers basic information about a CLIInstance
 
