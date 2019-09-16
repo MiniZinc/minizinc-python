@@ -21,7 +21,7 @@ from ..dzn import UnknownExpression
 from ..error import parse_error
 from ..instance import Instance
 from ..json import MZNJSONEncoder
-from ..model import Method, Model
+from ..model import Method, Model, ParPath
 from ..result import Result, Status, parse_solution, set_stat
 from ..solver import Solver
 from .driver import CLIDriver, to_python_type
@@ -68,6 +68,11 @@ class CLIInstance(Instance):
     def branch(self) -> Instance:  # TODO: Self reference
         child = self.__class__(self._solver)
         child._parent = self
+        # Copy current information from analysis
+        child._method = self.method
+        child._output_type = self.output_type
+        child._output = self._output
+        child._input = self.input
         try:
             with self._lock:
                 yield child
@@ -137,13 +142,13 @@ class CLIInstance(Instance):
 
     @property
     def input(self):
-        if self._input is None:
+        if self._input is None or self._method is None:
             self.analyse()
         return self._input
 
     @property
     def output_type(self):
-        if self._output_type is None:
+        if self._output_type is None or self._method is None:
             self.analyse()
         return self._output_type
 
@@ -179,16 +184,19 @@ class CLIInstance(Instance):
         interface = json.loads(
             output.stdout
         )  # TODO: Possibly integrate with the MZNJSONDecoder
+        old_method = self._method
         self._method = Method.from_string(interface["method"])
         self._input = {}
         for key, value in interface["input"].items():
             self._input[key] = to_python_type(value)
+        old_output = self._output
         self._output = {}
         for (key, value) in interface["output"].items():
             self._output[key] = to_python_type(value)
 
-        if self._output_type is None or issubclass(
-            self._output_type, _GeneratedSolution
+        if self._output_type is None or (
+            issubclass(self._output_type, _GeneratedSolution)
+            and (self._output != old_output or self._method != old_method)
         ):
             fields = []
             if self._method is not Method.SATISFY:
@@ -196,6 +204,7 @@ class CLIInstance(Instance):
             for k, v in self._output.items():
                 fields.append((k, v))
             fields.append(("__output_item", str, field(default="")))
+
             self._output_type = make_dataclass(
                 "Solution",
                 fields,
@@ -207,6 +216,9 @@ class CLIInstance(Instance):
                 },
                 frozen=True,
             )
+
+    def _reset_analysis(self):
+        self._method = None
 
     async def solutions(
         self,
@@ -414,3 +426,11 @@ class CLIInstance(Instance):
         finally:
             os.remove(fzn.name)
             os.remove(ozn.name)
+
+    def add_file(self, file: ParPath, parse_data: bool = True) -> None:
+        self._reset_analysis()
+        return super().add_file(file, parse_data)
+
+    def add_string(self, code: str) -> None:
+        self._reset_analysis()
+        return super().add_string(code)
