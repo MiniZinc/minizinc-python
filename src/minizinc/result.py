@@ -4,11 +4,10 @@
 
 import json
 import re
-from collections import namedtuple
-from datetime import timedelta
 from dataclasses import dataclass
+from datetime import timedelta
 from enum import Enum, auto
-from typing import Dict, Optional, Tuple, Union, Type
+from typing import Dict, Optional, Tuple, Type, Union
 
 from .instance import Method
 from .json import MZNJSONDecoder
@@ -193,6 +192,7 @@ class Result:
             information generated during the search for the Solution
 
     """
+
     status: Status
     solution: Tuple
     statistics: Dict[str, Union[float, int, timedelta]]
@@ -273,7 +273,6 @@ class Result:
             return 1
 
 
-
 def parse_solution(
     raw: bytes, output_type: Type, enum_map: Dict[str, Enum]
 ) -> Tuple[Optional[Dict], Dict]:
@@ -319,9 +318,10 @@ def parse_solution(
     raw = re.sub(rb"^\w*%.*\n?", b"", raw, flags=re.MULTILINE)
     if b"{" in raw:
         tmp = json.loads(raw, enum_map=enum_map, cls=MZNJSONDecoder)
-        tmp["as_str"] = tmp.pop("_output", str(raw))
         if "_objective" in tmp:
             tmp["objective"] = tmp.pop("_objective")
+        if "_output" in tmp:
+            tmp["__output_item"] = tmp.pop("_output")
         solution = output_type(**tmp)
 
     return solution, statistics

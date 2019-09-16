@@ -8,9 +8,10 @@ import json
 import os
 import re
 import tempfile
-from collections import namedtuple
+from dataclasses import field, make_dataclass
 from datetime import datetime, timedelta
 from enum import EnumMeta
+from numbers import Number
 from pathlib import Path
 from typing import Dict, List, Optional, Type
 
@@ -24,6 +25,10 @@ from ..model import Method, Model
 from ..result import Result, Status, parse_solution, set_stat
 from ..solver import Solver
 from .driver import CLIDriver, to_python_type
+
+
+class _GeneratedSolution:
+    pass
 
 
 class CLIInstance(Instance):
@@ -164,13 +169,26 @@ class CLIInstance(Instance):
         for (key, value) in interface["output"].items():
             self._output[key] = to_python_type(value)
 
-        keys = (
-            ["objective" for _ in range(int(self._method is not Method.SATISFY))]
-            + list(self._output.keys())
-            + ["as_str"]
-        )
-        self._output_type = namedtuple("Solution", keys)
-        self._output_type.__str__ = lambda self: self.as_str
+        if self._output_type is None or issubclass(
+            self._output_type, _GeneratedSolution
+        ):
+            fields = []
+            if self._method is not Method.SATISFY:
+                fields.append(("objective", Number))
+            for k, v in self._output.items():
+                fields.append((k, v))
+            fields.append(("__output_item", str, field(default="")))
+            self._output_type = make_dataclass(
+                "Solution",
+                fields,
+                bases=(_GeneratedSolution,),
+                namespace={
+                    "__str__": lambda self: self.__repr__()
+                    if self.__output_item == ""
+                    else self.__output_item
+                },
+                frozen=True,
+            )
 
     async def solutions(
         self,

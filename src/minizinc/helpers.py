@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from datetime import timedelta
 from typing import Optional, Sequence
 
@@ -42,8 +43,8 @@ def check_solution(
     for i in solution_nrs:
         sol = solutions[i]
         with instance.branch() as child:
-            for k, v in sol._asdict().items():
-                if k not in ("objective", "as_str"):
+            for k, v in asdict(sol).items():
+                if k not in ("objective", "__output_item"):
                     child[k] = v
             try:
                 check = child.solve(timeout=timedelta(seconds=1))

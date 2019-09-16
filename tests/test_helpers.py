@@ -23,8 +23,7 @@ class CheckResults(InstanceTestCase):
     def test_incorrect(self):
         assert self.instance.method == Method.SATISFY
         result = self.instance.solve()
-        result.access_all = True
-        result.solution = self.instance.output_type(x=[2,1], as_str="")
+        result.solution = self.instance.output_type(x=[2, 1])
         assert not check_solution(self.instance, result, self.other_solver)
 
     def test_check_all(self):

@@ -34,7 +34,7 @@ class TestEnum(InstanceTestCase):
 
         inst = Instance(self.solver)
         inst.add_string(self.code + append)
-        result2= inst.solve()
+        result2 = inst.solve()
         assert isinstance(result["d"], str)
         assert isinstance(result2["d"], str)
         assert result["d"] == result2["d"]
