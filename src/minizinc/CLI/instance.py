@@ -311,7 +311,6 @@ class CLIInstance(Instance):
                 solution, statistics = parse_solution(
                     remainder, self.output_type, self._enum_map
                 )
-                print(solution)
                 assert solution is None
                 yield Result(status, solution, statistics)
                 code = await proc.wait()

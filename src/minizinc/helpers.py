@@ -48,8 +48,6 @@ def check_solution(
                     child[k] = v
             try:
                 check = child.solve(timeout=timedelta(seconds=1))
-                print(result)
-                print(check)
                 if result.status != check.status:
                     if check.status in [
                         minizinc.Status.SATISFIED,
