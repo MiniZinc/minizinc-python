@@ -8,6 +8,6 @@ gecode = Solver.lookup("gecode")
 instance = Instance(gecode, nqueens)
 # Assign 4 to n
 instance["n"] = 4
-(status, solution, statistics) = instance.solve()
+result = instance.solve()
 # Output the array q
-print(solution["q"])
+print(result["q"])

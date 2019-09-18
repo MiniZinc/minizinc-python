@@ -11,10 +11,10 @@ async def show_queens(n):
     gecode = minizinc.Solver.lookup("gecode")
     instance = minizinc.Instance(gecode, model)
 
-    async for (_, sol, _) in instance.solutions(all_solutions=True):
-        if sol is None:
+    async for result in instance.solutions(all_solutions=True):
+        if result.solution is None:
             continue
-        queens = sol["q"]
+        queens = result["q"]
 
         for row in range(len(queens)):
             # Print line
