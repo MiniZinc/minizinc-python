@@ -34,11 +34,10 @@ class _GeneratedSolution:
 class CLIInstance(Instance):
     _driver: CLIDriver
     _solver: Solver
-    _input: Optional[Dict[str, Type]]
-    _output: Optional[Dict[str, Type]]
-    _output_type: Optional[Type]
-    _method: Optional[Method]
-    _parent: Optional[Instance]
+    _input: Optional[Dict[str, Type]] = None
+    _output: Optional[Dict[str, Type]] = None
+    _method: Optional[Method] = None
+    _parent: Optional[Instance] = None
 
     def __init__(
         self,
@@ -48,21 +47,24 @@ class CLIInstance(Instance):
     ):
         super().__init__(solver, model)
         self._solver = solver
-        self._parent = None
-        self._method = None
-        self._input = None
-        self._output = None
-        self._output_type = None
-        if model is not None:
-            self._includes = model._includes.copy()
-            self._code_fragments = model._code_fragments.copy()
-            self._data = dict.copy(model._data)
-            self._enum_map = dict.copy(model._enum_map)
         if driver is not None:
             self._driver = driver
         else:
             self._driver = minizinc.default_driver
         assert isinstance(self._driver, CLIDriver)
+
+        if model is not None:
+            self.output_type = model.output_type
+            self._includes = model._includes.copy()
+            self._code_fragments = model._code_fragments.copy()
+            self._data = dict.copy(model._data)
+            self._enum_map = dict.copy(model._enum_map)
+
+            # Generate output_type to ensure the same type between different
+            # instances of the same model
+            if self.output_type is None:
+                self.analyse()
+                model.output_type = self.output_type
 
     @contextlib.contextmanager
     def branch(self) -> Instance:  # TODO: Self reference
@@ -70,7 +72,7 @@ class CLIInstance(Instance):
         child._parent = self
         # Copy current information from analysis
         child._method = self.method
-        child._output_type = self.output_type
+        child.output_type = self.output_type
         child._output = self._output
         child._input = self.input
         try:
@@ -146,30 +148,6 @@ class CLIInstance(Instance):
             self.analyse()
         return self._input
 
-    @property
-    def output_type(self):
-        if self._output_type is None or self._method is None:
-            self.analyse()
-        return self._output_type
-
-    @output_type.setter
-    def output_type(self, ntype: Type):
-        """Set the type used to stored solutions from the model.
-
-        This method fixes the type used to store the solution values created in
-        the process of solving the Instance. This method is particularly
-        helpful when comparing the results of multiple instances together. The
-        type must support initialisation with the assignments returned by
-        MiniZinc. These assignments currently always include "__output_item"
-        and include "objective" if the instance is not a satisfaction problem.
-
-        Args:
-            ntype (Type): The type of which new values will be initialised
-                for every solution found during the solving process.
-
-        """
-        self._output_type = ntype
-
     def analyse(self):
         """Discovers basic information about a CLIInstance
 
@@ -194,8 +172,8 @@ class CLIInstance(Instance):
         for (key, value) in interface["output"].items():
             self._output[key] = to_python_type(value)
 
-        if self._output_type is None or (
-            issubclass(self._output_type, _GeneratedSolution)
+        if self.output_type is None or (
+            issubclass(self.output_type, _GeneratedSolution)
             and (self._output != old_output or self._method != old_method)
         ):
             fields = []
@@ -205,7 +183,7 @@ class CLIInstance(Instance):
                 fields.append((k, v))
             fields.append(("__output_item", str, field(default="")))
 
-            self._output_type = make_dataclass(
+            self.output_type = make_dataclass(
                 "Solution",
                 fields,
                 bases=(_GeneratedSolution,),

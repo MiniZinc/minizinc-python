@@ -7,7 +7,7 @@ import threading
 import warnings
 from enum import Enum, EnumMeta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Type, Union
 
 from lark.exceptions import LarkError
 
@@ -52,10 +52,24 @@ class Method(Enum):
 
 
 class Model:
-    _data: Dict[str, Any]
-    _includes: List[Path]
+    """The representation of a MiniZinc model in Python
+
+    Attributes:
+        output_type (Type): the type used to store the solution values created
+            in the process of solving the Instance. This attribute is
+            particularly helpful when comparing the results of multiple
+            instances together. The type must support initialisation with the
+            assignments returned by MiniZinc. These assignments currently
+            always include "__output_item" and include "objective" if the
+            instance is not a satisfaction problem.
+
+    """
+    output_type: Optional[Type] = None
+
     _code_fragments: List[str]
+    _data: Dict[str, Any]
     _enum_map: Dict[str, Enum]
+    _includes: List[Path]
     _lock: threading.Lock
 
     def __init__(self, files: Optional[Union[ParPath, List[ParPath]]] = None):
