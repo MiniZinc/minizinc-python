@@ -64,6 +64,7 @@ class Model:
             instance is not a satisfaction problem.
 
     """
+
     output_type: Optional[Type] = None
 
     _code_fragments: List[str]

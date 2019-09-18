@@ -4,6 +4,20 @@ Advanced Usage
 This page provides examples of usages of MiniZinc Python other than solving just
 a basic model instance.
 
+Custom Output Type
+------------------
+
+You can change the type in which MiniZinc Python will provide its solutions. By
+default the output type will automatically be generated for every mode, but it
+can be changed by setting the `output_type` attribute of a model or instance.
+This can be useful if you require the data in a particular format for later use.
+The following example solves a task assignment problem and its result will store
+the solutions in a class with an additional method to check that the tasks in
+the solution are scheduled uniquely.
+
+
+..  literalinclude:: examples/output_type.py
+    :language: python
 
 Concurrent Solving
 ------------------
