@@ -27,8 +27,9 @@ patterns.
     :maxdepth: 2
 
     getting_started
-    advanced_usage
+    basic_usage
     library_structure
+    advanced_usage
 
 API Reference
 -------------
