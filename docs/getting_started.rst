@@ -29,6 +29,7 @@ installing MiniZinc Python is using the following command:
     $ pip install minizinc
 
 ..  note::
+
     On machines that have both Python 2 and Python 3 installed you might have to
     use ``pip3`` instead of ``pip``
 
@@ -51,3 +52,71 @@ The following Python code will use MiniZinc Python to:
 
 ..  literalinclude:: examples/nqueens.py
     :language: python
+
+Finding all solutions
+---------------------
+
+Sometimes we don't just require one solution for the given MiniZinc instance,
+but all possible solutions. The following variation of the previous example uses
+the ``all_solutions=True`` parameter to ask for all solutions to the problem
+instance.
+
+..  code-block:: python
+
+    from minizinc import Instance, Model, Solver
+
+    gecode = Solver.lookup("gecode")
+
+    nqueens = Model("./nqueens.mzn")
+    instance = Instance(gecode, nqueens)
+    instance["n"] = 4
+
+    # Find and print all possible solutions
+    result = instance.solve(all_solutions=True)
+    for i in range(len(result)):
+        print(result[i, "q"])
+
+The use of the ``all_solutions=True`` parameter is limited to satisfaction
+models (``solve satisfy``). MiniZinc currently does not support looking for all
+solutions for an optimisation model.
+
+Similarly, in a optimisation model (``solve maximize`` or ``solve minimize``) we
+could want access to the intermediate solutions created by the solver during the
+optimisation process. (This could provide insight into the progress the solver
+makes). In this case the ``intermediate_solutions=True`` parameter can be used.
+The following example prints the intermediate solutions that Gecode found to the
+trivial problem of find the highest uneven number between 1 and 10, but trying
+smaller values first.
+
+..  code-block:: python
+
+    from minizinc import Instance, Model, Solver
+
+    gecode = Solver.lookup("gecode")
+
+    trivial = Model()
+    trivial.add_string(
+        """
+        var 1..10: x;
+        constraint (x mod 2) = 1;
+        solve ::int_search([x], input_order, indomain_min) maximize x;
+        """
+    )
+    instance = Instance(gecode, trivial)
+
+    # Find and print all intermediate solutions
+    result = instance.solve(intermediate_solutions=True)
+    for i in range(len(result)):
+        print(result[i, "x"])
+
+..  note::
+
+    Not all solver support the finding of all solutions and the printing of
+    intermediate solutions. Solvers that support these functionalities will have
+    ``-a`` among the standard flags supported by the solvers. MiniZinc Python
+    will automatically check if this flag is available. If this is not the case,
+    then an exception will be thrown when the requesting all or intermediate
+    solutions.
+
+For information about other parameters that are available when solving a model
+instance, see :meth:`minizinc.Instance.solve`
