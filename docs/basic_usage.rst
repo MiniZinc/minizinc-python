@@ -58,3 +58,64 @@ solutions for set variables.
     assert isinstance(result["X"], range)
     print(result["Y"])  # {0, 2, 4}
     assert isinstance(result["Y"], set)
+
+
+Using enumerated types
+-----------------------
+
+The support for enumerated types in MiniZinc Python is still limited. It is,
+however, already supported to assign enumerated types in MiniZinc using a Python
+enumeration. When a enumeration is assigned, the values in the solution are
+ensured to be of the assigned enumerated type. This is demonstrated in the
+following example:
+
+..  code-block:: python
+
+    import enum
+
+    from minizinc import Instance, Model, Solver
+
+    gecode = Solver.lookup("gecode")
+
+    model = Model()
+    model.add_string(
+        """
+        enum DAY;
+        var DAY: d;
+        constraint d = min(DAY);
+        """
+    )
+    instance = Instance(gecode, model)
+
+    Day = enum.Enum("Day", ["Mo", "Tu", "We", "Th", "Fr"])
+    instance["DAY"] = Day
+
+    result = instance.solve()
+    print(result["d"])  # Day.Mo
+    assert isinstance(result["d"], Day)
+
+Enumerations that are defined in MiniZinc are currently not translated into
+Python enumerations. Their values are currently returned as strings. The
+following adaptation of the previous example declares an enumerated type in
+MiniZinc and contains a string in it's solution.
+
+
+..  code-block:: python
+
+    from minizinc import Instance, Model, Solver
+
+    gecode = Solver.lookup("gecode")
+
+    model = Model()
+    model.add_string(
+        """
+        enum DAY = {Mo, Tu, We, Th, Fr};
+        var DAY: d;
+        constraint d = min(DAY);
+        """
+    )
+    instance = Instance(gecode, model)
+
+    result = instance.solve()
+    print(result["d"])  # Mo
+    assert isinstance(result["d"], str)
