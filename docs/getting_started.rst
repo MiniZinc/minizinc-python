@@ -179,5 +179,7 @@ smaller values first.
     then an exception will be thrown when the requesting all or intermediate
     solutions.
 
-For information about other parameters that are available when solving a model
-instance, see :meth:`minizinc.Instance.solve`
+..  seealso::
+
+    For information about other parameters that are available when solving a
+    model instance, see :meth:`minizinc.Instance.solve`
