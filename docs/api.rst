@@ -39,9 +39,6 @@ Results
     :members:
     :special-members:  __getitem__, __len__
 
-..  autoclass:: minizinc.result.Solution
-    :special-members:  __getitem__
-
 ..  autoclass:: minizinc.result.Status
     :members:
 

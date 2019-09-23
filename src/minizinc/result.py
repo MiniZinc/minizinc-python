@@ -186,7 +186,7 @@ class Result:
 
     Attributes:
         status (Status): The solving status of the MiniZinc instance
-        solution (Tuple): Variable assignments
+        solution (Any): Variable assignments
             made to form the solution
         statistics (Dict[str, Union[float, int, timedelta]]): Statistical
             information generated during the search for the Solution
@@ -223,6 +223,7 @@ class Result:
         Overrides the default implementation of item access (obj[key]) to
         retrieve a solution object or member of a solution from the result
         object.
+
         - If the Result object does not contain any solutions, then a
           KeyError will always be raised.
         - If the Result object contains a single solutions, then the names of a
@@ -275,7 +276,7 @@ class Result:
 
 def parse_solution(
     raw: bytes, output_type: Type, enum_map: Dict[str, Enum]
-) -> Tuple[Optional[Dict], Dict]:
+) -> Tuple[Optional[Any], Dict]:
     """Parses a solution from the output of a MiniZinc process.
 
     Parses the MiniZinc output between solution separators. The solution is
