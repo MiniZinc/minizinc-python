@@ -53,6 +53,67 @@ The following Python code will use MiniZinc Python to:
 ..  literalinclude:: examples/nqueens.py
     :language: python
 
+
+Using different solvers
+------------------------
+
+One of MiniZinc's key features is the ability to use multiple solvers. MiniZinc
+Python allows you to use all of MiniZinc's solver using a `solver configuration
+<https://www.minizinc.org/doc-latest/en/fzn-spec.html#solver-configuration-files>`.
+Solver configurations were introduces in MiniZinc 2.2. In MiniZinc Python there
+are three ways of accessing a solver using solver configurations:
+
+I. You can ``lookup`` a solver configuration that is known to MiniZinc. These
+   are solver configurations that are placed on standard locations or in a
+   folder included in the ``$MZN_SOLVER_PATH`` environmental variable. This is
+   the most common way of accessing solvers.
+II. You can ``load`` a solver configuration directly from a solver configuration
+    file, ``.msc``. A description of the formatting of such files can be found
+    in the `MiniZinc documentation
+    <https://www.minizinc.org/doc-latest/en/fzn-spec.html#solver-configuration-files>`.
+    The :meth:`minizinc.Solver.output_configuration` method can be used to
+    generate a valid solver configuration.
+III. You can create a new solver configuration, ``Solver``.
+
+..  note::
+
+    Solver loaded from file (2) or created in MiniZinc Python (3). Cannot share
+    the combination of identifier and version with a solver known to MiniZinc
+    (1). In these cases the solver configuration as known to MiniZinc will be
+    used.
+
+The following example shows an example of each method. It will lookup the
+Chuffed solver, then load a solver configuration from a file located at
+``./solvers/or-tools.msc``, and, finally, create a new solver configuration for
+a solver named "My Solver".
+
+..  code-block:: python
+
+    from minizinc import Solver
+    from pathlib import Path
+
+    # Lookup Chuffed among MiniZinc solver configurations.
+    # The argument can be a solver tag, its full identifier, or the last part of
+    # its identifier
+    chuffed = Solver.lookup("chuffed")
+
+    # Load solver configuration from file
+    or_tools = Solver.load(Path("./solvers/or-tools.msc"))
+
+    # Create a new solver configuration
+    # Arguments: name, version, identifier, executable
+    my_solver = Solver(
+        "My Solver",
+        "0.7",
+        "com.example.mysolver",
+        "/usr/local/bin/fzn-my-solver",
+    )
+
+    # You can now change other options in the solver created configuration
+    my_solver.mznlib = "/usr/local/share/mysolver/mznlib"
+    my_solver.stdFlags = ["-a", "-t", "-s"]
+
+
 Finding all solutions
 ---------------------
 
