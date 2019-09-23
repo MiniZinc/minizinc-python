@@ -4,7 +4,7 @@ Getting Started
 This page will guide you through the process of setting up MiniZinc Python.
 MiniZinc Python requires the following software to be installed on you machine:
 
-- `MiniZinc <https://www.minizinc.org/>`_ 2.2.3 (or higher)
+- `MiniZinc <https://www.minizinc.org/>`_ 2.3.2 (or higher)
 - `Python <https://www.python.org/>`_ 3.6 (or higher)
 
 ..  note::
