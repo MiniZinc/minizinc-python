@@ -13,17 +13,17 @@ from datetime import datetime, timedelta
 from enum import EnumMeta
 from numbers import Number
 from pathlib import Path
-from typing import Dict, List, Optional, Type
+from typing import Any, Dict, Iterator, List, Optional, Type
 
 import minizinc
+from minizinc.error import parse_error
+from minizinc.instance import Instance
+from minizinc.json import MZNJSONEncoder
+from minizinc.model import Method, Model, ParPath
+from minizinc.result import Result, Status, parse_solution, set_stat
+from minizinc.solver import Solver
+from minzinc.dzn import UnknownExpression
 
-from ..dzn import UnknownExpression
-from ..error import parse_error
-from ..instance import Instance
-from ..json import MZNJSONEncoder
-from ..model import Method, Model, ParPath
-from ..result import Result, Status, parse_solution, set_stat
-from ..solver import Solver
 from .driver import CLIDriver, to_python_type
 
 
@@ -88,7 +88,7 @@ class CLIInstance(Instance):
         return self._method
 
     @contextlib.contextmanager
-    def files(self) -> List[Path]:
+    def files(self) -> Iterator[List[Path]]:
         """Gets list of files of the Instance
 
         Files will create a list of paths to the files that together form the
@@ -211,7 +211,12 @@ class CLIInstance(Instance):
         **kwargs,
     ):
         # Set standard command line arguments
-        cmd = ["--output-mode", "json", "--output-time", "--output-objective"]
+        cmd: List[Any] = [
+            "--output-mode",
+            "json",
+            "--output-time",
+            "--output-objective",
+        ]
         # Enable statistics
         cmd.append("-s")
 
@@ -271,7 +276,7 @@ class CLIInstance(Instance):
                 if value:
                     cmd.append(flag)
             else:
-                cmd.extend([flag, str(value)])
+                cmd.extend([flag, value])
 
         # Add files as last arguments
         with self.files() as files:
@@ -338,7 +343,7 @@ class CLIInstance(Instance):
     ):
         status = Status.UNKNOWN
         solution = None
-        statistics = {}
+        statistics: Dict[str, Any] = {}
 
         multiple_solutions = (
             all_solutions or intermediate_solutions or nr_solutions is not None
@@ -378,7 +383,7 @@ class CLIInstance(Instance):
             and a dictionary the statistics of flattening
 
         """
-        cmd = ["--compile", "--statistics"]
+        cmd: List[Any] = ["--compile", "--statistics"]
 
         fzn = tempfile.NamedTemporaryFile(prefix="fzn_", suffix=".fzn", delete=False)
         cmd.extend(["--fzn", fzn.name])
@@ -393,7 +398,7 @@ class CLIInstance(Instance):
             # Run the MiniZinc process
             output = self._driver.run(cmd, solver=self._solver, timeout=timeout)
 
-        statistics = {}
+        statistics: Dict[str, Any] = {}
         matches = re.findall(rb"%%%mzn-stat:? (\w*)=(.*)", output.stdout)
         for m in matches:
             set_stat(statistics, m[0].decode(), m[1].decode())

@@ -6,7 +6,7 @@ from ctypes import c_void_p
 from pathlib import Path
 from typing import Any, List, Optional, Union
 
-from ..instance import Instance, Method
+from minizinc.instance import Instance, Method
 
 
 class APIInstance(Instance):

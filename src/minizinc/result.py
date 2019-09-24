@@ -7,7 +7,7 @@ import re
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum, auto
-from typing import Dict, Optional, Tuple, Type, Union
+from typing import Any, Dict, Optional, Tuple, Type, Union
 
 from .instance import Method
 from .json import MZNJSONDecoder
@@ -298,7 +298,7 @@ def parse_solution(
 
     """
     # Parse statistics
-    statistics = {}
+    statistics: Dict[str, Any] = {}
     matches = re.findall(rb"%%%mzn-stat:? (\w*)=(.*)", raw)
     for m in matches:
         set_stat(statistics, m[0].decode(), m[1].decode())

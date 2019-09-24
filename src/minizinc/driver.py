@@ -110,13 +110,13 @@ def find_driver(
         path_bin = path
         path_lib = path
 
-    path_bin = os.pathsep.join(path_bin)
-    path_lib = os.pathsep.join(path_lib)
+    path_bin_list = os.pathsep.join(path_bin)
+    path_lib_list = os.pathsep.join(path_lib)
 
     # Try to load the MiniZinc C API
     env_backup = os.environ.copy()
-    os.environ["LD_LIBRARY_PATH"] = path_lib
-    os.environ["DYLD_LIBRARY_PATH"] = path_lib
+    os.environ["LD_LIBRARY_PATH"] = path_lib_list
+    os.environ["DYLD_LIBRARY_PATH"] = path_lib_list
     lib = find_library(name)
     os.environ.clear()
     os.environ.update(env_backup)
@@ -127,11 +127,10 @@ def find_driver(
         driver = APIDriver(library)
     else:
         # Try to locate the MiniZinc executable
-        executable = shutil.which(name, path=path_bin)
+        executable = shutil.which(name, path=path_bin_list)
         if executable is not None:
             from minizinc.CLI import CLIDriver
 
-            executable = Path(executable)
-            driver = CLIDriver(executable)
+            driver = CLIDriver(Path(executable))
 
     return driver

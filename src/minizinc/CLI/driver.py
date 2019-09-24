@@ -8,7 +8,7 @@ import subprocess
 import warnings
 from datetime import timedelta
 from pathlib import Path
-from typing import List, Optional, Type
+from typing import Any, List, Optional, Type
 
 import minizinc
 
@@ -81,7 +81,7 @@ class CLIDriver(Driver):
 
     def run(
         self,
-        args: List[str],
+        args: List[Any],
         solver: Optional[Solver] = None,
         timeout: Optional[timedelta] = None,
     ):

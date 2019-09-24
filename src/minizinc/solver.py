@@ -6,7 +6,7 @@ import contextlib
 import json
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
 
 import minizinc
 
@@ -159,8 +159,8 @@ class Solver:
         )  # TODO: Possibly integrate with the MZNJSONDecoder
 
         # Find the specified solver
-        lookup = None
-        names = set()
+        lookup: Optional[Dict[str, Any]] = None
+        names: Set[str] = set()
         for s in solvers:
             s_names = [s["id"], s["id"].split(".")[-1]]
             s_names.extend(s.get("tags", []))
@@ -231,7 +231,7 @@ class Solver:
         return ret
 
     @contextlib.contextmanager
-    def configuration(self) -> str:
+    def configuration(self) -> Iterator[str]:
         """Gives the identifier for the current solver configuration.
 
         Gives an identifier argument that can be used by a CLIDriver to
