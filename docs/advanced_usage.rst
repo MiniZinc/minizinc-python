@@ -4,6 +4,7 @@ Advanced Usage
 This page provides examples of usages of MiniZinc Python other than solving just
 a basic model instance.
 
+
 Custom Output Type
 ------------------
 
@@ -18,6 +19,7 @@ the solution are scheduled uniquely.
 
 ..  literalinclude:: examples/output_type.py
     :language: python
+
 
 Concurrent Solving
 ------------------
@@ -45,5 +47,45 @@ letter Q on any position that contains a queen.
     :language: python
 
 
+..  _multiple-minizinc:
+               
+Using multiple MiniZinc versions
+--------------------------------
 
+MiniZinc Python is designed to be flexible in its communication with MiniZinc.
+That is why it is possible to switch to a different version of MiniZinc, or even
+use multiple versions of MiniZinc at the same time. This can be useful to
+compare different versions of MiniZinc.
 
+In MiniZinc Python a MiniZinc executable or shared library is represented by a
+:class:`Driver` object. The :func:`find_driver` function can help finding a
+compatible MiniZinc executable or shared library and create an associated Driver
+object. The following example shows how to load two versions of MiniZinc and
+sets one as the new default.
+
+..  code-block:: python
+
+    from minizinc import Driver, Instance, Solver, default_driver, find_driver
+
+    print(default_driver.minizinc_version)
+
+    v23: Driver = find_driver(["/minizinc/2.3.2/bin"])
+    print(v23.minizinc_version)
+    gecode = Solver.lookup("gecode", driver=v23)
+    v23_instance = Instance(gecode, driver=v23)
+
+    v24: Driver = find_driver(["/minizinc/2.4.0/bin"])
+    print(v24.minizinc_version)
+    gecode = Solver.lookup("gecode", driver=v24)
+    v24_instance = Instance(gecode, driver=v24)
+
+    v24.make_default()
+    print(default_driver.minizinc_version)
+    gecode = Solver.lookup("gecode")  # using the new default_driver
+    instance = Instance(gecode)
+
+..  seealso::
+
+    For more information about how MiniZinc Python connect to MiniZinc using
+    either an executable or shared library, please read about the :ref:`library
+    structure <library-structure>`

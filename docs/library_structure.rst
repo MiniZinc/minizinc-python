@@ -1,3 +1,5 @@
+..  _library-structure: 
+
 Library Structure
 =================
 
@@ -15,7 +17,7 @@ driver. The specialised versions of classes implement the methods provided by
 the abstract classes in the main package. The specialised versions of classes
 link back to the MiniZinc Driver for their functionality.
 
-If you want to use multiple drivers at the same time, then you can explicitly
-create the drivers (``d = Driver("/path/to/minizinc")``) and find their
-specialised classes as part of their attribures: ``d.Instance`` and
-``d.Solver``.
+..  seealso::
+
+    The advanced usage guide includes a :ref:`section <multiple-minizinc>` on
+    using different and multiple version of MiniZinc at the same time.
