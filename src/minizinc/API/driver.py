@@ -2,68 +2,64 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from ctypes import CDLL, c_bool, c_char_p, c_int, c_void_p
-from datetime import timedelta
-from typing import List, Optional, Tuple, Type
-
-import minizinc
-
-from .. import driver
+from minizinc.driver import Driver
 
 
-class APIDriver(driver.Driver):
+class APIDriver(Driver):
+    pass
     #: Definitions of the MiniZinc API functions
-    API_DEFINITIONS: List[Tuple[str, List[Type], Type]] = [
-        # FUNCTION NAME, ARGUMENT TYPES, RESULT TYPE
-        ("minizinc_version", [], c_char_p),
-        ("minizinc_check_version", [c_int, c_int, c_int], c_bool),
-        ("minizinc_error", [], c_char_p),
-        ("minizinc_solver_init", [c_char_p, c_char_p, c_char_p, c_char_p], c_void_p),
-        ("minizinc_solver_lookup", [c_char_p], c_void_p),
-        ("minizinc_solver_load", [c_char_p], c_void_p),
-        ("minizinc_solver_destroy", [c_void_p], c_bool),
-        ("minizinc_instance_init", [], c_void_p),
-        ("minizinc_instance_destroy", [c_void_p], c_bool),
-    ]
 
-    def __init__(self, library: CDLL):
-        self.library = library
+    # API_DEFINITIONS: List[Tuple[str, List[Type], Type]] = [
+    #     # FUNCTION NAME, ARGUMENT TYPES, RESULT TYPE
+    #     ("minizinc_version", [], c_char_p),
+    #     ("minizinc_check_version", [c_int, c_int, c_int], c_bool),
+    #     ("minizinc_error", [], c_char_p),
+    #     ("minizinc_solver_init", [c_char_p, c_char_p, c_char_p, c_char_p], c_void_p),
+    #     ("minizinc_solver_lookup", [c_char_p], c_void_p),
+    #     ("minizinc_solver_load", [c_char_p], c_void_p),
+    #     ("minizinc_solver_destroy", [c_void_p], c_bool),
+    #     ("minizinc_instance_init", [], c_void_p),
+    #     ("minizinc_instance_destroy", [c_void_p], c_bool),
+    # ]
 
-        for (f_name, f_args, f_res) in self.API_DEFINITIONS:
-            func = getattr(self.library, f_name)
-            func.argtypes = f_args
-            func.restype = f_res
-            setattr(self, "_" + f_name, func)
+    # def __init__(self, library: CDLL):
+    #     self.library = library
 
-        super(APIDriver, self).__init__(library)
+    #     for (f_name, f_args, f_res) in self.API_DEFINITIONS:
+    #         func = getattr(self.library, f_name)
+    #         func.argtypes = f_args
+    #         func.restype = f_res
+    #         setattr(self, "_" + f_name, func)
 
-    def make_default(self) -> None:
-        from . import APInstance, APISolver
+    #     super(APIDriver, self).__init__(library)
 
-        minizinc.default_driver = self
-        minizinc.Instance = APInstance
-        minizinc.Solver = APISolver
+    # def make_default(self) -> None:
+    #     from . import APInstance, APISolver
 
-    def solve(
-        self,
-        solver,
-        instance,
-        timeout: Optional[timedelta] = None,
-        nr_solutions: Optional[int] = None,
-        processes: Optional[int] = None,
-        random_seed: Optional[int] = None,
-        free_search: bool = False,
-        all_solutions=False,
-        ignore_errors=False,
-        **kwargs,
-    ):
-        # TODO: IMPLEMENT
-        pass
+    #     minizinc.default_driver = self
+    #     minizinc.Instance = APInstance
+    #     minizinc.Solver = APISolver
 
-    @property
-    def minizinc_version(self) -> str:
-        return self._minizinc_version().decode()
+    # def solve(
+    #     self,
+    #     solver,
+    #     instance,
+    #     timeout: Optional[timedelta] = None,
+    #     nr_solutions: Optional[int] = None,
+    #     processes: Optional[int] = None,
+    #     random_seed: Optional[int] = None,
+    #     free_search: bool = False,
+    #     all_solutions=False,
+    #     ignore_errors=False,
+    #     **kwargs,
+    # ):
+    #     # TODO: IMPLEMENT
+    #     pass
 
-    def check_version(self) -> bool:
-        v = driver.required_version
-        return self._minizinc_check_version(v[0], v[1], v[2])
+    # @property
+    # def minizinc_version(self) -> str:
+    #     return self._minizinc_version().decode()
+
+    # def check_version(self) -> bool:
+    #     v = driver.required_version
+    #     return self._minizinc_check_version(v[0], v[1], v[2])

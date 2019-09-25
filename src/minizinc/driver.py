@@ -121,10 +121,12 @@ def find_driver(
     os.environ.clear()
     os.environ.update(env_backup)
     if lib and Path(lib).suffix in [".dll", ".dylib", ".so"]:
-        from minizinc.API import APIDriver
+        pass
+        # TODO:
+        # from minizinc.API import APIDriver
 
-        library = cdll.LoadLibrary(lib)
-        driver = APIDriver(library)
+        # library = cdll.LoadLibrary(lib)
+        # driver = APIDriver(library)
     else:
         # Try to locate the MiniZinc executable
         executable = shutil.which(name, path=path_bin_list)
