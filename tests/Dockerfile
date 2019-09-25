@@ -25,7 +25,7 @@ COPY --from=minizinc /usr/local/ /usr/local/
 COPY --from=pyenv /root/.pyenv/versions/ /python/
 
 RUN apt-get update && \
-    apt-get install -y libssl1.1 && \
+    apt-get install -y libssl1.1 libsqlite3-0 && \
     rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/python/3.7.4/bin:/python/3.6.9/bin:/python/pypy3.6-7.1.1/bin:${PATH}"
