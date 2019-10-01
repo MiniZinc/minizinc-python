@@ -194,7 +194,7 @@ class Result:
     """
 
     status: Status
-    solution: Tuple
+    solution: Any
     statistics: Dict[str, Union[float, int, timedelta]]
 
     @property

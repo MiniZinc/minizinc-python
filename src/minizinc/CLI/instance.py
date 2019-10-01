@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from enum import EnumMeta
 from numbers import Number
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Type
+from typing import Any, Dict, Iterator, List, Optional, Type, cast
 
 import minizinc
 from minizinc.dzn import UnknownExpression
@@ -49,9 +49,12 @@ class CLIInstance(Instance):
         self._solver = solver
         if driver is not None:
             self._driver = driver
+        elif minizinc.default_driver is not None and isinstance(
+            self._driver, CLIDriver
+        ):
+            self._driver = cast(CLIDriver, minizinc.default_driver)
         else:
-            self._driver = minizinc.default_driver
-        assert isinstance(self._driver, CLIDriver)
+            raise Exception("No compatible driver provided")
 
         if model is not None:
             self.output_type = model.output_type
@@ -67,7 +70,7 @@ class CLIInstance(Instance):
                 model.output_type = self.output_type
 
     @contextlib.contextmanager
-    def branch(self) -> Instance:  # TODO: Self reference
+    def branch(self) -> Iterator[Instance]:  # TODO: Self reference
         child = self.__class__(self._solver)
         child._parent = self
         # Copy current information from analysis
@@ -85,6 +88,7 @@ class CLIInstance(Instance):
     def method(self) -> Method:
         if self._method is None:
             self.analyse()
+        assert self._method is not None
         return self._method
 
     @contextlib.contextmanager
@@ -280,6 +284,7 @@ class CLIInstance(Instance):
 
         # Add files as last arguments
         with self.files() as files:
+            assert self.output_type is not None
             cmd.extend(files)
             # Run the MiniZinc process
             proc = await self._driver.create_process(cmd, solver=self._solver)

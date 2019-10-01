@@ -5,4 +5,4 @@
 from .driver import CLIDriver
 from .instance import CLIInstance
 
-__all__ = [CLIDriver, CLIInstance]
+__all__ = ["CLIDriver", "CLIInstance"]

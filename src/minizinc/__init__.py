@@ -2,16 +2,17 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from typing import Optional
+from typing import Optional, Type
+
+import instance
 
 from .driver import Driver, find_driver
 from .error import MiniZincError
-from .instance import Instance
 from .model import Method, Model
 from .result import Result, Status
 from .solver import Solver
 
-Instance = Instance
+Instance: Type[instance.Instance] = instance.Instance
 
 #: Default MiniZinc driver used by the python package
 default_driver: Optional[Driver] = find_driver()

@@ -5,4 +5,4 @@
 from .driver import APIDriver
 from .instance import APIInstance
 
-__all__ = [APIDriver, APIInstance]
+__all__ = ["APIDriver", "APIInstance"]

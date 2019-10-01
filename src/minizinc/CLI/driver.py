@@ -32,6 +32,7 @@ def to_python_type(mzn_type: dict) -> Type:
 
     """
     basetype = mzn_type["type"]
+    pytype: Type
     if basetype == "bool":
         pytype = bool
     elif basetype == "float":
@@ -47,7 +48,8 @@ def to_python_type(mzn_type: dict) -> Type:
 
     dim = mzn_type.get("dim", 0)
     while dim >= 1:
-        pytype = List[pytype]
+        # No typing support for n-dimensional typing
+        pytype = List[pytype]  # type: ignore
         dim -= 1
     return pytype
 
@@ -77,7 +79,7 @@ class CLIDriver(Driver):
         from . import CLIInstance
 
         minizinc.default_driver = self
-        minizinc.Instance = CLIInstance
+        minizinc.instance = CLIInstance
 
     def run(
         self,
@@ -86,8 +88,9 @@ class CLIDriver(Driver):
         timeout: Optional[timedelta] = None,
     ):
         # TODO: Add documentation
+        timeout_flt = None
         if timeout is not None:
-            timeout = timeout.total_seconds()
+            timeout_flt = timeout.total_seconds()
         if solver is None:
             output = subprocess.run(
                 [str(self._executable), "--allow-multiple-assignments"]
@@ -95,7 +98,7 @@ class CLIDriver(Driver):
                 stdin=None,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                timeout=timeout,
+                timeout=timeout_flt,
             )
         else:
             with solver.configuration() as conf:
@@ -110,7 +113,7 @@ class CLIDriver(Driver):
                     stdin=None,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
-                    timeout=timeout,
+                    timeout=timeout_flt,
                 )
         if output.returncode != 0:
             raise parse_error(output.stderr)
@@ -142,7 +145,7 @@ class CLIDriver(Driver):
         return proc
 
     @property
-    def minizinc_version(self) -> tuple:
+    def minizinc_version(self) -> str:
         return self.run(["--version"]).stdout.decode()
 
     def check_version(self):

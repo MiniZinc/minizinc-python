@@ -6,10 +6,11 @@ import os
 import platform
 import shutil
 from abc import ABC, abstractmethod
-from ctypes import cdll
 from ctypes.util import find_library
 from pathlib import Path
 from typing import List, Optional, Type
+
+from minizinc.instance import Instance
 
 #: MiniZinc version required by the python package
 required_version = (2, 2, 0)
@@ -20,7 +21,7 @@ class Driver(ABC):
     """
 
     Solver: Type
-    Instance: Type
+    Instance: Instance
 
     @abstractmethod
     def make_default(self) -> None:
@@ -80,7 +81,7 @@ def find_driver(
         Optional[Driver]: Returns a Driver object when found or None.
 
     """
-    driver = None
+    driver: Optional[Driver] = None
     if path is None:
         path_bin = os.environ.get("PATH", "").split(os.pathsep)
         path_lib = os.environ.get("LD_LIBRARY_PATH", "").split(os.pathsep)
