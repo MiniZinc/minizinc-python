@@ -4,15 +4,14 @@
 
 from typing import Optional, Type
 
-import instance
-
 from .driver import Driver, find_driver
 from .error import MiniZincError
+from .instance import Instance as GenInstance
 from .model import Method, Model
 from .result import Result, Status
 from .solver import Solver
 
-Instance: Type[instance.Instance] = instance.Instance
+Instance: Type[GenInstance]
 
 #: Default MiniZinc driver used by the python package
 default_driver: Optional[Driver] = find_driver()

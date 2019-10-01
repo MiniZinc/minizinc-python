@@ -4,12 +4,13 @@
 
 import unittest
 
-from minizinc import Instance, Solver, instance
+from minizinc import Instance, Solver
+from minizinc.instance import Instance as GenInstance
 
 
 class InstanceTestCase(unittest.TestCase):
     code = ""
-    instance: instance.Instance
+    instance: GenInstance
     solver: Solver
 
     def setUp(self):

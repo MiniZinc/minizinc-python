@@ -79,7 +79,7 @@ class CLIDriver(Driver):
         from . import CLIInstance
 
         minizinc.default_driver = self
-        minizinc.instance = CLIInstance
+        minizinc.Instance = CLIInstance
 
     def run(
         self,

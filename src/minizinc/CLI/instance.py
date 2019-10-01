@@ -50,7 +50,7 @@ class CLIInstance(Instance):
         if driver is not None:
             self._driver = driver
         elif minizinc.default_driver is not None and isinstance(
-            self._driver, CLIDriver
+            minizinc.default_driver, CLIDriver
         ):
             self._driver = cast(CLIDriver, minizinc.default_driver)
         else:
