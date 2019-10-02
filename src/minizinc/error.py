@@ -102,6 +102,24 @@ def parse_error(error_txt: bytes) -> MiniZincError:
             columns = (int(match[4].decode()), int(match[5].decode()))
         location = Location(Path(match[1].decode()), int(match[2].decode()), columns)
 
-    message = error_txt
+    message = error_txt.decode()
+    if location is not None:
+        assert location.file is not None
+        with open(location.file) as f:
+            for _ in range(location.line - 2):
+                f.readline()
+            message += "\nFile fragment:\n"
+            for nr in range(max(1, location.line - 1), location.line + 2):
+                line = f.readline()
+                if line == "":
+                    break
+                message += f"{nr}: {line.rstrip()}\n"
+                diff = location.columns[1] - location.columns[0]
+                if nr == location.line and diff > 0:
+                    message += (
+                        " " * (len(str(nr)) + 2 + location.columns[0] - 1)
+                        + "^" * (diff + 1)
+                        + "\n"
+                    )
 
-    return error(location, message.decode())
+    return error(location, message)
