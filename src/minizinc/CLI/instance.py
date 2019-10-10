@@ -185,16 +185,16 @@ class CLIInstance(Instance):
                 fields.append(("objective", Number))
             for k, v in self._output.items():
                 fields.append((k, v))
-            fields.append(("__output_item", str, field(default="")))
+            fields.append(("_output_item", str, field(default="")))
 
             self.output_type = make_dataclass(
                 "Solution",
                 fields,
                 bases=(_GeneratedSolution,),
                 namespace={
-                    "__str__": lambda self: self.__repr__()
-                    if self.__output_item == ""
-                    else self.__output_item
+                    "__str__": lambda myself: myself.__repr__()
+                    if myself._output_item == ""
+                    else myself._output_item
                 },
                 frozen=True,
             )
@@ -220,6 +220,7 @@ class CLIInstance(Instance):
             "json",
             "--output-time",
             "--output-objective",
+            "--output-output-item",
         ]
         # Enable statistics
         cmd.append("-s")

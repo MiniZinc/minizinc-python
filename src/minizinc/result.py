@@ -322,7 +322,7 @@ def parse_solution(
         if "_objective" in tmp:
             tmp["objective"] = tmp.pop("_objective")
         if "_output" in tmp:
-            tmp["__output_item"] = tmp.pop("_output")
+            tmp["_output_item"] = tmp.pop("_output")
         solution = output_type(**tmp)
 
     return solution, statistics
