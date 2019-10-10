@@ -162,4 +162,4 @@ process for a toy model that maximises the value of an array of unique integers:
     In the example the :func:`Instance.branch` method is used to temporarily
     add a search goal to the :class:`Instance` object. More information about
     the usage of this method can be found in the :ref:`advanced examples
-    <meta-heuristics>`
+    <meta-heuristics>`.

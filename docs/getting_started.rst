@@ -40,8 +40,18 @@ To test everything is working let's run a basic example. The n-Queens problem is
 a famous problem within the constraint programming community. In the MiniZinc
 Examples we can find the following model for this problem:
 
-..  literalinclude:: examples/nqueens.mzn
-    :language: minizinc
+..  code-block:: minizinc
+
+    int: n; % The number of queens.
+
+    array [1..n] of var 1..n: q;
+
+    include "alldifferent.mzn";
+
+    constraint alldifferent(q);
+    constraint alldifferent(i in 1..n)(q[i] + i);
+    constraint alldifferent(i in 1..n)(q[i] - i);
+
 
 The following Python code will use MiniZinc Python to:
 
@@ -50,8 +60,21 @@ The following Python code will use MiniZinc Python to:
 3. Assign the value 4 to ``n`` in the instance
 4. Print the positions of the Queens store in the array ``q``
 
-..  literalinclude:: examples/nqueens.py
-    :language: python
+..  code-block:: python
+
+    from minizinc import Instance, Model, Solver
+
+    # Load n-Queens model from file
+    nqueens = Model("./nqueens.mzn")
+    # Find the MiniZinc solver configuration for Gecode
+    gecode = Solver.lookup("gecode")
+    # Create an Instance of the n-Queens model for Gecode
+    instance = Instance(gecode, nqueens)
+    # Assign 4 to n
+    instance["n"] = 4
+    result = instance.solve()
+    # Output the array q
+    print(result["q"])
 
 
 Using different solvers
