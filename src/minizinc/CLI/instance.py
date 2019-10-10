@@ -103,48 +103,50 @@ class CLIInstance(Instance):
             List of Path objects to existing and created files
 
         """
-        files: List[Path] = self._includes.copy()
-        fragments = None
-        data = None
-        tmp_fragments = self._code_fragments.copy()
-        if len(self._data) > 0:
-            tmp_data = {}
-            for k, v in self._data.items():
+
+        files: List[Path] = []
+        fragments: List[str] = []
+        data: Dict[str, Any] = {}
+
+        inst: Optional[CLIInstance] = self
+        while inst is not None:
+            for k, v in inst._data.items():
                 if isinstance(v, UnknownExpression):
-                    tmp_fragments.append(f"{k} = {v};\n")
+                    fragments.append(f"{k} = {v};\n")
                 elif isinstance(v, EnumMeta):
-                    tmp_fragments.append(
+                    fragments.append(
                         f"{k} = {{{', '.join([i for i in v.__members__])}}};\n"
                     )
                 else:
-                    tmp_data[k] = v
-            if len(tmp_data) > 0:
-                data = tempfile.NamedTemporaryFile(
+                    data[k] = v
+            fragments.extend(inst._code_fragments)
+            files.extend(inst._includes)
+
+            inst = inst._parent
+
+        gen_files: List[tempfile.NamedTemporaryFile] = []
+        try:
+            if len(data) > 0:
+                file = tempfile.NamedTemporaryFile(
                     prefix="mzn_data", suffix=".json", delete=False
                 )
-                data.write(json.dumps(tmp_data, cls=MZNJSONEncoder).encode())
-                data.close()
-                files.append(Path(data.name))
-        if len(tmp_fragments) > 0 or len(files) == 0:
-            fragments = tempfile.NamedTemporaryFile(
-                prefix="mzn_fragment", suffix=".mzn", delete=False
-            )
-            for code in tmp_fragments:
-                fragments.write(code.encode())
-            fragments.close()
-            files.append(Path(fragments.name))
-        try:
-            if self._parent is not None:
-                assert isinstance(self._parent, CLIInstance)
-                with self._parent.files() as pfiles:
-                    yield pfiles + files
-            else:
-                yield files
+                gen_files.append(file)
+                file.write(json.dumps(data, cls=MZNJSONEncoder).encode())
+                file.close()
+                files.append(Path(file.name))
+            if len(fragments) > 0 or len(files) == 0:
+                file = tempfile.NamedTemporaryFile(
+                    prefix="mzn_fragment", suffix=".mzn", delete=False
+                )
+                gen_files.append(file)
+                for code in fragments:
+                    file.write(code.encode())
+                file.close()
+                files.append(Path(file.name))
+            yield files
         finally:
-            if fragments is not None:
-                os.remove(fragments.name)
-            if data is not None:
-                os.remove(data.name)
+            for file in gen_files:
+                os.remove(file.name)
 
     @property
     def input(self):
