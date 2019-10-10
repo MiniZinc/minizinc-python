@@ -85,5 +85,5 @@ class CheckEmpty(InstanceTestCase):
         assert self.instance.method == Method.SATISFY
         result = self.instance.solve()
         fs = [f.name for f in fields(result.solution)]
-        assert fs == ["__output_item"]
+        assert fs == ["_output_item"]
         assert result.status == Status.SATISFIED

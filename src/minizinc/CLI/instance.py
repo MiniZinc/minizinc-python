@@ -111,7 +111,7 @@ class CLIInstance(Instance):
         inst: Optional["CLIInstance"] = self
         while inst is not None:
             for k, v in inst._data.items():
-                if isinstance(v, UnknownExpression):
+                if isinstance(v, UnknownExpression) or k in data:
                     fragments.append(f"{k} = {v};\n")
                 elif isinstance(v, EnumMeta):
                     fragments.append(
