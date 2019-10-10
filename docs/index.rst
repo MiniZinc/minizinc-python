@@ -1,12 +1,6 @@
 MiniZinc Python
 ===============
 
-..  warning::
-    The development of MiniZinc Python is still in the very early stages. We
-    appreciate any feedback for the package, but we would recommend refraining
-    from using the package in production software. The package can drastically
-    change and backwards compatible changes are not guaranteed.
-
 MiniZinc Python provides a native python interface for the MiniZinc toolchain.
 The package can interface with MiniZinc in two ways: using the command line
 interface, the ``minizinc`` executable, or the experimental C API to MiniZinc
@@ -16,6 +10,19 @@ you to use MiniZinc in your application, but also enables you to use MiniZinc in
 new ways! Using MiniZinc in a procedural language allows you to use incremental
 solving techniques that can be used to implement different kinds of
 meta-heuristics.
+
+..  note::
+
+    The development of MiniZinc Python is still in its early stages. Although
+    the module is fully supported and the functionality is stabilising, we
+    will not guarantee that changes made before version 1.0 are backwards
+    compatible. Similarly, the functionality of this module is closely
+    connected to the releases of the main MiniZinc bundle. An update to this
+    module might require an update to your MiniZinc installation.
+
+    This project adheres to `Semantic Versioning <https://semver.org>`_ and
+    all (breaking) changes are recorded in the :ref:`changelog <changelog>`.
+
 
 Documentation
 -------------
@@ -41,3 +48,13 @@ this part of the documentation is for you.
     :maxdepth: 2
 
     api
+
+Changelog
+---------
+
+All changes made to this project are recorded in the changelog.
+
+..  toctree::
+    :maxdepth: 1
+
+    changelog

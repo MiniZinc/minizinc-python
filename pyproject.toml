@@ -14,7 +14,7 @@ line_length = 88
 
 [tool.poetry]
 name = "minizinc"
-version = "0.1.0-alpha.4"
+version = "0.1.0"
 description = "Access MiniZinc directly from Python"
 readme = "README.md"
 authors = ["Jip J. Dekker <jip@dekker.one>"]
@@ -23,7 +23,7 @@ homepage = "https://www.minizinc.org/"
 documentation = "https://minizinc-python.readthedocs.io"
 repository = "https://gitlab.com/minizinc/minizinc-python"
 classifiers=[
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: Mathematics",
