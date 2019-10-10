@@ -37,7 +37,7 @@ class CLIInstance(Instance):
     _input: Optional[Dict[str, Type]] = None
     _output: Optional[Dict[str, Type]] = None
     _method: Optional[Method] = None
-    _parent: Optional[Instance] = None
+    _parent: Optional["CLIInstance"] = None
 
     def __init__(
         self,
@@ -108,7 +108,7 @@ class CLIInstance(Instance):
         fragments: List[str] = []
         data: Dict[str, Any] = {}
 
-        inst: Optional[CLIInstance] = self
+        inst: Optional["CLIInstance"] = self
         while inst is not None:
             for k, v in inst._data.items():
                 if isinstance(v, UnknownExpression):
@@ -124,7 +124,7 @@ class CLIInstance(Instance):
 
             inst = inst._parent
 
-        gen_files: List[tempfile.NamedTemporaryFile] = []
+        gen_files = []
         try:
             if len(data) > 0:
                 file = tempfile.NamedTemporaryFile(
