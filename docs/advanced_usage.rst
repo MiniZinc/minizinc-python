@@ -21,8 +21,10 @@ the solution are scheduled uniquely.
     :language: python
 
 
+..  _meta-heuristics:
+
 Defining Meta-Heuristics
----------------------
+------------------------
 
 Modellers will sometimes require the use of meta-heuristics to more
 efficiently solve their problem instances. MiniZinc Python can assist in the

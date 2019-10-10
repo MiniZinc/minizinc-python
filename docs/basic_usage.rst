@@ -119,3 +119,47 @@ MiniZinc and contains a string in it's solution.
     result = instance.solve()
     print(result["d"])  # Mo
     assert isinstance(result["d"], str)
+
+
+Finding all optimal solutions
+-----------------------------
+
+MiniZinc does not support finding all *optimal* solutions for a specific
+optimisation problem. However, a scheme that is often used to find all
+optimal solutions is to first find one optimal solution and then find all
+other solutions with the same optimal value. The following example shows this
+process for a toy model that maximises the value of an array of unique integers:
+
+..  code-block:: python
+
+    from minizinc import Instance, Model, Solver
+
+    gecode = Solver.lookup("gecode")
+
+    model = Model()
+    model.add_string(
+        """
+        include "all_different.mzn";
+        array[1..4] of var 1..10: x;
+        constraint all_different(x);
+        """
+    )
+    instance = Instance(gecode, model)
+
+    with instance.branch() as opt:
+        opt.add_string("solve maximize sum(x);\n")
+        res = opt.solve()
+        obj = res["objective"]
+
+    instance.add_string(f"constraint sum(x) = {obj};\n")
+
+    result = instance.solve(all_solutions=True)
+    for sol in result.solution:
+        print(sol.x)
+
+..  seealso::
+
+    In the example the :func:`Instance.branch` method is used to temporarily
+    add a search goal to the :class:`Instance` object. More information about
+    the usage of this method can be found in the :ref:`advanced examples
+    <meta-heuristics>`
