@@ -93,7 +93,7 @@ I. You can ``lookup`` a solver configuration that is known to MiniZinc. These
 II. You can ``load`` a solver configuration directly from a solver configuration
     file, ``.msc``. A description of the formatting of such files can be found
     in the `MiniZinc documentation
-    <https://www.minizinc.org/doc-latest/en/fzn-spec.html#solver-configuration-files>`.
+    <https://www.minizinc.org/doc-latest/en/fzn-spec.html>`_.
     The :meth:`minizinc.Solver.output_configuration` method can be used to
     generate a valid solver configuration.
 III. You can create a new solver configuration, ``Solver``.
