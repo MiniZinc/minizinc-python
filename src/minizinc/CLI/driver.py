@@ -8,7 +8,7 @@ import subprocess
 import warnings
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, List, Optional, Type
+from typing import Any, List, Optional, Set, Type, Union
 
 import minizinc
 
@@ -33,6 +33,7 @@ def to_python_type(mzn_type: dict) -> Type:
     """
     basetype = mzn_type["type"]
     pytype: Type
+    # TODO: MiniZinc does not report enumerated types correctly
     if basetype == "bool":
         pytype = bool
     elif basetype == "float":
@@ -45,6 +46,12 @@ def to_python_type(mzn_type: dict) -> Type:
             FutureWarning,
         )
         pytype = int
+
+    if mzn_type.get("set", False):
+        if pytype is int:
+            pytype = Union[Set[int], range]
+        else:
+            pytype = Set[pytype]  # type: ignore
 
     dim = mzn_type.get("dim", 0)
     while dim >= 1:
