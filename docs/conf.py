@@ -9,7 +9,10 @@
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
 
+import re
 from typing import Dict, List
+
+import tomlkit
 
 # -- Path setup --------------------------------------------------------------
 
@@ -32,10 +35,21 @@ project = "MiniZinc Python"
 copyright = "2019, Jip J. Dekker"
 author = "Jip J. Dekker"
 
+
+def _get_project_meta():
+    with open("../pyproject.toml") as pyproject:
+        file_contents = pyproject.read()
+
+    return tomlkit.parse(file_contents)["tool"]["poetry"]
+
+
+pkg_meta = _get_project_meta()
 # The short X.Y version
-version = "0.1"
+_match = re.match(r"\d+\.\d+", pkg_meta["version"])
+assert _match is not None
+version = _match.group(0)
 # The full version, including alpha/beta/rc tags
-release = "0.1.0"
+release = pkg_meta["version"]
 
 
 # -- General configuration ---------------------------------------------------
