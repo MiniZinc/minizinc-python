@@ -59,6 +59,9 @@ Drivers
 Errors
 ------
 
+..  autoexception:: minizinc.error.ConfigurationError
+    :members:
+
 ..  autofunction:: minizinc.error.parse_error
 
 ..  autoexception:: minizinc.error.MiniZincError

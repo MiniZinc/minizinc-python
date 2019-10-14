@@ -25,6 +25,16 @@ class Location:
     columns: Tuple[int, int] = (0, 0)
 
 
+class ConfigurationError(Exception):
+    """Exception raised during the configuration of MiniZinc
+
+    Attributes:
+        message (str): Explanation of the error
+    """
+
+    message: str
+
+
 class MiniZincError(Exception):
     """Exception raised for errors caused by a MiniZinc Driver
 

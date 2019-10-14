@@ -9,6 +9,11 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Changed
+^^^^^^^
+- ``Driver.check_version`` now raises an ``ConfigurationError`` exception
+  when an incompatible function is detected; otherwise, the method not return a
+  value.
 
 
 0.1.0_ - 2019-10-11

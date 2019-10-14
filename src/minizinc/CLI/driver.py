@@ -13,7 +13,7 @@ from typing import Any, List, Optional, Set, Type, Union
 import minizinc
 
 from ..driver import Driver
-from ..error import parse_error
+from ..error import ConfigurationError, parse_error
 from ..solver import Solver
 
 
@@ -42,7 +42,7 @@ def to_python_type(mzn_type: dict) -> Type:
         pytype = int
     else:
         warnings.warn(
-            "Unable to determine basetype `" + basetype + "` assuming integer type",
+            f"Unable to determine minizinc type `{basetype}` assuming integer type",
             FutureWarning,
         )
         pytype = int
@@ -158,6 +158,10 @@ class CLIDriver(Driver):
     def check_version(self):
         output = self.run(["--version"])
         match = re.search(rb"version (\d+)\.(\d+)\.(\d+)", output.stdout)
-        return (
-            tuple([int(i) for i in match.groups()]) >= minizinc.driver.required_version
-        )
+        found = tuple([int(i) for i in match.groups()])
+        if found < minizinc.driver.required_version:
+            raise ConfigurationError(
+                f"The MiniZinc driver found at '{self._executable}' has "
+                f"version {found}. The minimal required version is "
+                f"{minizinc.driver.required_version}."
+            )

@@ -32,7 +32,7 @@ class Driver(ABC):
 
     @abstractmethod
     def __init__(self):
-        assert self.check_version()
+        self.check_version()
 
     @property
     @abstractmethod
@@ -50,15 +50,13 @@ class Driver(ABC):
         pass
 
     @abstractmethod
-    def check_version(self) -> bool:
-        """Check if the MiniZinc version is compatible with MiniZinc Python.
+    def check_version(self) -> None:
+        """Raises an error if the MiniZinc version is incompatible with
+        MiniZinc Python.
 
-        Check if the semantic version of the MiniZinc driver is compatible with
-        the required version of the MiniZinc Python driver back-end.
-
-        Returns:
-            bool: The compatibility of the driver.
-
+        Raises:
+            ConfigurationError: An error noting the discrepancy between the
+                required version of MiniZinc and the version of MiniZinc found.
         """
         pass
 
