@@ -32,6 +32,12 @@ class Driver(ABC):
 
     @abstractmethod
     def __init__(self):
+        """Creates a new MiniZinc driver
+
+        Raises:
+            ConfigurationError: If an the driver version is found to be
+                incompatible with MiniZinc Python
+        """
         self.check_version()
 
     @property
