@@ -9,6 +9,10 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Added
+^^^^^
+- Support and testing for Python 3.8
+
 Changed
 ^^^^^^^
 - ``Driver.check_version`` now raises an ``ConfigurationError`` exception

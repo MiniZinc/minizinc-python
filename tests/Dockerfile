@@ -14,10 +14,11 @@ RUN curl https://pyenv.run | bash
 
 ENV PYENV_ROOT /root/.pyenv
 ENV PATH="${PYENV_ROOT}/shims:${PYENV_ROOT}/bin:${PATH}"
-RUN pyenv install 3.7.4; \
+RUN pyenv install 3.8.0; \
+    pyenv install 3.7.4; \
     pyenv install 3.6.9; \
     pyenv install pypy3.6-7.1.1; \
-    pyenv global 3.7.4 3.6.9 pypy3.6-7.1.1
+    pyenv global 3.8.0 3.7.4 3.6.9 pypy3.6-7.1.1
 
 FROM ubuntu:latest
 
@@ -28,6 +29,6 @@ RUN apt-get update && \
     apt-get install -y libssl1.1 libsqlite3-0 && \
     rm -rf /var/lib/apt/lists/*
 
-ENV PATH="/python/3.7.4/bin:/python/3.6.9/bin:/python/pypy3.6-7.1.1/bin:${PATH}"
+ENV PATH="/python/3.8.0/bin:/python/3.7.4/bin:/python/3.6.9/bin:/python/pypy3.6-7.1.1/bin:${PATH}"
 
 
