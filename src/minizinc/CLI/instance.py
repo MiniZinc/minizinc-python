@@ -300,12 +300,13 @@ class CLIInstance(Instance):
 
             try:
                 while not proc.stdout.at_eof():
+                    separator: bytes = str.encode("----------" + os.linesep)
                     if deadline is None:
-                        raw_sol = await proc.stdout.readuntil(b"----------\n")
+                        raw_sol = await proc.stdout.readuntil(separator)
                     else:
                         t = deadline - datetime.now()
                         raw_sol = await asyncio.wait_for(
-                            proc.stdout.readuntil(b"----------\n"), t.total_seconds()
+                            proc.stdout.readuntil(separator), t.total_seconds()
                         )
                     status = Status.SATISFIED
                     solution, statistics = parse_solution(

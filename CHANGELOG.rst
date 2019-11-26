@@ -19,6 +19,12 @@ Changed
   when an incompatible function is detected; otherwise, the method not return a
   value.
 
+Fixed
+^^^^^
+- ``CLIInstance.solutions()``: The separator detection is now OS independent.
+  The separator previously included a ``\n`` literal instead of ``\r\n`` on
+  Windows.
+
 
 0.1.0_ - 2019-10-11
 ---------------------
