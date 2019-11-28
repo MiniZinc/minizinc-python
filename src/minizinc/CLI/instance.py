@@ -7,6 +7,7 @@ import contextlib
 import json
 import os
 import re
+import sys
 import tempfile
 from dataclasses import field, make_dataclass
 from datetime import datetime, timedelta
@@ -25,6 +26,13 @@ from minizinc.result import Result, Status, parse_solution, set_stat
 from minizinc.solver import Solver
 
 from .driver import CLIDriver, to_python_type
+
+if sys.version_info >= (3, 8):
+    from typing import Final
+
+    SEPARATOR: Final[bytes] = str.encode("----------" + os.linesep)
+else:
+    SEPARATOR: bytes = str.encode("----------" + os.linesep)
 
 
 class _GeneratedSolution:
@@ -309,13 +317,12 @@ class CLIInstance(Instance):
 
             try:
                 while not proc.stdout.at_eof():
-                    separator: bytes = str.encode("----------" + os.linesep)
                     if deadline is None:
-                        raw_sol = await proc.stdout.readuntil(separator)
+                        raw_sol = await proc.stdout.readuntil(SEPARATOR)
                     else:
                         t = deadline - datetime.now()
                         raw_sol = await asyncio.wait_for(
-                            proc.stdout.readuntil(separator), t.total_seconds()
+                            proc.stdout.readuntil(SEPARATOR), t.total_seconds()
                         )
                     status = Status.SATISFIED
                     solution, statistics = parse_solution(
