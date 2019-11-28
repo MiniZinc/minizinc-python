@@ -189,6 +189,10 @@ class CLIInstance(Instance):
                 fields.append((k, v))
             fields.append(("_output_item", str, field(default="")))
 
+            minizinc.logger.debug(
+                f"CLIInstance:analyse -> output fields: " f"{[f[0:2] for f in fields]}"
+            )
+
             self.output_type = make_dataclass(
                 "Solution",
                 fields,

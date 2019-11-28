@@ -99,9 +99,15 @@ class CLIDriver(Driver):
         if timeout is not None:
             timeout_flt = timeout.total_seconds()
         if solver is None:
+            cmd = [str(self._executable), "--allow-multiple-assignments"] + [
+                str(arg) for arg in args
+            ]
+            minizinc.logger.debug(
+                f"CLIDriver:run -> command: \"{' '.join(cmd)}\", timeout "
+                f"{timeout_flt}"
+            )
             output = subprocess.run(
-                [str(self._executable), "--allow-multiple-assignments"]
-                + [str(arg) for arg in args],
+                cmd,
                 stdin=None,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -109,14 +115,18 @@ class CLIDriver(Driver):
             )
         else:
             with solver.configuration() as conf:
+                cmd = [
+                    str(self._executable),
+                    "--solver",
+                    conf,
+                    "--allow-multiple-assignments",
+                ] + [str(arg) for arg in args]
+                minizinc.logger.debug(
+                    f"CLIDriver:run -> command: \"{' '.join(cmd)}\", timeout "
+                    f"{timeout_flt}"
+                )
                 output = subprocess.run(
-                    [
-                        str(self._executable),
-                        "--solver",
-                        conf,
-                        "--allow-multiple-assignments",
-                    ]
-                    + [str(arg) for arg in args],
+                    cmd,
                     stdin=None,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
@@ -129,6 +139,11 @@ class CLIDriver(Driver):
     async def create_process(self, args: List[str], solver: Optional[Solver] = None):
         # TODO: Add documentation
         if solver is None:
+            minizinc.logger.debug(
+                f"CLIDriver:create_process -> program: {str(self._executable)} "
+                f'args: "--allow-multiple-assignments '
+                f"{' '.join(str(arg) for arg in args)}\""
+            )
             proc = await asyncio.create_subprocess_exec(
                 str(self._executable),
                 "--allow-multiple-assignments",
@@ -139,6 +154,11 @@ class CLIDriver(Driver):
             )
         else:
             with solver.configuration() as conf:
+                minizinc.logger.debug(
+                    f"CLIDriver:create_process -> program: {str(self._executable)} "
+                    f'args: "--solver {conf} --allow-multiple-assignments '
+                    f"{' '.join(str(arg) for arg in args)}\""
+                )
                 proc = await asyncio.create_subprocess_exec(
                     str(self._executable),
                     "--solver",
