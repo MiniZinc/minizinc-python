@@ -187,21 +187,26 @@ class CLIInstance(Instance):
                 fields.append(("objective", Number))
             for k, v in self._output.items():
                 fields.append((k, v))
-            fields.append(("_output_item", str, field(default="")))
+            if interface.get("has_output_item", True):
+                fields.append(("_output_item", str, field(default="")))
 
             minizinc.logger.debug(
                 f"CLIInstance:analyse -> output fields: " f"{[f[0:2] for f in fields]}"
             )
 
+            methods = {}
+            if interface.get("has_output_item", True):
+                methods["__str__"] = (
+                    lambda myself: myself.__repr__()
+                    if myself._output_item == ""
+                    else myself._output_item
+                )
+
             self.output_type = make_dataclass(
                 "Solution",
                 fields,
                 bases=(_GeneratedSolution,),
-                namespace={
-                    "__str__": lambda myself: myself.__repr__()
-                    if myself._output_item == ""
-                    else myself._output_item
-                },
+                namespace=methods,
                 frozen=True,
             )
 
