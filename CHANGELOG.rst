@@ -28,6 +28,8 @@ Fixed
 - ``CLIInstance.solutions()``: The separator detection is now OS independent.
   The separator previously included a ``\n`` literal instead of ``\r\n`` on
   Windows.
+- Solve an issue in ``CLIInstance.solution()`` where a solution with a size
+  bigger than the buffer size would result in a ``LimitOverrunError`` exception.
 
 
 0.1.0_ - 2019-10-11

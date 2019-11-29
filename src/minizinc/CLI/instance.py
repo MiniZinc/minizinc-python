@@ -316,19 +316,24 @@ class CLIInstance(Instance):
                 deadline = datetime.now() + timeout + timedelta(seconds=2)
 
             try:
+                raw_sol: bytes = b""
                 while not proc.stdout.at_eof():
-                    if deadline is None:
-                        raw_sol = await proc.stdout.readuntil(SEPARATOR)
-                    else:
-                        t = deadline - datetime.now()
-                        raw_sol = await asyncio.wait_for(
-                            proc.stdout.readuntil(SEPARATOR), t.total_seconds()
+                    try:
+                        if deadline is None:
+                            raw_sol += await proc.stdout.readuntil(SEPARATOR)
+                        else:
+                            t = deadline - datetime.now()
+                            raw_sol += await asyncio.wait_for(
+                                proc.stdout.readuntil(SEPARATOR), t.total_seconds()
+                            )
+                        status = Status.SATISFIED
+                        solution, statistics = parse_solution(
+                            raw_sol, self.output_type, self._enum_map
                         )
-                    status = Status.SATISFIED
-                    solution, statistics = parse_solution(
-                        raw_sol, self.output_type, self._enum_map
-                    )
-                    yield Result(Status.SATISFIED, solution, statistics)
+                        yield Result(Status.SATISFIED, solution, statistics)
+                        raw_sol = b""
+                    except asyncio.LimitOverrunError as err:
+                        raw_sol += await proc.stdout.readexactly(err.consumed)
 
                 code = await proc.wait()
             except asyncio.IncompleteReadError as err:
