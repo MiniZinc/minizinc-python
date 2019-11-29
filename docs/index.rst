@@ -20,8 +20,9 @@ meta-heuristics.
     connected to the releases of the main MiniZinc bundle. An update to this
     module might require an update to your MiniZinc installation.
 
-    This project adheres to `Semantic Versioning <https://semver.org>`_ and
-    all (breaking) changes are recorded in the :ref:`changelog <changelog>`.
+    Once the project reaches version 1.0, it will abide by `Semantic Versioning
+    <https://semver.org>`_. All (breaking) changes are recorded in the
+    :ref:`changelog <changelog>`.
 
 
 Documentation
