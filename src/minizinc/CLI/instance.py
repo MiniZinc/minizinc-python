@@ -313,8 +313,9 @@ class CLIInstance(Instance):
             code = 0
             deadline = None
             if timeout is not None:
-                deadline = datetime.now() + timeout + timedelta(seconds=2)
+                deadline = datetime.now() + timeout + timedelta(seconds=5)
 
+            remainder: Optional[bytes] = None
             try:
                 raw_sol: bytes = b""
                 while not proc.stdout.at_eof():
@@ -338,23 +339,25 @@ class CLIInstance(Instance):
                 code = await proc.wait()
             except asyncio.IncompleteReadError as err:
                 # End of Stream has been reached
-                # Read remaining text in buffer and parse the remaining statistics
-                remainder = err.partial
-                final_status = Status.from_output(remainder, self.method)
-                if final_status is not None:
-                    status = final_status
-                solution, statistics = parse_solution(
-                    remainder, self.output_type, self._enum_map
-                )
-                assert solution is None
-                yield Result(status, solution, statistics)
+                # Read remaining text in buffer
                 code = await proc.wait()
+                remainder = err.partial
+            except asyncio.TimeoutError:
+                # Process was reached hard deadline (timeout + 5 sec)
+                # Kill process and read remaining output
+                proc.kill()
+                await proc.wait()
+                remainder = proc.stdout.read()
             finally:
-                if proc.returncode is None:
-                    # TODO: Ensure all child watchers are being disposed of correctly
-                    proc.kill()
-                    await proc.wait()
-
+                # parse the remaining statistics
+                if remainder is not None:
+                    final_status = Status.from_output(remainder, self.method)
+                    if final_status is not None:
+                        status = final_status
+                    solution, statistics = parse_solution(
+                        remainder, self.output_type, self._enum_map
+                    )
+                    yield Result(status, solution, statistics)
                 # Raise error if required
                 if code != 0 or status == Status.ERROR:
                     stderr = await proc.stderr.read()

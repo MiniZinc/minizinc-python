@@ -30,6 +30,8 @@ Fixed
   Windows.
 - Solve an issue in ``CLIInstance.solution()`` where a solution with a size
   bigger than the buffer size would result in a ``LimitOverrunError`` exception.
+- Correctly catch the ``asyncio.TimeoutError`` and kill the process when
+  reaching a hard timeout. (i.e., the solver and minizinc do not stop in time)
 
 
 0.1.0_ - 2019-10-11
