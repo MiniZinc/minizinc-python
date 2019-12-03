@@ -1,5 +1,3 @@
-image: registry.gitlab.com/minizinc/minizinc-python:test
-
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
@@ -9,11 +7,52 @@ cache:
     - .tox/
 
 before_script:
-  - python3 -m pip install tox
+  - pip install tox
 
-test:
+stages:
+  - check
+  - test
+  - build
+
+.test_template: &test_definition
+  stage: test
   script:
-    - python3 -m tox
-    - python3 -m tox -e docs
+    - tox -e ${PYENV}
+
+check:
+  image: python:latest
+  stage: check
+  script:
+    - tox -e check
+
+test:latest:
+  image: registry.gitlab.com/minizinc/minizinc-python:latest
+  variables:
+    PYENV: "py38"
+  <<: *test_definition
+
+test:py37:
+  image: registry.gitlab.com/minizinc/minizinc-python:py37
+  variables:
+    PYENV: "py37"
+  <<: *test_definition
+
+test:py36:
+  image: registry.gitlab.com/minizinc/minizinc-python:py36
+  variables:
+    PYENV: "py36"
+  <<: *test_definition
+
+test:pypy:
+  image: registry.gitlab.com/minizinc/minizinc-python:pypy
+  variables:
+    PYENV: "pypy3"
+  <<: *test_definition
+
+docs:
+  image: python:latest
+  stage: build
+  script:
+    - tox -e docs
   artifacts:
     paths: [dist/]
