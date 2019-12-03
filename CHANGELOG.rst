@@ -13,6 +13,7 @@ Added
 ^^^^^
 - Support and testing for Python 3.8
 - Logging of started processes and attributes of generated output items
+- Export `Pygments <https://pygments.org>`_ Lexer for MiniZinc
 
 Changed
 ^^^^^^^
