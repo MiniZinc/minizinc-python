@@ -191,7 +191,7 @@ class CLIInstance(Instance):
             and (self._output != old_output or self._method != old_method)
         ):
             fields = []
-            if self._method is not Method.SATISFY:
+            if self._method is not Method.SATISFY and "objective" not in self._output:
                 fields.append(("objective", Number))
             for k, v in self._output.items():
                 fields.append((k, v))

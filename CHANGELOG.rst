@@ -36,6 +36,8 @@ Fixed
   time)
 - Check if file exists before opening file when an error occurs. (File might
   have been part of a compiled solver)
+- Ensure the ``objective`` attribute is only added to the generated solution
+  type once
 
 
 0.1.0_ - 2019-10-11
