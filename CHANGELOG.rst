@@ -38,6 +38,7 @@ Fixed
   have been part of a compiled solver)
 - Ensure the ``objective`` attribute is only added to the generated solution
   type once
+- Remove '\r' characters from input when parsing statistics (Windows Specific).
 
 
 0.1.0_ - 2019-10-11

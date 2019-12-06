@@ -300,7 +300,7 @@ def parse_solution(
     """
     # Parse statistics
     statistics: Dict[str, Any] = {}
-    matches = re.findall(rb"%%%mzn-stat:? (\w*)=(.*)", raw)
+    matches = re.findall(rb"%%%mzn-stat:? (\w*)=([^\r\n]*)", raw)
     for m in matches:
         set_stat(statistics, m[0].decode(), m[1].decode())
     match = re.search(rb"% time elapsed: (\d+.\d+) s", raw)

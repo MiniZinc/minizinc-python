@@ -432,12 +432,12 @@ class CLIInstance(Instance):
             output = self._driver.run(cmd, solver=self._solver, timeout=timeout)
 
         statistics: Dict[str, Any] = {}
-        matches = re.findall(rb"%%%mzn-stat:? (\w*)=(.*)", output.stdout)
+        matches = re.findall(rb"%%%mzn-stat:? (\w*)=([^\r\n]*)", output.stdout)
         for m in matches:
             set_stat(statistics, m[0].decode(), m[1].decode())
 
         try:
-            yield (fzn, ozn, statistics)
+            yield fzn, ozn, statistics
         finally:
             os.remove(fzn.name)
             os.remove(ozn.name)
