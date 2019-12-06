@@ -12,7 +12,9 @@ from typing import Any, Dict, Optional, Tuple, Type, Union
 from .instance import Method
 from .json import MZNJSONDecoder
 
-StatisticTypes = {
+StatisticsType = Union[float, int, str, timedelta]
+
+StdStatisticTypes = {
     # Number of search nodes
     "nodes": int,
     # Number of leaf nodes that were failed
@@ -78,7 +80,7 @@ StatisticTypes = {
 }
 
 
-def set_stat(stats: Dict[str, Union[float, int, timedelta]], name: str, value: str):
+def set_stat(stats: Dict[str, StatisticsType], name: str, value: str):
     """Set statistical value in the result object.
 
     Set solving statiscal value within the result object. This value is
@@ -92,15 +94,23 @@ def set_stat(stats: Dict[str, Union[float, int, timedelta]], name: str, value: s
         value: The value for the statistical value to be converted and stored.
 
     """
-    tt = StatisticTypes.get(name, str)
-    if tt is timedelta:
+    value = value.strip('"')
+    tt = StdStatisticTypes.get(name, None)
+    if tt is timedelta or (tt is None and ("time" in name or "Time" in name)):
         time_us = int(float(value) * 1000000)
         stats[name] = timedelta(microseconds=time_us)
-    elif tt is str and ("time" in name or "Time" in name):
-        time_us = int(float(value) * 1000000)
-        stats[name] = timedelta(microseconds=time_us)
-    else:
+    elif tt is not None:
         stats[name] = tt(value)
+    else:
+        try:
+            stats[name] = int(value)
+            return
+        except ValueError:
+            try:
+                stats[name] = float(value)
+                return
+            except ValueError:
+                stats[name] = value
 
 
 class Status(Enum):
@@ -299,7 +309,7 @@ def parse_solution(
 
     """
     # Parse statistics
-    statistics: Dict[str, Any] = {}
+    statistics: Dict[str, StatisticsType] = {}
     matches = re.findall(rb"%%%mzn-stat:? (\w*)=([^\r\n]*)", raw)
     for m in matches:
         set_stat(statistics, m[0].decode(), m[1].decode())
