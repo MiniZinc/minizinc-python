@@ -403,13 +403,16 @@ class CLIInstance(Instance):
         return Result(status, solution, statistics)
 
     @contextlib.contextmanager
-    def flat(self, timeout: Optional[timedelta] = None):
+    def flat(self, timeout: Optional[timedelta] = None, **kwargs):
         """Produce a FlatZinc file for the instance.
 
         Args:
             timeout (Optional[timedelta]): Set the time limit for the process
                 of flattening the instance. TODO: An exception is raised if the
                 timeout is reached.
+            **kwargs: Other flags to be passed onto the solver. ``--`` can be
+                omitted in the name of the flag. If the type of the flag is
+                Boolean, then its value signifies its occurrence.
 
         Yields:
             Tuple containing the files of the FlatZinc model, the output model
@@ -424,6 +427,15 @@ class CLIInstance(Instance):
         ozn = tempfile.NamedTemporaryFile(prefix="ozn_", suffix=".fzn", delete=False)
         cmd.extend(["--ozn", ozn.name])
         ozn.close()
+
+        for flag, value in kwargs.items():
+            if not flag.startswith("-"):
+                flag = "--" + flag
+            if type(value) is bool:
+                if value:
+                    cmd.append(flag)
+            else:
+                cmd.extend([flag, value])
 
         # Add files as last arguments
         with self.files() as files:
