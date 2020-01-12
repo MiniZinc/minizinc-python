@@ -9,6 +9,9 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+0.2.0_ - 2019-12-13
+-------------------
+
 Added
 ^^^^^
 - Support and testing for Python 3.8
@@ -53,5 +56,6 @@ release is best described in the `documentation
 <https://minizinc-python.readthedocs.io/en/0.1.0/>`_.
 
 
-..  _Unreleased: https://gitlab.com/minizinc/minizinc-python/compare/master...develop
+..  _0.2.0: https://gitlab.com/minizinc/minizinc-python/compare/0.1.0...0.2.0
 ..  _0.1.0: https://gitlab.com/minizinc/minizinc-python/compare/d14654d65eb747470e11c10747e6dd49baaab0b4...0.1.0
+..  _Unreleased: https://gitlab.com/minizinc/minizinc-python/compare/master...develop
