@@ -96,9 +96,15 @@ class Instance(Model, ABC):
             **kwargs,
         )
         if sys.version_info >= (3, 7):
+            if sys.platform == "win32":
+                asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
             return asyncio.run(coroutine)
         else:
-            loop = asyncio.events.new_event_loop()
+            if sys.platform == "win32":
+                loop = asyncio.ProactorEventLoop()
+            else:
+                loop = asyncio.events.new_event_loop()
+
             try:
                 asyncio.events.set_event_loop(loop)
                 return loop.run_until_complete(coroutine)

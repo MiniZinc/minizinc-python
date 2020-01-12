@@ -9,6 +9,12 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Fixed
+^^^^^
+- Ensure the event loop selection on Windows to always selects
+  ``ProactorEventLoop``. This ensures the usage on Windows when the python
+  version ``<= 3.8.0``.
+
 0.2.0_ - 2019-12-13
 -------------------
 
