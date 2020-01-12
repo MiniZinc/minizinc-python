@@ -9,6 +9,11 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Added
+^^^^^
+- Add support for other command line flags for ``CLIInstance.flatten()``
+  through the use of ``**kwargs``.
+
 Fixed
 ^^^^^
 - Ensure the event loop selection on Windows to always selects
