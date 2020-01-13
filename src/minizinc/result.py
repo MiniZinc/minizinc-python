@@ -283,6 +283,9 @@ class Result:
         else:
             return 1
 
+    def __str__(self):
+        return str(self.solution)
+
 
 def parse_solution(
     raw: bytes, output_type: Type, enum_map: Dict[str, Enum]

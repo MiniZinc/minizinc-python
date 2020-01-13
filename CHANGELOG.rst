@@ -16,6 +16,11 @@ Added
 - Add initial ``Checker`` class to allow the usage of MiniZinc solution
   checkers.
 
+Changed
+^^^^^^^
+- The string method for ``Result`` will now refer to the string method of its
+  ``Solution`` attribute.
+
 Fixed
 ^^^^^
 - Ensure the event loop selection on Windows to always selects
