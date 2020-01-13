@@ -21,6 +21,9 @@ Models
     :members:
     :special-members:  __getitem__, __setitem__
 
+..  autoclass:: minizinc.model.Checker
+    :members:
+
 Instances
 ---------
 

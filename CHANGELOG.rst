@@ -13,6 +13,8 @@ Added
 ^^^^^
 - Add support for other command line flags for ``CLIInstance.flatten()``
   through the use of ``**kwargs``.
+- Add initial ``Checker`` class to allow the usage of MiniZinc solution
+  checkers.
 
 Fixed
 ^^^^^

@@ -7,7 +7,7 @@ import threading
 import warnings
 from enum import Enum, EnumMeta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Mapping, Optional, Type, Union
 
 from lark.exceptions import LarkError
 
@@ -192,3 +192,42 @@ class Model:
         copy._code_fragments = self._code_fragments[:]
         copy._data = dict.copy(self._data)
         return copy
+
+
+class Checker:
+    """An interface to a MiniZinc solution checker
+
+    Attributes:
+        checker (Path): The file path to the solution checker file.
+
+    """
+
+    checker: Path
+
+    def __init__(self, path: Path):
+        self.checker = path
+        assert self.checker.exists()
+
+    def check(self, solution) -> str:
+        """Check the Solution object using Checker
+
+        This method runs the Checker model on the solution provided. The
+        output from the checker model is returned as a string.
+
+        Args:
+            solution (Union[Solution, Mapping[str, Any]]): The solution given to
+                the checker
+        """
+        from minizinc import Solver
+        from minizinc.CLI import CLIInstance
+
+        solver = Solver.lookup("gecode")
+        instance = CLIInstance(solver)
+        instance.add_file(self.checker)
+        for i in instance.input.keys():
+            if isinstance(solution, Mapping):
+                instance[i] = solution[i]
+            else:
+                instance[i] = getattr(solution, i)
+
+        return str(instance.solve())

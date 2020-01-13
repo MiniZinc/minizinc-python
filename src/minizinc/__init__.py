@@ -8,7 +8,7 @@ from typing import Optional, Type
 from .driver import Driver, find_driver
 from .error import ConfigurationError, MiniZincError
 from .instance import Instance as GenInstance
-from .model import Method, Model
+from .model import Checker, Method, Model
 from .result import Result, Status
 from .solver import Solver
 
@@ -37,6 +37,7 @@ except ConfigurationError as err:
 __all__ = [
     "default_driver",
     "find_driver",
+    "Checker",
     "Driver",
     "Instance",
     "Method",
