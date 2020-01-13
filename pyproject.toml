@@ -14,7 +14,7 @@ line_length = 88
 
 [tool.poetry]
 name = "minizinc"
-version = "0.2.0"
+version = "0.2.1"
 description = "Access MiniZinc directly from Python"
 readme = "README.md"
 authors = ["Jip J. Dekker <jip@dekker.one>"]

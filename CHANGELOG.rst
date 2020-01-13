@@ -9,6 +9,9 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+0.2.1_ - 2020-01-13
+-------------------
+
 Added
 ^^^^^
 - Add support for other command line flags for ``CLIInstance.flatten()``
@@ -74,6 +77,7 @@ release is best described in the `documentation
 <https://minizinc-python.readthedocs.io/en/0.1.0/>`_.
 
 
+..  _0.2.1: https://gitlab.com/minizinc/minizinc-python/compare/0.2.0...0.2.1
 ..  _0.2.0: https://gitlab.com/minizinc/minizinc-python/compare/0.1.0...0.2.0
 ..  _0.1.0: https://gitlab.com/minizinc/minizinc-python/compare/d14654d65eb747470e11c10747e6dd49baaab0b4...0.1.0
 ..  _Unreleased: https://gitlab.com/minizinc/minizinc-python/compare/master...develop
