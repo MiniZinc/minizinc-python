@@ -163,3 +163,43 @@ process for a toy model that maximises the value of an array of unique integers:
     add a search goal to the :class:`Instance` object. More information about
     the usage of this method can be found in the :ref:`advanced examples
     <meta-heuristics>`.
+
+Using a Solution Checker
+------------------------
+
+MiniZinc Python supports the use of MiniZinc solution checkers. The solution
+checker file can be added to a ``Model``/``Instance`` just like any normal
+MiniZinc file. Once a checker has been added, any ``solve`` operation will
+automatically run the checker. The output of the Solution checker can be
+accessed using the ``Solution.check()`` method. The following example follows
+shows the usage for a trivial Solution checking model.
+
+..  code-block:: python
+
+    from minizinc import Instance, Model, Solver
+
+    gecode = Solver.lookup("gecode")
+
+    model = Model()
+    # --- small_alldifferent.mzn ---
+    # include "all_different.mzn";
+    # array[1..4] of var 1..10: x;
+    # constraint all_different(x);
+    # ------------------------------
+    model.add_file("small_alldifferent.mzn")
+    # --- check_all_different.mzc.mzn ---
+    # array[int] of int: x;
+    # output[
+    #   if forall(i,j in index_set(x) where i<j) (x[i] != x[j]) then
+    #      "CORRECT"
+    #   else
+    #      "INCORRECT"
+    #   endif
+    # ];
+    # -----------------------------------
+    model.add_file("check_all_different.mzc.mzn")
+    instance = Instance(gecode, model)
+
+    result = instance.solve()
+    print(result.solution)
+    print(result.solution.check())  # "CORRECT"

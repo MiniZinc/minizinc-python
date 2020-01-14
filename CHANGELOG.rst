@@ -9,6 +9,12 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Changed
+^^^^^^^
+- Improved interaction with solution checker models. Solution checkers can
+  now be added to an ```Instance``/``Model`` and an ``check`` method will be
+  added to the generated solution objects.
+
 0.2.1_ - 2020-01-13
 -------------------
 

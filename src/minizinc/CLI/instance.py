@@ -70,6 +70,7 @@ class CLIInstance(Instance):
             self._code_fragments = model._code_fragments.copy()
             self._data = dict.copy(model._data)
             self._enum_map = dict.copy(model._enum_map)
+            self._checker = True
 
             # Generate output_type to ensure the same type between different
             # instances of the same model
@@ -185,6 +186,10 @@ class CLIInstance(Instance):
         self._output = {}
         for (key, value) in interface["output"].items():
             self._output[key] = to_python_type(value)
+        if interface.get("has_output_item", True):
+            self._output["_output_item"] = str
+        if self._checker:
+            self._output["_checker"] = str
 
         if self.output_type is None or (
             issubclass(self.output_type, _GeneratedSolution)
@@ -194,9 +199,10 @@ class CLIInstance(Instance):
             if self._method is not Method.SATISFY and "objective" not in self._output:
                 fields.append(("objective", Number))
             for k, v in self._output.items():
-                fields.append((k, v))
-            if interface.get("has_output_item", True):
-                fields.append(("_output_item", str, field(default="")))
+                if k in ["_output_item", "_checker"]:
+                    fields.append((k, str, field(default="")))
+                else:
+                    fields.append((k, v))
 
             minizinc.logger.debug(
                 f"CLIInstance:analyse -> output fields: " f"{[f[0:2] for f in fields]}"
@@ -209,6 +215,8 @@ class CLIInstance(Instance):
                     if myself._output_item == ""
                     else myself._output_item
                 )
+            if self._checker:
+                methods["check"] = lambda myself: myself._checker
 
             self.output_type = make_dataclass(
                 "Solution",
