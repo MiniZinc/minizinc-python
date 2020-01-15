@@ -13,7 +13,7 @@ setup(
     author="Jip J. Dekker",
     author_email="jip.dekker@monash.edu",
     description="Access MiniZinc directly from Python",
-    long_description=Path("README.md").read_text(),
+    long_description=Path("README.md").read_text(encoding="UTF-8"),
     long_description_content_type="text/markdown",
     url="https://www.minizinc.org/",
     project_urls={

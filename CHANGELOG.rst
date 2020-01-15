@@ -14,6 +14,8 @@ Changed
 - Improved interaction with solution checker models. Solution checkers can
   now be added to an ```Instance``/``Model`` and an ``check`` method will be
   added to the generated solution objects.
+- Change the Python packaging system back to setuptools due to the excessive
+  required dependencies of Poetry.
 
 0.2.1_ - 2020-01-13
 -------------------
