@@ -1,0 +1,23 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+black = ">=19.10b0"
+flake8 = ">=3.7"
+flake8-black = ">=0.1.1"
+flake8-bugbear = ">=19.8"
+flake8-mypy = ">=17.8"
+isort = {version = ">=4.3",extras = ["pyproject"]}
+pytest = ">=5.1"
+tox = ">=3.14"
+
+[packages]
+dataclasses = {version = ">=0.6.0",python = "<3.7"}
+lark-parser = ">=0.7.5"
+pygments = ">=2.5"
+
+[pipenv]
+# Only necessary for Black (https://github.com/pypa/pipenv/issues/1760)
+allow_prereleases = true

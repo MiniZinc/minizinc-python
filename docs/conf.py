@@ -9,10 +9,9 @@
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
 
-import re
 from typing import Dict, List
 
-import tomlkit
+from pkg_resources import get_distribution
 
 # -- Path setup --------------------------------------------------------------
 
@@ -28,29 +27,16 @@ except ImportError:
 
     sys.path.insert(0, os.path.abspath("../src"))
 
-
 # -- Project information -----------------------------------------------------
 
 project = "MiniZinc Python"
 copyright = "2019, Jip J. Dekker"
 author = "Jip J. Dekker"
 
-
-def _get_project_meta():
-    with open("../pyproject.toml") as pyproject:
-        file_contents = pyproject.read()
-
-    return tomlkit.parse(file_contents)["tool"]["poetry"]
-
-
-pkg_meta = _get_project_meta()
-# The short X.Y version
-_match = re.match(r"\d+\.\d+", pkg_meta["version"])
-assert _match is not None
-version = _match.group(0)
 # The full version, including alpha/beta/rc tags
-release = pkg_meta["version"]
-
+release = get_distribution("minizinc").version
+# The short X.Y version
+version = ".".join(release.split(".")[:2])
 
 # -- General configuration ---------------------------------------------------
 
@@ -96,7 +82,6 @@ exclude_patterns: List[str] = []
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
 
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -127,12 +112,10 @@ html_static_path = ["_static"]
 
 html_logo = "_static/minizinc.svg"
 
-
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "MiniZincPythondoc"
-
 
 # -- Options for LaTeX output ------------------------------------------------
 
@@ -164,7 +147,6 @@ latex_documents = [
     )
 ]
 
-
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
@@ -172,7 +154,6 @@ latex_documents = [
 man_pages = [
     (master_doc, "minizincpython", "MiniZinc Python Documentation", [author], 1)
 ]
-
 
 # -- Options for Texinfo output ----------------------------------------------
 
@@ -191,7 +172,6 @@ texinfo_documents = [
     )
 ]
 
-
 # -- Options for Epub output -------------------------------------------------
 
 # Bibliographic Dublin Core info.
@@ -208,7 +188,6 @@ epub_title = project
 
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ["search.html"]
-
 
 # -- Extension configuration -------------------------------------------------
 

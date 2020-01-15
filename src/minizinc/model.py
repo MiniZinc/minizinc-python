@@ -7,7 +7,7 @@ import threading
 import warnings
 from enum import Enum, EnumMeta
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Type, Union
 
 from lark.exceptions import LarkError
 
