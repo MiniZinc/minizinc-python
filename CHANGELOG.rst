@@ -17,6 +17,10 @@ Changed
 - Change the Python packaging system back to setuptools due to the excessive
   required dependencies of Poetry.
 
+Fixed
+^^^^^
+- Fix the MiniZinc output parsing of sets of an enumerated type.
+
 0.2.1_ - 2020-01-13
 -------------------
 

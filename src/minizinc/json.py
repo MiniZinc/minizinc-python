@@ -58,8 +58,9 @@ class MZNJSONDecoder(JSONDecoder):
                 if isinstance(item, list):
                     assert len(item) == 2
                     li.extend([i for i in range(item[0], item[1] + 1)])
+                elif len(obj) == 1 and "e" in obj:
+                    li.append(self.enum_map.get(obj["e"], obj["e"]))
                 else:
-                    assert isinstance(item, int)
                     li.append(item)
             return set(li)
         elif len(obj) == 1 and "e" in obj:
