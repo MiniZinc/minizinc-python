@@ -9,6 +9,11 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Added
+^^^^^
+- Add output property to ``CLIInstance`` to expose the output interface given by
+  MiniZinc.
+
 Changed
 ^^^^^^^
 - Improved interaction with solution checker models. Solution checkers can

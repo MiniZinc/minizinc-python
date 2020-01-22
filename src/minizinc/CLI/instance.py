@@ -163,6 +163,12 @@ class CLIInstance(Instance):
             self.analyse()
         return self._input
 
+    @property
+    def output(self):
+        if self._output is None or self._method is None:
+            self.analyse()
+        return self._output
+
     def analyse(self):
         """Discovers basic information about a CLIInstance
 
