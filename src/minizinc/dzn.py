@@ -19,7 +19,7 @@ dzn_grammar = r"""
          | string
          | "true"       -> true
          | "false"      -> false
-    list: [value ("," value)*]
+    list: [value ("," value)* ","?]
     array: "[" list "]"
     array2d: "[" "|" [ list ("|" list)*] "|" "]"
     set: "{" list "}"

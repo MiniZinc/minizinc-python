@@ -90,3 +90,10 @@ def test_dzn_semicolon():
         "y": 2e3,
         "z": "string",
     }
+
+
+def test_dzn_trailing_comma():
+    assert parse_dzn("x = [1,2,3,]") == {"x": [1, 2, 3]}
+    assert parse_dzn("x = {1,2,3,}") == {"x": {1, 2, 3}}
+    assert parse_dzn("x = [{1,},{2,},]") == {"x": [{1}, {2}]}
+    assert parse_dzn("x = [|1,|2,|3,|]") == {"x": [[1], [2], [3]]}
