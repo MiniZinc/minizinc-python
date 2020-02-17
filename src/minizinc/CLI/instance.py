@@ -424,7 +424,7 @@ class CLIInstance(Instance):
             timeout (Optional[timedelta]): Set the time limit for the process
                 of flattening the instance. TODO: An exception is raised if the
                 timeout is reached.
-            **kwargs: Other flags to be passed onto the solver. ``--`` can be
+            **kwargs: Other flags to be passed to the compiler. ``--`` can be
                 omitted in the name of the flag. If the type of the flag is
                 Boolean, then its value signifies its occurrence.
 
