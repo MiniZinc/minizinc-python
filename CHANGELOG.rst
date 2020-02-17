@@ -25,6 +25,7 @@ Changed
 Fixed
 ^^^^^
 - Fix the MiniZinc output parsing of sets of an enumerated type.
+- Fix the TypeError that occurred when a hard timeout occurred.
 
 0.2.1_ - 2020-01-13
 -------------------

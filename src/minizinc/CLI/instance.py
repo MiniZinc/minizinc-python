@@ -361,7 +361,7 @@ class CLIInstance(Instance):
                 # Kill process and read remaining output
                 proc.kill()
                 await proc.wait()
-                remainder = proc.stdout.read()
+                remainder = await proc.stdout.read()
             finally:
                 # parse the remaining statistics
                 if remainder is not None:
