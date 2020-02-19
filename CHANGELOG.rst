@@ -9,6 +9,11 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Changed
+^^^^^^^
+- Add text to the empty MiniZincError that occurs when MiniZinc exits with a non-zero
+  exit status
+
 0.2.2_ - 2020-02-17
 -------------------
 

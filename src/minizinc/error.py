@@ -112,8 +112,13 @@ def parse_error(error_txt: bytes) -> MiniZincError:
             columns = (int(match[4].decode()), int(match[5].decode()))
         location = Location(Path(match[1].decode()), int(match[2].decode()), columns)
 
-    message = error_txt.decode()
-    if location is not None and location.file is not None and location.file.exists():
+    message = error_txt.decode().strip()
+    if not message:
+        message = (
+            "MiniZinc stopped with a non-zero exit code, but did not output an "
+            "error message. "
+        )
+    elif location is not None and location.file is not None and location.file.exists():
         with location.file.open() as f:
             for _ in range(location.line - 2):
                 f.readline()
