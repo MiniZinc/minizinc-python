@@ -14,6 +14,11 @@ Changed
 - Add text to the empty MiniZincError that occurs when MiniZinc exits with a non-zero
   exit status
 
+Fixed
+^^^^^
+- Close generated solver configuration before handing it to MiniZinc. This fixes the
+  usage of generated solver configurations on Windows.
+
 0.2.2_ - 2020-02-17
 -------------------
 

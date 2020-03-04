@@ -4,6 +4,7 @@
 
 import contextlib
 import json
+import os
 import tempfile
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
@@ -251,16 +252,17 @@ class Solver:
             configuration = self.id + "@" + self.version
         file = None
         if self._generate:
-            file = tempfile.NamedTemporaryFile(prefix="minizinc_solver_", suffix=".msc")
+            file = tempfile.NamedTemporaryFile(
+                prefix="minizinc_solver_", suffix=".msc", delete=False
+            )
             file.write(self.output_configuration().encode())
-            file.flush()
-            file.seek(0)
+            file.close()
             configuration = file.name
         try:
             yield configuration
         finally:
             if file is not None:
-                file.close()
+                os.remove(file.name)
 
     def output_configuration(self) -> str:
         """Formulates a valid JSON specification for the Solver
