@@ -18,6 +18,8 @@ Fixed
 ^^^^^
 - Close generated solver configuration before handing it to MiniZinc. This fixes the
   usage of generated solver configurations on Windows.
+- The DZN parser now constructs correct range objects. The parser was off by one due to
+  the exclusive upper bound in Python range objects.
 
 0.2.2_ - 2020-02-17
 -------------------

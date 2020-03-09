@@ -71,7 +71,7 @@ class TreeToDZN(Transformer):
         if len(s) == 1:
             return set(s[0])
         else:
-            return range(s[0], s[1])
+            return range(s[0], s[1] + 1)
 
     @staticmethod
     def string(s):

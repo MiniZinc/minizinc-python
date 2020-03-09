@@ -51,8 +51,11 @@ def test_dzn_set():
     assert parse_dzn("x = {1.2,2.1}") == {"x": {1.2, 2.1}}
 
     # Set Ranges
-    assert parse_dzn("x = 1..1") == {"x": range(1, 1)}
-    assert parse_dzn("x = 1..3") == {"x": range(1, 3)}
+    # note: upper range limit is exclusive in Python
+    assert parse_dzn("x = 1..1") == {"x": range(1, 2)}
+    assert set(parse_dzn("x = 1..1")["x"]) == {1}
+    assert parse_dzn("x = 1..3") == {"x": range(1, 4)}
+    assert set(parse_dzn("x = 1..3")["x"]) == {1, 2, 3}
 
 
 def test_dzn_array():
