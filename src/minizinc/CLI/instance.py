@@ -9,9 +9,11 @@ import os
 import re
 import sys
 import tempfile
+import warnings
 from dataclasses import field, make_dataclass
 from datetime import datetime, timedelta
 from enum import EnumMeta
+from keyword import iskeyword
 from numbers import Number
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Type, cast
@@ -207,6 +209,13 @@ class CLIInstance(Instance):
             for k, v in self._output.items():
                 if k in ["_output_item", "_checker"]:
                     fields.append((k, str, field(default="")))
+                elif iskeyword(k):
+                    warnings.warn(
+                        f"MiniZinc field '{k}' is a Python keyword. It has been "
+                        f"renamed to 'mzn_{k}'",
+                        SyntaxWarning,
+                    )
+                    fields.append(("mzn_" + k, v))
                 else:
                     fields.append((k, v))
 

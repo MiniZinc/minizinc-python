@@ -7,6 +7,7 @@ import re
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum, auto
+from keyword import kwlist
 from typing import Any, Dict, Optional, Tuple, Type, Union
 
 from .instance import Method
@@ -336,6 +337,10 @@ def parse_solution(
             tmp["objective"] = tmp.pop("_objective")
         if "_output" in tmp:
             tmp["_output_item"] = tmp.pop("_output")
+        for k in kwlist:
+            if k in tmp:
+                tmp["mzn_" + k] = tmp.pop(k)
+
         solution = output_type(**tmp)
 
     return solution, statistics

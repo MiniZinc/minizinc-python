@@ -30,6 +30,19 @@ class TestAssign(InstanceTestCase):
             self.instance["n"] = 15
 
 
+class TestPythonConflict(InstanceTestCase):
+    code = """
+        include "globals.mzn";
+        var 1..2: return;
+        constraint return > 1;
+    """
+
+    def test_rename(self):
+        with pytest.warns(SyntaxWarning):
+            result = self.instance.solve()
+            assert result.solution.mzn_return == 2
+
+
 class TestBranch(InstanceTestCase):
     code = """
         include "globals.mzn";

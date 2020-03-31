@@ -20,6 +20,9 @@ Fixed
   usage of generated solver configurations on Windows.
 - The DZN parser now constructs correct range objects. The parser was off by one due to
   the exclusive upper bound in Python range objects.
+- Rewrite MiniZinc fields that are keywords in Python. These names cannot be used
+  directly as members of a dataclass. Python keywords used in MiniZinc are rewritten to
+  ``"mzn_" + {keyword}`` and a warning is thrown.
 
 0.2.2_ - 2020-02-17
 -------------------
