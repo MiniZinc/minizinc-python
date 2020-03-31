@@ -9,6 +9,9 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+0.2.3_ - 2020-03-31
+-------------------
+
 Changed
 ^^^^^^^
 - Add text to the empty MiniZincError that occurs when MiniZinc exits with a non-zero
@@ -114,6 +117,7 @@ release is best described in the `documentation
 <https://minizinc-python.readthedocs.io/en/0.1.0/>`_.
 
 
+..  _0.2.3: https://gitlab.com/minizinc/minizinc-python/compare/0.2.2...0.2.3
 ..  _0.2.2: https://gitlab.com/minizinc/minizinc-python/compare/0.2.1...0.2.2
 ..  _0.2.1: https://gitlab.com/minizinc/minizinc-python/compare/0.2.0...0.2.1
 ..  _0.2.0: https://gitlab.com/minizinc/minizinc-python/compare/0.1.0...0.2.0
