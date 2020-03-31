@@ -6,9 +6,11 @@ EXTS=("latest" "py37" "py36" "pypy")
 green=`tput setaf 2`
 reset=`tput sgr0`
 
+docker pull minizinc/minizinc:latest
 for i in {0..3}
 do
   echo "${green}Build with base ${BASES[$i]} and create registry.gitlab.com/minizinc/minizinc-python:${EXTS[$i]}${reset}"
+  docker pull ${BASES[i]}
   docker build --build-arg BASE=${BASES[$i]} -t registry.gitlab.com/minizinc/minizinc-python:${EXTS[$i]} .
   docker push registry.gitlab.com/minizinc/minizinc-python:${EXTS[$i]}
 done
