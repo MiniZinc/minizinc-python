@@ -253,6 +253,7 @@ class CLIInstance(Instance):
         all_solutions=False,
         intermediate_solutions=False,
         free_search: bool = False,
+        optimisation_level: Optional[int] = None,
         ignore_errors=False,
         **kwargs,
     ):
@@ -311,6 +312,9 @@ class CLIInstance(Instance):
             if "-f" not in self._solver.stdFlags:
                 raise NotImplementedError("Solver does not support the -f flag")
             cmd.append("-f")
+        # Set compiler optimisation level if specified
+        if optimisation_level:
+            cmd.extend(["-O", str(optimisation_level)])
 
         # Set time limit for the MiniZinc solving
         if timeout is not None:
@@ -395,6 +399,7 @@ class CLIInstance(Instance):
         all_solutions=False,
         intermediate_solutions=False,
         free_search: bool = False,
+        optimisation_level: Optional[int] = None,
         **kwargs,
     ):
         status = Status.UNKNOWN
@@ -414,6 +419,7 @@ class CLIInstance(Instance):
             random_seed=random_seed,
             all_solutions=all_solutions,
             free_search=free_search,
+            optimisation_level=optimisation_level,
             **kwargs,
         ):
             status = result.status
@@ -426,13 +432,28 @@ class CLIInstance(Instance):
         return Result(status, solution, statistics)
 
     @contextlib.contextmanager
-    def flat(self, timeout: Optional[timedelta] = None, **kwargs):
+    def flat(
+        self,
+        timeout: Optional[timedelta] = None,
+        optimisation_level: Optional[int] = None,
+        **kwargs,
+    ):
         """Produce a FlatZinc file for the instance.
 
         Args:
             timeout (Optional[timedelta]): Set the time limit for the process
                 of flattening the instance. TODO: An exception is raised if the
                 timeout is reached.
+            optimisation_level (Optional[int]): Set the MiniZinc compiler
+                optimisation level.
+
+                - 0: Disable optimisation
+                - 1: Single pass optimisation (default)
+                - 2: Flatten twice to improve flattening decisions
+                - 3: Perform root-node-propagation
+                - 4: Probe bounds of all variables at the root node
+                - 5: Probe values of all variables at the root node
+
             **kwargs: Other flags to be passed to the compiler. ``--`` can be
                 omitted in the name of the flag. If the type of the flag is
                 Boolean, then its value signifies its occurrence.
@@ -450,6 +471,10 @@ class CLIInstance(Instance):
         ozn = tempfile.NamedTemporaryFile(prefix="ozn_", suffix=".fzn", delete=False)
         cmd.extend(["--ozn", ozn.name])
         ozn.close()
+
+        # Set compiler optimisation level if specified
+        if optimisation_level:
+            cmd.extend(["-O", str(optimisation_level)])
 
         for flag, value in kwargs.items():
             if not flag.startswith("-"):

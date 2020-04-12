@@ -9,6 +9,11 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Added
+^^^^^
+- Add support for different MiniZinc compiler optimisation levels. All methods that
+  compile an instance now have an additional `optimisation_level` argument.
+
 0.2.3_ - 2020-03-31
 -------------------
 

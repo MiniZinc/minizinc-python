@@ -39,6 +39,7 @@ class Instance(Model, ABC):
         all_solutions: bool = False,
         intermediate_solutions: bool = False,
         free_search: bool = False,
+        optimisation_level: Optional[int] = None,
         **kwargs,
     ):
         """Solves the Instance using its given solver configuration.
@@ -70,6 +71,16 @@ class Instance(Model, ABC):
                 intermediate solutions that are found during the solving
                 process. (Only available on optimisation problems and when the
                 ``-a`` flag is supported by the solver)
+            optimisation_level (Optional[int]): Set the MiniZinc compiler
+                optimisation level.
+
+                - 0: Disable optimisation
+                - 1: Single pass optimisation (default)
+                - 2: Flatten twice to improve flattening decisions
+                - 3: Perform root-node-propagation
+                - 4: Probe bounds of all variables at the root node
+                - 5: Probe values of all variables at the root node
+
             **kwargs: Other flags to be passed onto the solver. ``--`` can be
                 omitted in the name of the flag. If the type of the flag is
                 Boolean, then its value signifies its occurrence.
@@ -93,6 +104,7 @@ class Instance(Model, ABC):
             all_solutions=all_solutions,
             intermediate_solutions=intermediate_solutions,
             free_search=free_search,
+            optimisation_level=optimisation_level,
             **kwargs,
         )
         if sys.version_info >= (3, 7):
@@ -122,6 +134,7 @@ class Instance(Model, ABC):
         all_solutions=False,
         intermediate_solutions=False,
         free_search: bool = False,
+        optimisation_level: Optional[int] = None,
         **kwargs,
     ):
         """Solves the Instance using its given solver configuration in a coroutine.
@@ -152,6 +165,7 @@ class Instance(Model, ABC):
         all_solutions=False,
         intermediate_solutions=False,
         free_search: bool = False,
+        optimisation_level: Optional[int] = None,
         ignore_errors=False,
         **kwargs,
     ):
