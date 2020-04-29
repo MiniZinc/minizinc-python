@@ -14,6 +14,11 @@ Added
 - Add support for different MiniZinc compiler optimisation levels. All methods that
   compile an instance now have an additional `optimisation_level` argument.
 
+Changed
+^^^^^^^
+- ``Solver`` has been turned into a ``dataclass`` and has been updated with all
+  attributes used in the compiler.
+
 0.2.3_ - 2020-03-31
 -------------------
 

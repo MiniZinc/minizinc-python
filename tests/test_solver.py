@@ -23,4 +23,4 @@ def test_coinbc():
     coinbc = Solver.lookup("coin-bc")
     assert coinbc is not None
     assert coinbc.id.endswith("coin-bc")
-    assert coinbc.executable == ""
+    assert coinbc.executable == None

@@ -6,6 +6,7 @@ import contextlib
 import json
 import os
 import tempfile
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
 
@@ -14,6 +15,7 @@ import minizinc
 from .json import MZNJSONDecoder, MZNJSONEncoder
 
 
+@dataclass
 class Solver:
     """The representation of a MiniZinc solver configuration in MiniZinc Python.
 
@@ -22,11 +24,12 @@ class Solver:
         version (str): The version of the solver.
         id (str): A unique identifier for the solver, “reverse domain name”
             notation.
-        executable (str): The executable for this solver that can run FlatZinc
-            files. This can be just a file name (in which case the solver has
-            to be on the current PATH), or an absolute path to the executable,
-            or a relative path (which is interpreted relative to the location
-            of the configuration file).
+        executable (Optional[str]): The executable for this solver that can run
+            FlatZinc files. This can be just a file name (in which case the
+            solver has to be on the current ``$PATH``), or an absolute path to
+            the executable, or a relative path (which is interpreted relative
+            to the location of the configuration file). This attribute is set
+            to ``None`` if the solver is integrated into MiniZinc.
         mznlib (str): The solver-specific library of global constraints and
             redefinitions. This should be the name of a directory (either an
             absolute path or a relative path, interpreted relative to the
@@ -35,6 +38,10 @@ class Solver:
             library, this can also take the form -G, e.g., -Ggecode (this is
             mostly the case for solvers that ship with the MiniZinc binary
             distribution).
+        mznlibVersion (int): *Currently undocumented in the MiniZinc
+            documentation.*
+        description (str):  *Currently undocumented in the MiniZinc
+            documentation.*
         tags (List[str]): Each solver can have one or more tags that describe
             its features in an abstract way. Tags can be used for selecting a
             solver using the --solver option. There is no fixed list of tags,
@@ -59,6 +66,8 @@ class Solver:
             it implements its own compilation or interpretation of the model).
         supportsFzn (bool): Whether the solver can run FlatZinc. This should be
             the case for most solvers.
+        supportsNL (bool): Whether the solver conforms to the AMPL NL standard.
+            The NL format is used if ``supportsFZN`` is ``False``.
         needsSolns2Out (bool): Whether the output of the solver needs to be
             passed through the MiniZinc output processor.
         needsMznExecutable (bool): Whether the solver needs to know the
@@ -67,62 +76,33 @@ class Solver:
         needsStdlibDir (bool): Whether the solver needs to know the location of
             the MiniZinc standard library directory. If true, it will be passed
             to the solver using the ``stdlib-dir`` option.
+        needsPathsFile (bool):  *Currently undocumented in the MiniZinc
+            documentation.*
         isGUIApplication (bool): Whether the solver has its own graphical user
             interface, which means that MiniZinc will detach from the process
             and not wait for it to finish or to produce any output.
         _generate (bool): True if the solver needs to be generated
-
     """
 
     name: str
     version: str
     id: str
-    mznlib: str
-    tags: List[str]
-    stdFlags: List[str]
-    extraFlags: List[Tuple[str, str, str, str]]
-    executable: str
-    supportsMzn: bool
-    supportsFzn: bool
-    needsSolns2Out: bool
-    needsMznExecutable: bool
-    needsStdlibDir: bool
-    isGUIApplication: bool
-    _generate: bool
-    FIELDS = [
-        "version",
-        "executable",
-        "mznlib",
-        "tags",
-        "stdFlags",
-        "extraFlags",
-        "supportsMzn",
-        "supportsFzn",
-        "needsSolns2Out",
-        "needsMznExecutable",
-        "needsStdlibDir",
-        "isGUIApplication",
-    ]
-
-    def __init__(self, name: str, version: str, id: str, executable: str):
-        # Set required fields
-        self.name = name
-        self.id = id
-        self.version = version
-        self.executable = executable
-        self._generate = True
-
-        # Initialise optional fields
-        self.mznlib = ""
-        self.tags = []
-        self.stdFlags = []
-        self.extraFlags = []
-        self.supportsMzn = False
-        self.supportsFzn = True
-        self.needsSolns2Out = False
-        self.needsMznExecutable = False
-        self.needsStdlibDir = False
-        self.isGUIApplication = False
+    executable: Optional[str] = None 
+    mznlib: str = ""
+    mznlibVersion: int = 1
+    description: str = ""
+    tags: List[str] = field(default_factory=list)
+    stdFlags: List[str] = field(default_factory=list)
+    extraFlags: List[Tuple[str, str, str, str]] = field(default_factory=list)
+    supportsMzn: bool = False
+    supportsFzn: bool = True
+    supportsNL: bool = False
+    needsSolns2Out: bool = False
+    needsMznExecutable: bool = False
+    needsStdlibDir: bool = False
+    needsPathsFile: bool = False
+    isGUIApplication: bool = False
+    _generate: bool = True
 
     @classmethod
     def lookup(cls, tag: str, driver=None):
@@ -175,7 +155,8 @@ class Solver:
                 f"{sorted([x for x in names])}"
             )
 
-        ret = cls._from_dict(lookup)
+        lookup.pop("extraInfo", None)
+        ret = cls(**lookup)
         ret._generate = False
         return ret
 
@@ -203,33 +184,8 @@ class Solver:
             raise FileNotFoundError
         solver = json.loads(path.read_bytes(), cls=MZNJSONDecoder)
         if not isinstance(solver, cls):
-            solver = cls._from_dict(solver)
+            solver = cls(**solver)
         return solver
-
-    @classmethod
-    def _from_dict(cls, sol: Dict[str, Any]):
-        if (
-            sol.get("id", None) is None
-            or sol.get("name", None) is None
-            or sol.get("version", None) is None
-        ):
-            raise ValueError("Invalid solver configuration")
-        # Initialize Solver
-        ret = cls(sol["name"], sol["version"], sol["id"], sol.get("executable", ""))
-
-        # Set all specified options
-        ret.mznlib = sol.get("mznlib", ret.mznlib)
-        ret.tags = sol.get("tags", ret.tags)
-        ret.stdFlags = sol.get("stdFlags", ret.stdFlags)
-        ret.extraFlags = sol.get("extraFlags", ret.extraFlags)
-        ret.supportsMzn = sol.get("supportsMzn", ret.supportsMzn)
-        ret.supportsFzn = sol.get("supportsFzn", ret.supportsFzn)
-        ret.needsSolns2Out = sol.get("needsSolns2Out", ret.needsSolns2Out)
-        ret.needsMznExecutable = sol.get("needsMznExecutable", ret.needsMznExecutable)
-        ret.needsStdlibDir = sol.get("needsStdlibDir", ret.needsStdlibDir)
-        ret.isGUIApplication = sol.get("isGUIApplication", ret.isGUIApplication)
-
-        return ret
 
     @contextlib.contextmanager
     def configuration(self) -> Iterator[str]:

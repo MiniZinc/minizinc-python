@@ -65,9 +65,5 @@ class MZNJSONDecoder(JSONDecoder):
             return set(li)
         elif len(obj) == 1 and "e" in obj:
             return self.enum_map.get(obj["e"], obj["e"])
-        elif all(
-            [i in obj.keys() for i in ["name", "version", "id", "executable"]]
-        ) and all([i in Solver.FIELDS for i in obj.keys()]):
-            return Solver._from_dict(obj)
         else:
             return obj
