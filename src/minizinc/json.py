@@ -46,8 +46,6 @@ class MZNJSONDecoder(JSONDecoder):
         JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
 
     def object_hook(self, obj):
-        from .solver import Solver
-
         if len(obj) == 1 and "set" in obj:
             if len(obj["set"]) == 1 and isinstance(obj["set"][0], list):
                 assert len(obj["set"][0]) == 2

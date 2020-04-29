@@ -12,7 +12,7 @@ from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
 
 import minizinc
 
-from .json import MZNJSONDecoder, MZNJSONEncoder
+from .json import MZNJSONEncoder
 
 
 @dataclass
@@ -87,7 +87,7 @@ class Solver:
     name: str
     version: str
     id: str
-    executable: Optional[str] = None 
+    executable: Optional[str] = None
     mznlib: str = ""
     mznlibVersion: int = 1
     description: str = ""
@@ -135,9 +135,7 @@ class Solver:
         else:
             raise LookupError("Solver is not linked to a MiniZinc driver")
         # Find all available solvers
-        solvers = json.loads(
-            output.stdout
-        )  # TODO: Possibly integrate with the MZNJSONDecoder
+        solvers = json.loads(output.stdout)
 
         # Find the specified solver
         lookup: Optional[Dict[str, Any]] = None
@@ -182,7 +180,7 @@ class Solver:
         """
         if not path.exists():
             raise FileNotFoundError
-        solver = json.loads(path.read_bytes(), cls=MZNJSONDecoder)
+        solver = json.loads(path.read_bytes())
         if not isinstance(solver, cls):
             solver = cls(**solver)
         return solver
