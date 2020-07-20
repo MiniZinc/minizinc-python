@@ -3,12 +3,13 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import pytest
+from support import InstanceTestCase
+
 from minizinc.error import (
     MiniZincAssertionError,
     MiniZincSyntaxError,
     MiniZincTypeError,
 )
-from support import InstanceTestCase
 
 
 class AssertionTest(InstanceTestCase):

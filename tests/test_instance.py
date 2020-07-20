@@ -3,8 +3,9 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import pytest
-from minizinc.result import Status
 from support import InstanceTestCase
+
+from minizinc.result import Status
 
 
 class TestAssign(InstanceTestCase):

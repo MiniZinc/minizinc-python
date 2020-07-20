@@ -2,10 +2,11 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from support import InstanceTestCase
+
 from minizinc import Solver
 from minizinc.helpers import check_solution
 from minizinc.instance import Method
-from support import InstanceTestCase
 
 
 class CheckResults(InstanceTestCase):

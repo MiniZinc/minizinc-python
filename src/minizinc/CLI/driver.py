@@ -49,7 +49,7 @@ def to_python_type(mzn_type: dict) -> Type:
 
     if mzn_type.get("set", False):
         if pytype is int:
-            pytype = Union[Set[int], range]
+            pytype = Union[Set[int], range]  # type: ignore
         else:
             pytype = Set[pytype]  # type: ignore
 

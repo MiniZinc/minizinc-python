@@ -106,7 +106,7 @@ class Model:
             else:
                 if self._data[key] != value:
                     raise AssertionError(
-                        f"The parameter '%s' cannot be assigned multiple values. "
+                        f"The parameter '{key}' cannot be assigned multiple values. "
                         f"If you are changing the model, consider using the branch "
                         f"method before assigning the parameter."
                     )

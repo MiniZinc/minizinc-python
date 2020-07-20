@@ -4,9 +4,10 @@
 
 from dataclasses import fields
 
+from support import InstanceTestCase
+
 from minizinc.instance import Method
 from minizinc.result import Status
-from support import InstanceTestCase
 
 
 class TestSatisfy(InstanceTestCase):
