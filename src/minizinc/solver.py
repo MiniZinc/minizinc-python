@@ -181,8 +181,16 @@ class Solver:
         if not path.exists():
             raise FileNotFoundError
         solver = json.loads(path.read_bytes())
-        if not isinstance(solver, cls):
-            solver = cls(**solver)
+        # Resolve relative paths
+        for key in ["executable", "mznlib"]:
+            if key in solver:
+                p = Path(solver[key])
+                if not p.is_absolute():
+                    p = path.parent / p
+                    if p.exists():
+                        solver[key] = str(p.resolve())
+
+        solver = cls(**solver)
         return solver
 
     @contextlib.contextmanager

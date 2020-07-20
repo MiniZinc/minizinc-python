@@ -19,6 +19,12 @@ Changed
 - ``Solver`` has been turned into a ``dataclass`` and has been updated with all
   attributes used in the compiler.
 
+Fixed
+^^^^^
+- Resolve relative paths when directly loading a solver configuration. This
+  ensures that when a temporary solver configuration is created, the paths are
+  correct.
+
 0.2.3_ - 2020-03-31
 -------------------
 
