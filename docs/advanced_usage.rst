@@ -254,7 +254,7 @@ letter Q on any position that contains a queen.
 
 
 ..  _multiple-minizinc:
-               
+
 Using multiple MiniZinc versions
 --------------------------------
 
@@ -295,3 +295,52 @@ sets one as the new default.
     For more information about how MiniZinc Python connect to MiniZinc using
     either an executable or shared library, please read about the :ref:`library
     structure <library-structure>`
+
+Debugging the Python to MiniZinc connection
+-------------------------------------------
+
+This package has been setup to contain useful logging features to find any
+potential issues in the connections from Python to MiniZinc. The logging is
+implemented using Python's default `logging` package and is always enabled. To
+view this log one has to set the preferred output mode and event level before
+importing the MiniZinc package. The following example will view all logged
+events and write them to a file:
+
+..  code-block:: python
+
+    import logging
+
+    logging.basicConfig(filename="minizinc-python.log", level=logging.DEBUG)
+
+    import minizinc
+
+    model = minizinc.Model(["nqueens.mzn"])
+    solver = minizinc.Solver.lookup("gecode")
+    instance = minizinc.Instance(solver, model)
+    instance["n"] = 9
+    print(instance.solve())
+
+
+The generated file will contain all remote calls to the MiniZinc executable:
+
+..  code-block:: none
+
+    DEBUG:minizinc:CLIDriver:run -> command: "/Applications/MiniZincIDE.app/Contents/Resources/minizinc --allow-multiple-assignments --version", timeout None
+    DEBUG:minizinc:CLIDriver:run -> command: "/Applications/MiniZincIDE.app/Contents/Resources/minizinc --allow-multiple-assignments --version", timeout None
+    DEBUG:minizinc:CLIDriver:run -> command: "/Applications/MiniZincIDE.app/Contents/Resources/minizinc --allow-multiple-assignments --solvers-json", timeout None
+    DEBUG:minizinc:CLIDriver:run -> command: "/Applications/MiniZincIDE.app/Contents/Resources/minizinc --solver org.gecode.gecode@6.1.1 --allow-multiple-assignments --model-interface-only nqueens.mzn", timeout None
+    DEBUG:minizinc:CLIInstance:analyse -> output fields: [('q', typing.List[int]), ('_checker', <class 'str'>)]
+    DEBUG:asyncio:Using selector: KqueueSelector
+    DEBUG:minizinc:CLIDriver:create_process -> program: /Applications/MiniZincIDE.app/Contents/Resources/minizinc args: "--solver org.gecode.gecode@6.1.1 --allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s nqueens.mzn"
+    DEBUG:minizinc:CLIDriver:run -> command: "/Applications/MiniZincIDE.app/Contents/Resources/minizinc --allow-multiple-assignments --version", timeout None
+    DEBUG:minizinc:CLIDriver:run -> command: "/Applications/MiniZincIDE.app/Contents/Resources/minizinc --allow-multiple-assignments --solvers-json", timeout None
+    DEBUG:minizinc:CLIDriver:run -> command: "/Applications/MiniZincIDE.app/Contents/Resources/minizinc --solver org.gecode.gecode@6.1.1 --allow-multiple-assignments --model-interface-only nqueens.mzn", timeout None
+    DEBUG:minizinc:CLIInstance:analyse -> output fields: [('q', typing.List[int]), ('_checker', <class 'str'>)]
+    DEBUG:asyncio:Using selector: KqueueSelector
+    DEBUG:minizinc:CLIDriver:create_process -> program: /Applications/MiniZincIDE.app/Contents/Resources/minizinc args: "--solver org.gecode.gecode@6.1.1 --allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s nqueens.mzn /var/folders/gj/cmhh026j5ddb28sw1z95pygdy5kk20/T/mzn_datau1ss0gze.json"
+    DEBUG:minizinc:CLIDriver:run -> command: "/Applications/MiniZincIDE.app/Contents/Resources/minizinc --allow-multiple-assignments --version", timeout None
+    DEBUG:minizinc:CLIDriver:run -> command: "/Applications/MiniZincIDE.app/Contents/Resources/minizinc --allow-multiple-assignments --solvers-json", timeout None
+    DEBUG:minizinc:CLIDriver:run -> command: "/Applications/MiniZincIDE.app/Contents/Resources/minizinc --solver org.gecode.gecode@6.1.1 --allow-multiple-assignments --model-interface-only nqueens.mzn", timeout None
+    DEBUG:minizinc:CLIInstance:analyse -> output fields: [('q', typing.List[int]), ('_checker', <class 'str'>)]
+    DEBUG:asyncio:Using selector: KqueueSelector
+    DEBUG:minizinc:CLIDriver:create_process -> program: /Applications/MiniZincIDE.app/Contents/Resources/minizinc args: "--solver org.gecode.gecode@6.1.1 --allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s nqueens.mzn /var/folders/gj/cmhh026j5ddb28sw1z95pygdy5kk20/T/mzn_datamnhikzwo.json"
