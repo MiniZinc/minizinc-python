@@ -329,11 +329,13 @@ class CLIInstance(Instance):
                 cmd.extend([flag, value])
 
         # Add files as last arguments
-        with self.files() as files:
+        with self.files() as files, self._solver.configuration() as solver:
             assert self.output_type is not None
             cmd.extend(files)
             # Run the MiniZinc process
-            proc = await self._driver.create_process(cmd, solver=self._solver)
+            proc = await self._driver.create_process(cmd, solver=solver)
+            assert proc.stderr is not None
+            assert proc.stdout is not None
 
             status = Status.UNKNOWN
             code = 0

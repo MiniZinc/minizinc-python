@@ -2,10 +2,11 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import asyncio
 import re
 import subprocess
 import warnings
+from asyncio import create_subprocess_exec
+from asyncio.subprocess import PIPE, Process
 from datetime import timedelta
 from pathlib import Path
 from typing import Any, List, Optional, Set, Type, Union
@@ -136,39 +137,46 @@ class CLIDriver(Driver):
             raise parse_error(output.stderr)
         return output
 
-    async def create_process(self, args: List[str], solver: Optional[Solver] = None):
-        # TODO: Add documentation
+    async def create_process(
+        self, args: List[str], solver: Optional[str] = None
+    ) -> Process:
+        """Start an asynchronous driver process with given arguments
+
+        Args:
+            args (List[str]): direct arguments to the driver
+            solver (Union[str, Path, None]): Solver configuration string
+                guaranteed by the user to be valid until the process has ended.
+        """
         if solver is None:
             minizinc.logger.debug(
                 f"CLIDriver:create_process -> program: {str(self._executable)} "
                 f'args: "--allow-multiple-assignments '
                 f"{' '.join(str(arg) for arg in args)}\""
             )
-            proc = await asyncio.create_subprocess_exec(
+            proc = await create_subprocess_exec(
                 str(self._executable),
                 "--allow-multiple-assignments",
                 *[str(arg) for arg in args],
                 stdin=None,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
+                stdout=PIPE,
+                stderr=PIPE,
             )
         else:
-            with solver.configuration() as conf:
-                minizinc.logger.debug(
-                    f"CLIDriver:create_process -> program: {str(self._executable)} "
-                    f'args: "--solver {conf} --allow-multiple-assignments '
-                    f"{' '.join(str(arg) for arg in args)}\""
-                )
-                proc = await asyncio.create_subprocess_exec(
-                    str(self._executable),
-                    "--solver",
-                    conf,
-                    "--allow-multiple-assignments",
-                    *[str(arg) for arg in args],
-                    stdin=None,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
+            minizinc.logger.debug(
+                f"CLIDriver:create_process -> program: {str(self._executable)} "
+                f'args: "--solver {solver} --allow-multiple-assignments '
+                f"{' '.join(str(arg) for arg in args)}\""
+            )
+            proc = await create_subprocess_exec(
+                str(self._executable),
+                "--solver",
+                solver,
+                "--allow-multiple-assignments",
+                *[str(arg) for arg in args],
+                stdin=None,
+                stdout=PIPE,
+                stderr=PIPE,
+            )
         return proc
 
     @property
