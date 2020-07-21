@@ -14,6 +14,10 @@ from .solver import Solver
 
 class Instance(Model, ABC):
     """Abstract representation of a MiniZinc instance in Python.
+
+       Raises:
+           MiniZincError: when an error occurs during the parsing or
+               type checking of the model object.
     """
 
     @abstractmethod

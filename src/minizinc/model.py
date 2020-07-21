@@ -63,6 +63,9 @@ class Model:
             always include "__output_item" and include "objective" if the
             instance is not a satisfaction problem.
 
+    Raises:
+        MiniZincError: when an error occurs during the parsing or
+            type checking of the model object.
     """
 
     output_type: Optional[Type] = None
@@ -96,7 +99,6 @@ class Model:
         Args:
             key (str): Identifier of the parameter.
             value (Any): Value to be assigned to the parameter.
-
         """
         with self._lock:
             if self._data.get(key, None) is None:
@@ -105,6 +107,7 @@ class Model:
                 self._data.__setitem__(key, value)
             else:
                 if self._data[key] != value:
+                    # TODO: Fix the error type and document
                     raise AssertionError(
                         f"The parameter '{key}' cannot be assigned multiple values. "
                         f"If you are changing the model, consider using the branch "
@@ -114,6 +117,7 @@ class Model:
     def _register_enum_values(self, t: EnumMeta):
         for name in t.__members__:
             if name in self._enum_map:
+                # TODO: Fix the error type and document
                 raise AssertionError(
                     f"Identifier '{name}' is used in multiple enumerated types"
                     f"within the same model. Identifiers in enumerated types "
@@ -147,7 +151,9 @@ class Model:
             file (Union[Path, str]): Path to the file to be added
             parse_data (bool): Signal if the data should be parsed for usage
                 within Python.
-
+        Raises:
+            MiniZincError: when an error occurs during the parsing or
+                type checking of the model object.
         """
         if not isinstance(file, Path):
             file = Path(file)
@@ -185,6 +191,9 @@ class Model:
 
         Args:
             code (str): A string contain MiniZinc code
+        Raises:
+            MiniZincError: when an error occurs during the parsing or
+                type checking of the model object.
         """
         with self._lock:
             self._code_fragments.append(code)
