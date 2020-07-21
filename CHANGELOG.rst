@@ -12,6 +12,11 @@ Unreleased_
 0.3.1_ - 2020-07-21
 -------------------
 
+Changed
+^^^^^^^
+- Store path of loaded solver configuration paths so that no configuration file
+  has to be generated if no changes are made to the solver.
+
 Fixed
 ^^^^^
 - Ensure generated solver configurations exists during the full existence of

@@ -81,7 +81,9 @@ class Solver:
         isGUIApplication (bool): Whether the solver has its own graphical user
             interface, which means that MiniZinc will detach from the process
             and not wait for it to finish or to produce any output.
-        _generate (bool): True if the solver needs to be generated
+        _identifier (Optional[str]): A string to specify the solver to MiniZinc
+            driver. If set to None, then a solver configuration file should be
+            generated.
     """
 
     name: str
@@ -102,7 +104,7 @@ class Solver:
     needsStdlibDir: bool = False
     needsPathsFile: bool = False
     isGUIApplication: bool = False
-    _generate: bool = True
+    _identifier: Optional[str] = None
 
     @classmethod
     def lookup(cls, tag: str, driver=None):
@@ -155,7 +157,10 @@ class Solver:
 
         lookup.pop("extraInfo", None)
         ret = cls(**lookup)
-        ret._generate = False
+        if ret.version == "<unknown version>":
+            ret._identifier = ret.id
+        else:
+            ret._identifier = ret.id + "@" + ret.version
         return ret
 
     @classmethod
@@ -176,7 +181,6 @@ class Solver:
         Raises:
             FileNotFoundError: Solver configuration file not found.
             ValueError: File contains an invalid solver configuration.
-
         """
         if not path.exists():
             raise FileNotFoundError
@@ -191,6 +195,7 @@ class Solver:
                         solver[key] = str(p.resolve())
 
         solver = cls(**solver)
+        solver._identifier = str(path.resolve())
         return solver
 
     @contextlib.contextmanager
@@ -208,20 +213,17 @@ class Solver:
             str: solver identifier to be used for the ``--solver <id>`` flag.
 
         """
-        if self.version == "<unknown version>":
-            configuration = self.id
-        else:
-            configuration = self.id + "@" + self.version
-        file = None
-        if self._generate:
-            file = tempfile.NamedTemporaryFile(
-                prefix="minizinc_solver_", suffix=".msc", delete=False
-            )
-            file.write(self.output_configuration().encode())
-            file.close()
-            configuration = file.name
         try:
-            yield configuration
+            file = None
+            if self._identifier is not None:
+                yield self._identifier
+            else:
+                file = tempfile.NamedTemporaryFile(
+                    prefix="minizinc_solver_", suffix=".msc", delete=False
+                )
+                file.write(self.output_configuration().encode())
+                file.close()
+                yield file.name
         finally:
             if file is not None:
                 os.remove(file.name)
@@ -262,5 +264,5 @@ class Solver:
             ]
             and getattr(self, key, None) is not value
         ):
-            self._generate = True
+            self._identifier = None
         return super().__setattr__(key, value)
