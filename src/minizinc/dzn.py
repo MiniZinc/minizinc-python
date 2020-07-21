@@ -7,6 +7,8 @@ from typing import Union
 
 from lark import Lark, Transformer
 
+from minizinc.model import UnknownExpression
+
 dzn_grammar = r"""
     items: [item (";" item)* ";"?]
     item: ident "=" value | ident "=" unknown
@@ -37,10 +39,6 @@ dzn_grammar = r"""
     COMMENT: "%" /[^\n]/*
     %ignore COMMENT
 """
-
-
-class UnknownExpression(str):
-    pass
 
 
 def arg1_construct(cls):

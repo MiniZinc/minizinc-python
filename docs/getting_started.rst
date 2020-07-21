@@ -33,6 +33,12 @@ installing MiniZinc Python is using the following command:
     On machines that have both Python 2 and Python 3 installed you might have to
     use ``pip3`` instead of ``pip``
 
+..  note::
+
+    If you require the parsed information of ``.dzn`` files within your python
+    environment, then you have to install the ``dzn`` extra with the MiniZinc
+    package: ``pip install minizinc[dzn]``
+
 A basic example
 ---------------
 

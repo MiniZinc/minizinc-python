@@ -38,9 +38,10 @@ setup(
     ],
     install_requires=[
         "dataclasses>=0.6.0; python_version < '3.7'",
-        "lark-parser>=0.7.5",
-        "pygments>=2.5",
     ],
+    extras_require={
+        "dzn": ["lark-parser>=0.7.5"],
+    },
     entry_points='''
         [pygments.lexers]
         minizinclexer = minizinc.pygments:MiniZincLexer

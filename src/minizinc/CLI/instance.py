@@ -19,11 +19,10 @@ from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Type, cast
 
 import minizinc
-from minizinc.dzn import UnknownExpression
 from minizinc.error import parse_error
 from minizinc.instance import Instance
 from minizinc.json import MZNJSONEncoder
-from minizinc.model import Method, Model, ParPath
+from minizinc.model import Method, Model, ParPath, UnknownExpression
 from minizinc.result import Result, Status, parse_solution, set_stat
 from minizinc.solver import Solver
 

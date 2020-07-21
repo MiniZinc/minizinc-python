@@ -9,10 +9,6 @@ from enum import Enum, EnumMeta
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Type, Union
 
-from lark.exceptions import LarkError
-
-from .dzn import parse_dzn
-
 ParPath = Union[Path, str]
 
 
@@ -34,7 +30,7 @@ class Method(Enum):
         """Get Method represented by the string s.
 
         Args:
-            s:
+            s: String expected to contain either "sat", "min", or "max".
 
         Returns:
             Method: Method represented by s
@@ -49,6 +45,10 @@ class Method(Enum):
             raise ValueError(
                 f"Unknown Method {s}, valid options are 'sat', 'min', or 'max'"
             )
+
+
+class UnknownExpression(str):
+    pass
 
 
 class Model:
@@ -150,7 +150,8 @@ class Model:
         Args:
             file (Union[Path, str]): Path to the file to be added
             parse_data (bool): Signal if the data should be parsed for usage
-                within Python.
+                within Python. This option is ignored if the extra `dzn` is
+                not enabled.
         Raises:
             MiniZincError: when an error occurs during the parsing or
                 type checking of the model object.
@@ -166,8 +167,12 @@ class Model:
             data = json.load(file.open())
             for k, v in data.items():
                 self.__setitem__(k, v)
-        elif file.suffix == ".dzn":
+        elif file.suffix == ".dzn" and parse_data:
             try:
+                from lark.exceptions import LarkError
+
+                from .dzn import parse_dzn
+
                 data = parse_dzn(file)
                 for k, v in data.items():
                     self.__setitem__(k, v)
@@ -176,9 +181,12 @@ class Model:
                     f"Could not parse {file}. Parameters included within this file are "
                     f"not available in Python"
                 )
+            except ImportError:
+                pass
+            finally:
                 with self._lock:
                     self._includes.append(file)
-        elif file.suffix not in [".mzn", ".mzc"]:
+        elif file.suffix not in [".dzn", ".mzn", ".mzc"]:
             raise NameError("Unknown file suffix %s", file.suffix)
         else:
             with self._lock:

@@ -16,6 +16,10 @@ Added
 
 Changed
 ^^^^^^^
+- The DZN parser functionality has been moved into the ``dzn`` extra. If your
+  application requires parsed ``dzn`` information, then you have to ensure your
+  MiniZinc Python is installed with this extra enabled:
+  ``pip install minizinc[dzn]``.
 - ``Solver`` has been turned into a ``dataclass`` and has been updated with all
   attributes used in the compiler.
 

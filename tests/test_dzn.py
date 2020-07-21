@@ -2,7 +2,12 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from minizinc.dzn import UnknownExpression, parse_dzn
+import pytest
+
+from minizinc.model import UnknownExpression
+
+lark = pytest.importorskip("lark")
+from minizinc.dzn import parse_dzn  # noqa: E402
 
 
 def test_dzn_empty():
