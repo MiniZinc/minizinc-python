@@ -154,7 +154,7 @@ release is best described in the `documentation
 <https://minizinc-python.readthedocs.io/en/0.1.0/>`_.
 
 
-..  _0.3.0: https://gitlab.com/minizinc/minizinc-python/compare/0.3.0...0.3.1
+..  _0.3.1: https://gitlab.com/minizinc/minizinc-python/compare/0.3.0...0.3.1
 ..  _0.3.0: https://gitlab.com/minizinc/minizinc-python/compare/0.2.3...0.3.0
 ..  _0.2.3: https://gitlab.com/minizinc/minizinc-python/compare/0.2.2...0.2.3
 ..  _0.2.2: https://gitlab.com/minizinc/minizinc-python/compare/0.2.1...0.2.2
