@@ -172,8 +172,6 @@ class Solver:
 
         Args:
             path (str): location to the solver configuration file to be loaded.
-            driver (Driver): driver used to load the solver configuration. If
-                set to None, then ``default_driver`` will be used.
 
         Returns:
             Solver: MiniZinc solver configuration compatible with the driver.
