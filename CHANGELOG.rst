@@ -9,6 +9,14 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+0.3.2_ - 2020-08-14
+-------------------
+
+Fixed
+^^^^^
+- Add full support for string input and output. The usage of strings would
+  previously incorrectly give a warning.
+
 0.3.1_ - 2020-07-21
 -------------------
 

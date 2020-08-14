@@ -41,6 +41,8 @@ def to_python_type(mzn_type: dict) -> Type:
         pytype = float
     elif basetype == "int":
         pytype = int
+    elif basetype == "string":
+        pytype = str
     else:
         warnings.warn(
             f"Unable to determine minizinc type `{basetype}` assuming integer type",

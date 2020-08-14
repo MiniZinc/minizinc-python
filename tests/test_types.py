@@ -82,3 +82,18 @@ class TestSets(InstanceTestCase):
         result = self.instance.solve()
         assert isinstance(result["s"], range)
         assert result["s"] == range(1, 4)
+
+
+class TestString(InstanceTestCase):
+    code = """
+    array[int] of string: names;
+    var index_set(names): x;
+    string: name ::output_only ::add_to_output = names[fix(x)];
+    """
+
+    def test_string(self):
+        names = ["Guido", "Peter"]
+        self.instance["names"] = names
+
+        result = self.instance.solve()
+        assert result.solution.name in names
