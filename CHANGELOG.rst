@@ -9,6 +9,10 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Added
+^^^^^
+- Add ``requiredFlags`` field to the ``Solver`` data class.
+
 Fixed
 ^^^^^
 - Ignore extra (undocumented) fields from MiniZinc's ``--solvers-json`` output

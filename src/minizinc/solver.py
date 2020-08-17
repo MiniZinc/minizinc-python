@@ -62,6 +62,8 @@ class Solver:
             to use"). The third string specifies the type of the argument
             (``int``, ``bool``, ``float`` or ``string``). The fourth string is
             the default value.
+        requiredFlags (List[str]):  *Currently undocumented in the MiniZinc
+            documentation.*
         supportsMzn (bool): Whether the solver can run MiniZinc directly (i.e.,
             it implements its own compilation or interpretation of the model).
         supportsFzn (bool): Whether the solver can run FlatZinc. This should be
@@ -96,6 +98,7 @@ class Solver:
     tags: List[str] = field(default_factory=list)
     stdFlags: List[str] = field(default_factory=list)
     extraFlags: List[Tuple[str, str, str, str]] = field(default_factory=list)
+    requiredFlags: List[str] = field(default_factory=list)
     supportsMzn: bool = False
     supportsFzn: bool = True
     supportsNL: bool = False
