@@ -6,7 +6,7 @@ import contextlib
 import json
 import os
 import tempfile
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
 
@@ -155,8 +155,10 @@ class Solver:
                 f"{sorted([x for x in names])}"
             )
 
-        lookup.pop("extraInfo", None)
-        ret = cls(**lookup)
+        allowed_fields = set([f.name for f in fields(cls)])
+        ret = cls(
+            **{key: value for (key, value) in lookup.items() if key in allowed_fields}
+        )
         if ret.version == "<unknown version>":
             ret._identifier = ret.id
         else:

@@ -9,6 +9,11 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Fixed
+^^^^^
+- Ignore extra (undocumented) fields from MiniZinc's ``--solvers-json`` output
+  when initialising ``Solver`` objects.
+
 0.3.2_ - 2020-08-14
 -------------------
 
