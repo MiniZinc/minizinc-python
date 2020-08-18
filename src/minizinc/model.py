@@ -173,14 +173,15 @@ class Model:
 
                 from .dzn import parse_dzn
 
-                data = parse_dzn(file)
-                for k, v in data.items():
-                    self.__setitem__(k, v)
-            except LarkError:
-                warnings.warn(
-                    f"Could not parse {file}. Parameters included within this file are "
-                    f"not available in Python"
-                )
+                try:
+                    data = parse_dzn(file)
+                    for k, v in data.items():
+                        self.__setitem__(k, v)
+                except LarkError:
+                    warnings.warn(
+                        f"Could not parse {file}. Parameters included within this file "
+                        f"are not available in Python"
+                    )
             except ImportError:
                 pass
             finally:

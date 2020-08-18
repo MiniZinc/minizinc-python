@@ -9,6 +9,11 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Fixed
+^^^^^
+- Catch lark ``ImportError`` before ``LarkError`` during ``Model.add_file()`` since
+  ``LarkError`` will not exist if the import failed.
+
 0.3.3_ - 2020-08-17
 -------------------
 
