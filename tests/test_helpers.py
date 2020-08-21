@@ -4,9 +4,8 @@
 
 from support import InstanceTestCase
 
-from minizinc import Solver
-from minizinc.helpers import check_solution
-from minizinc.instance import Method
+from minizinc import Method, Solver, Status
+from minizinc.helpers import check_result, check_solution
 
 
 class CheckResults(InstanceTestCase):
@@ -19,22 +18,27 @@ class CheckResults(InstanceTestCase):
     def test_correct(self):
         assert self.instance.method == Method.SATISFY
         result = self.instance.solve()
-        assert check_solution(self.instance, result, self.other_solver)
+        assert check_result(self.instance, result, self.other_solver)
 
     def test_incorrect(self):
         assert self.instance.method == Method.SATISFY
         result = self.instance.solve()
         result.solution = self.instance.output_type(x=[2, 1])
-        assert not check_solution(self.instance, result, self.other_solver)
+        assert not check_result(self.instance, result, self.other_solver)
 
     def test_check_all(self):
         assert self.instance.method == Method.SATISFY
         result = self.instance.solve(all_solutions=True)
-        assert check_solution(
+        assert check_result(
             self.instance, result, self.other_solver, range(len(result.solution))
         )
 
     def test_check_specific(self):
         assert self.instance.method == Method.SATISFY
         result = self.instance.solve(nr_solutions=5)
-        assert check_solution(self.instance, result, self.other_solver, [1, 2])
+        assert check_result(self.instance, result, self.other_solver, [1, 2])
+
+    def test_dict(self):
+        assert check_solution(
+            self.instance, {"x": [5, 6]}, Status.SATISFIED, self.other_solver
+        )

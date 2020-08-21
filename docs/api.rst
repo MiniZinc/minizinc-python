@@ -80,3 +80,10 @@ Errors
 
 ..  autoexception:: minizinc.error.MiniZincSyntaxError
     :members:
+
+Helper Functions
+-------
+
+..  autofunction:: minizinc.helpers.check_result
+
+..  autofunction:: minizinc.helpers.check_solution

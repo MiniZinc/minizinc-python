@@ -9,6 +9,14 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Changed
+^^^^^^^
+- The ``check_solution`` has been split into two separate functions. The
+  ``check_result`` function allows the user to check the correctness of a
+  ``Result`` object and the new ``check_solution`` function can check the
+  correctness of an individual solution in the form of a data class object or a
+  dictionary.
+
 Fixed
 ^^^^^
 - Catch lark ``ImportError`` before ``LarkError`` during ``Model.add_file()`` since
