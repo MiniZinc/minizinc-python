@@ -182,9 +182,9 @@ class Model:
                         f"Could not parse {file}. Parameters included within this file "
                         f"are not available in Python"
                     )
+                    with self._lock:
+                        self._includes.append(file)
             except ImportError:
-                pass
-            finally:
                 with self._lock:
                     self._includes.append(file)
         elif file.suffix not in [".dzn", ".mzn", ".mzc"]:

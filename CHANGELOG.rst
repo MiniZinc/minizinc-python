@@ -21,6 +21,7 @@ Fixed
 ^^^^^
 - Catch lark ``ImportError`` before ``LarkError`` during ``Model.add_file()`` since
   ``LarkError`` will not exist if the import failed.
+- Ensure a DZN file does not get included if its data is parsed.
 
 0.3.3_ - 2020-08-17
 -------------------
