@@ -9,6 +9,9 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+0.4.0_ - 2020-10-06
+------------
+
 Changed
 ^^^^^^^
 - The ``check_solution`` has been split into two separate functions. The
@@ -189,6 +192,7 @@ release is best described in the `documentation
 <https://minizinc-python.readthedocs.io/en/0.1.0/>`_.
 
 
+..  _0.4.0: https://gitlab.com/minizinc/minizinc-python/compare/0.3.3...0.4.0
 ..  _0.3.3: https://gitlab.com/minizinc/minizinc-python/compare/0.3.2...0.3.3
 ..  _0.3.2: https://gitlab.com/minizinc/minizinc-python/compare/0.3.1...0.3.2
 ..  _0.3.1: https://gitlab.com/minizinc/minizinc-python/compare/0.3.0...0.3.1
