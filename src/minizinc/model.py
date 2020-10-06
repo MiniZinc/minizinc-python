@@ -144,7 +144,7 @@ class Model:
         """
         return self._data.__getitem__(key)
 
-    def add_file(self, file: ParPath, parse_data: bool = True) -> None:
+    def add_file(self, file: ParPath, parse_data: bool = False) -> None:
         """Adds a MiniZinc file (``.mzn``, ``.dzn``, or ``.json``) to the Model.
 
         Args:

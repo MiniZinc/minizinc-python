@@ -16,6 +16,7 @@ Changed
   ``Result`` object and the new ``check_solution`` function can check the
   correctness of an individual solution in the form of a data class object or a
   dictionary.
+- ``Model.add_file`` no longer has its ``parse_data`` flag enabled by default.
 
 Fixed
 ^^^^^
