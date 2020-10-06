@@ -104,7 +104,10 @@ class MiniZincLexer(RegexLexer):
             ("(\n|\r|\r\n)", String),
             (".", String),
         ],
-        "main__1": [("(\n|\r|\r\n)", String), (".", Generic.Inserted),],
+        "main__1": [
+            ("(\n|\r|\r\n)", String),
+            (".", Generic.Inserted),
+        ],
         "main__2": [
             ("(\\|)", bygroups(Punctuation)),
             ("(/\\*)", bygroups(Comment), "multi_line_comment__1"),
@@ -447,7 +450,10 @@ class MiniZincLexer(RegexLexer):
             ("(\n|\r|\r\n)", String),
             (".", String),
         ],
-        "multi_line_comment__1": [("(\n|\r|\r\n)", String), (".", Comment),],
+        "multi_line_comment__1": [
+            ("(\n|\r|\r\n)", String),
+            (".", Comment),
+        ],
         "string__1": [
             ("(\\\\\\()", bygroups(Punctuation), "string__2"),
             ("(\\\\[\"'\\\\nrvt])", bygroups(String.Escape)),

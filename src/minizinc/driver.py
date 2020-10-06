@@ -17,8 +17,7 @@ required_version = (2, 3, 2)
 
 
 class Driver(ABC):
-    """The abstract representation of a MiniZinc driver within MiniZinc Python.
-    """
+    """The abstract representation of a MiniZinc driver within MiniZinc Python."""
 
     Solver: Type
     Instance: Instance
