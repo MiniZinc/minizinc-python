@@ -9,6 +9,11 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Fixed
+^^^^^
+- Handle the cancellation of asynchronous solving and correctly dispose of the
+  process
+
 0.4.0_ - 2020-10-06
 ------------
 
