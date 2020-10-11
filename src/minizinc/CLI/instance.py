@@ -370,13 +370,16 @@ class CLIInstance(Instance):
                 # Read remaining text in buffer
                 code = await proc.wait()
                 remainder = err.partial
-            except (asyncio.TimeoutError, asyncio.CancelledError):
+            except (asyncio.TimeoutError, asyncio.CancelledError) as e:
                 # Process was reached hard deadline (timeout + 5 sec) or was
                 # cancelled by the user.
                 # Kill process and read remaining output
                 proc.kill()
                 await proc.wait()
                 remainder = await proc.stdout.read()
+
+                if isinstance(e, asyncio.CancelledError):
+                    raise
             finally:
                 # parse the remaining statistics
                 if remainder is not None:
