@@ -67,6 +67,24 @@ class TestEnum(InstanceTestCase):
         assert isinstance(result["t1"], TT)
         assert result["t1"] is TT.one
 
+    def test_collections(self):
+        self.instance = Instance(self.solver)
+        self.instance.add_string(
+            """
+            enum TT;
+            array[int] of var TT: arr_t;
+            var set of TT: set_t;
+            """
+        )
+        TT = enum.Enum("TT", ["one", "two", "three"])
+        self.instance["TT"] = TT
+        self.instance["arr_t"] = [TT(3), TT(2), TT(1)]
+        self.instance["set_t"] = {TT(2), TT(1)}
+        result = self.instance.solve()
+
+        assert result["arr_t"] == [TT(3), TT(2), TT(1)]
+        assert result["set_t"] == {TT(1), TT(2)}
+
 
 class TestSets(InstanceTestCase):
     def test_ranges(self):
