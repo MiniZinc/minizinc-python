@@ -1,7 +1,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
-  <a href="https://gitlab.com/minizinc/minizinc-python">
+  <a href="https://github.com/MiniZinc/minizinc-python">
     <img src="https://www.minizinc.org/MiniZn_logo.png" alt="Logo" width="80" height="80">
   </a>
 
@@ -13,9 +13,9 @@
     <a href="https://minizinc-python.readthedocs.io/en/latest/"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://gitlab.com/minizinc/minizinc-python/issues">Report Bug</a>
+    <a href="https://github.com/MiniZinc/minizinc-python/issues">Report Bug</a>
     ·
-    <a href="https://gitlab.com/minizinc/minizinc-python/issues">Request Feature</a>
+    <a href="https://github.com/MiniZinc/minizinc-python/issues">Request Feature</a>
   </p>
 </p>
 
@@ -120,7 +120,7 @@ typeset the Python code, `tox -e format`.
 <!-- ROADMAP -->
 ## Roadmap
 
-See the [open issues](https://gitlab.com/minizinc/minizinc-python/issues) for a
+See the [open issues](https://github.com/MiniZinc/minizinc-python/issues) for a
 list of proposed features (and known issues).
 
 
