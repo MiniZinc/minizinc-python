@@ -1,0 +1,45 @@
+name: Python package
+
+on:
+  push:
+    branches: [prime]
+  pull_request:
+    branches: [prime]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.9, pypy3]
+
+    env:
+      MINIZINC_URL: https://github.com/MiniZinc/MiniZincIDE/releases/download/2.5.0/MiniZincIDE-2.5.0-x86_64.AppImage
+    steps:
+    - uses: actions/checkout@v2
+    - name: Add bin/ to PATH
+      run: |
+        mkdir -p ${{ github.workspace }}/bin
+        echo "${{ github.workspace }}/bin" >> $GITHUB_PATH
+    - name: Cache MiniZinc
+      id: cache-minizinc
+      uses: actions/cache@v2
+      with:
+        path: ${{ github.workspace }}/bin/minizinc
+        key: ${{ env.MINIZINC_URL }}
+    - name: Download MiniZinc
+      if: steps.cache-minizinc.outputs.cache-hit != 'true'
+      run: |
+        sudo curl -o ${{ github.workspace }}/bin/minizinc -L $MINIZINC_URL
+        sudo chmod +x ${{ github.workspace }}/bin/minizinc
+        minizinc --version
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install tox tox-gh-actions
+    - name: Test with tox
+      run: tox
