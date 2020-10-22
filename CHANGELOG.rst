@@ -9,6 +9,11 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Added
+^^^^^
+- Support for Python 3.9. (MiniZinc Python will aim to support all versions of
+  Python that are not deprecated)
+
 Changed
 ^^^^^^^
 - The MiniZinc Python repository moved from GitLab to GitHub, replacing GitLab
