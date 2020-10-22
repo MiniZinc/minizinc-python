@@ -8,33 +8,12 @@ from json import JSONDecoder, JSONEncoder
 
 class MZNJSONEncoder(JSONEncoder):
     def default(self, o):
-        from .solver import Solver
-
-        if isinstance(o, set):
-            return {"set": [i for i in o]}
-        elif isinstance(o, range):
-            return {"set": [i for i in o]}
-        elif isinstance(o, Enum):
+        if isinstance(o, Enum):
             return {"e": o.name}
-        elif isinstance(o, Solver):
-            return {
-                "name": o.name,
-                "version": o.version,
-                "id": o.id,
-                "executable": o.executable,
-                "mznlib": o.mznlib,
-                "tags": o.tags,
-                "stdFlags": o.stdFlags,
-                "extraFlags": o.extraFlags,
-                "supportsMzn": o.supportsMzn,
-                "supportsFzn": o.supportsFzn,
-                "needsSolns2Out": o.needsSolns2Out,
-                "needsMznExecutable": o.needsMznExecutable,
-                "needsStdlibDir": o.needsStdlibDir,
-                "isGUIApplication": o.isGUIApplication,
-            }
-        else:
-            return super().default(o)
+        if isinstance(o, set) or isinstance(o, range):
+            return {"set": [{"e": i.name} if isinstance(i, Enum) else i for i in o]}
+
+        return super().default(o)
 
 
 class MZNJSONDecoder(JSONDecoder):

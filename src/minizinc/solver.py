@@ -12,8 +12,6 @@ from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
 
 import minizinc
 
-from .json import MZNJSONEncoder
-
 
 @dataclass
 class Solver:
@@ -246,7 +244,26 @@ class Solver:
                 read by MiniZinc
 
         """
-        return json.dumps(self, sort_keys=True, indent=4, cls=MZNJSONEncoder)
+        return json.dumps(
+            {
+                "name": self.name,
+                "version": self.version,
+                "id": self.id,
+                "executable": self.executable,
+                "mznlib": self.mznlib,
+                "tags": self.tags,
+                "stdFlags": self.stdFlags,
+                "extraFlags": self.extraFlags,
+                "supportsMzn": self.supportsMzn,
+                "supportsFzn": self.supportsFzn,
+                "needsSolns2Out": self.needsSolns2Out,
+                "needsMznExecutable": self.needsMznExecutable,
+                "needsStdlibDir": self.needsStdlibDir,
+                "isGUIApplication": self.isGUIApplication,
+            },
+            sort_keys=True,
+            indent=4,
+        )
 
     def __setattr__(self, key, value):
         if (
