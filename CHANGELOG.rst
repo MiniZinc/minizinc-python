@@ -9,10 +9,17 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Changed
+^^^^^^^
+- The MiniZinc Python repository moved from GitLab to GitHub, replacing GitLab
+  CI for GitHub Actions for the continuous testing.
+
 Fixed
 ^^^^^
 - Handle the cancellation of asynchronous solving and correctly dispose of the
   process
+- Correct the JSON representation of sets of with ``IntEnum`` members. (Lists
+  are still not correctly represented).
 
 0.4.0_ - 2020-10-06
 ------------
