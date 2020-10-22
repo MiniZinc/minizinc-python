@@ -12,6 +12,7 @@ flake8-mypy = ">=17.8"
 isort = {version = ">=4.3",extras = ["pyproject"]}
 pytest = ">=5.1"
 tox = ">=3.14"
+minizinc = {editable = true, path = "."}
 
 [packages]
 dataclasses = {version = ">=0.6.0",python = "<3.7"}
