@@ -24,6 +24,16 @@ class MZNJSONDecoder(JSONDecoder):
             self.enum_map = enum_map
         JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
 
+    def _lookup_enum(self, name: str):
+        if name in self.enum_map:
+            return self.enum_map[name]
+        else:
+            # TODO: mypy seems to believe name the elements should be literals,
+            # but I cannot find this anywhere in the documentation
+            anon_enum = Enum("AnonymousEnum", name)  # type: ignore
+            self.enum_map[name] = anon_enum(1)
+            return anon_enum(1)
+
     def object_hook(self, obj):
         if len(obj) == 1 and "set" in obj:
             if len(obj["set"]) == 1 and isinstance(obj["set"][0], list):
@@ -36,11 +46,11 @@ class MZNJSONDecoder(JSONDecoder):
                     assert len(item) == 2
                     li.extend([i for i in range(item[0], item[1] + 1)])
                 elif len(obj) == 1 and "e" in obj:
-                    li.append(self.enum_map.get(obj["e"], obj["e"]))
+                    li.append(self._lookup_enum(obj["e"]))
                 else:
                     li.append(item)
             return set(li)
         elif len(obj) == 1 and "e" in obj:
-            return self.enum_map.get(obj["e"], obj["e"])
+            return self._lookup_enum(obj["e"])
         else:
             return obj

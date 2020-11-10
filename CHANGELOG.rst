@@ -22,6 +22,8 @@ Changed
 ^^^^^^^
 - The MiniZinc Python repository moved from GitLab to GitHub, replacing GitLab
   CI for GitHub Actions for the continuous testing.
+- Values of an enumerated type defined in MiniZinc will now appear in solutions
+  as a member of a singular anonymous ``enum.Enum`` class.
 
 Fixed
 ^^^^^
@@ -29,6 +31,8 @@ Fixed
   process
 - Correct the JSON representation of sets of with ``IntEnum`` members. (Lists
   are still not correctly represented).
+- ``check_solution`` will now correctly handle solution values of an enumerated
+  type defined in MiniZinc.
 
 0.4.0_ - 2020-10-06
 ------------

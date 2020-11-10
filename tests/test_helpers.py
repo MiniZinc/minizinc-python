@@ -42,3 +42,8 @@ class CheckResults(InstanceTestCase):
         assert check_solution(
             self.instance, {"x": [5, 6]}, Status.SATISFIED, self.other_solver
         )
+
+    def test_enum(self):
+        self.instance.add_string("""enum Foo = {A, B};var Foo: f;""")
+        result = self.instance.solve()
+        assert check_result(self.instance, result, self.other_solver)
