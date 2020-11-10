@@ -13,6 +13,10 @@ Added
 ^^^^^
 - Support for Python 3.9. (MiniZinc Python will aim to support all versions of
   Python that are not deprecated)
+- Experimental support for capturing the error output of the MiniZinc process
+  in ``CLIInstance``.
+- Experimental support for verbose compiler and solver output (using the ``-v``
+  flag) in ``CLIInstance``.
 
 Changed
 ^^^^^^^

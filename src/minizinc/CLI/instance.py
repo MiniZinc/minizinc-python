@@ -10,6 +10,7 @@ import re
 import sys
 import tempfile
 import warnings
+from asyncio import StreamReader
 from dataclasses import field, make_dataclass
 from datetime import datetime, timedelta
 from enum import EnumMeta
@@ -253,7 +254,8 @@ class CLIInstance(Instance):
         intermediate_solutions=False,
         free_search: bool = False,
         optimisation_level: Optional[int] = None,
-        ignore_errors=False,
+        verbose: bool = False,
+        debug_output: Optional[Path] = None,
         **kwargs,
     ):
         # Set standard command line arguments
@@ -319,6 +321,9 @@ class CLIInstance(Instance):
         if timeout is not None:
             cmd.extend(["--time-limit", str(int(timeout.total_seconds() * 1000))])
 
+        if verbose:
+            cmd.append("-v")
+
         for flag, value in kwargs.items():
             if not flag.startswith("-"):
                 flag = "--" + flag
@@ -334,35 +339,23 @@ class CLIInstance(Instance):
             cmd.extend(files)
             # Run the MiniZinc process
             proc = await self._driver.create_process(cmd, solver=solver)
-            assert proc.stderr is not None
-            assert proc.stdout is not None
+            assert isinstance(proc.stderr, StreamReader)
+            assert isinstance(proc.stdout, StreamReader)
+
+            # Python 3.7+: replace with asyncio.create_task
+            read_stderr = asyncio.ensure_future(_read_all(proc.stderr))
 
             status = Status.UNKNOWN
             code = 0
-            deadline = None
-            if timeout is not None:
-                deadline = datetime.now() + timeout + timedelta(seconds=5)
 
             remainder: Optional[bytes] = None
             try:
-                raw_sol: bytes = b""
-                while not proc.stdout.at_eof():
-                    try:
-                        if deadline is None:
-                            raw_sol += await proc.stdout.readuntil(SEPARATOR)
-                        else:
-                            t = deadline - datetime.now()
-                            raw_sol += await asyncio.wait_for(
-                                proc.stdout.readuntil(SEPARATOR), t.total_seconds()
-                            )
-                        status = Status.SATISFIED
-                        solution, statistics = parse_solution(
-                            raw_sol, self.output_type, self._enum_map
-                        )
-                        yield Result(Status.SATISFIED, solution, statistics)
-                        raw_sol = b""
-                    except asyncio.LimitOverrunError as err:
-                        raw_sol += await proc.stdout.readexactly(err.consumed)
+                async for raw_sol in _seperate_solutions(proc.stdout, timeout):
+                    status = Status.SATISFIED
+                    solution, statistics = parse_solution(
+                        raw_sol, self.output_type, self._enum_map
+                    )
+                    yield Result(Status.SATISFIED, solution, statistics)
 
                 code = await proc.wait()
             except asyncio.IncompleteReadError as err:
@@ -391,9 +384,14 @@ class CLIInstance(Instance):
                     )
                     yield Result(status, solution, statistics)
                 # Raise error if required
+                stderr = None
                 if code != 0 or status == Status.ERROR:
-                    stderr = await proc.stderr.read()
+                    stderr = await read_stderr
                     raise parse_error(stderr)
+                if debug_output is not None:
+                    if stderr is None:
+                        stderr = await read_stderr
+                    debug_output.write_bytes(stderr)
 
     async def solve_async(
         self,
@@ -514,3 +512,34 @@ class CLIInstance(Instance):
     def add_string(self, code: str) -> None:
         self._reset_analysis()
         return super().add_string(code)
+
+
+async def _seperate_solutions(stream: StreamReader, timeout: Optional[timedelta]):
+    deadline = None
+    if timeout is not None:
+        deadline = datetime.now() + timeout + timedelta(seconds=1)
+    solution: bytes = b""
+    while not stream.at_eof():
+        try:
+            if deadline is None:
+                solution += await stream.readuntil(SEPARATOR)
+            else:
+                t = deadline - datetime.now()
+                solution += await asyncio.wait_for(
+                    stream.readuntil(SEPARATOR), t.total_seconds()
+                )
+            yield solution
+            solution = b""
+        except asyncio.LimitOverrunError as err:
+            solution += await stream.readexactly(err.consumed)
+
+
+async def _read_all(stream: StreamReader):
+    output: bytes = b""
+    while not stream.at_eof():
+        try:
+            output += await stream.read()
+            return output
+        except asyncio.LimitOverrunError as err:
+            output += await stream.readexactly(err.consumed)
+    return output
