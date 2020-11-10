@@ -170,7 +170,6 @@ class Instance(Model, ABC):
         intermediate_solutions=False,
         free_search: bool = False,
         optimisation_level: Optional[int] = None,
-        ignore_errors=False,
         **kwargs,
     ):
         """An asynchronous generator for solutions of the MiniZinc instance.

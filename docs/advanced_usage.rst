@@ -344,3 +344,53 @@ The generated file will contain all remote calls to the MiniZinc executable:
     DEBUG:minizinc:CLIInstance:analyse -> output fields: [('q', typing.List[int]), ('_checker', <class 'str'>)]
     DEBUG:asyncio:Using selector: KqueueSelector
     DEBUG:minizinc:CLIDriver:create_process -> program: /Applications/MiniZincIDE.app/Contents/Resources/minizinc args: "--solver org.gecode.gecode@6.1.1 --allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s nqueens.mzn /var/folders/gj/cmhh026j5ddb28sw1z95pygdy5kk20/T/mzn_datamnhikzwo.json"
+
+
+If MiniZinc Python instances are instantiated directly from Python, then the
+CLI driver will generate temporary files to use with the created MiniZinc
+process. When something seems wrong with MiniZinc Python it is often a good
+idea to retrieve these objects to both check if the files are generated
+correctly and to recreate the exact MiniZinc command that is ran. For a
+``CLIInstance`` object, you can use the ``files()`` method to generate the
+files. You can then inspect or copy these files:
+
+..  code-block:: python
+
+    import minizinc
+    from pathlib import Path
+
+    model = minizinc.Model(["nqueens.mzn"])
+    solver = minizinc.Solver.lookup("gecode")
+    instance = minizinc.Instance(solver, model)
+    instance["n"] = 9
+
+    with instance.files() as files:
+        store = Path("./tmp")
+        store.mkdir()
+        for f in files:
+            f.link_to(store / f.name)
+
+
+Finally, if you are looking for bugs related to the behaviour of MiniZinc,
+solvers, or solver libraries, then it could be helpful to have a look at the
+direct MiniZinc output on ``stderr``.  The ``CLIInstance`` class now has
+experimental support for to write the output from ``stderr`` to a file and to
+enable verbose compilation and solving (using the command line ``-v`` flag).
+The former is enable by providing a ``pathlib.Path`` object as the
+``debug_output`` parameter to any solving method. Similarly, the verbose flag
+is triggered by setting the ``verbose`` parameter to ``True``. The following
+fragment shows capture the verbose output of a model that contains trace
+statements (which are also captured on ``stderr``):
+
+..  code-block:: python
+
+    import minizinc
+    from pathlib import Path
+
+    gecode = minizinc.Solver.lookup("gecode")
+    instance = minizinc.Instance(gecode)
+    instance.add_string("""
+        constraint trace("--- TRACE: This is a trace statement\\n");
+    """)
+
+    instance.solve(verbose=True, debug_output=Path("./debug_output.txt"))
