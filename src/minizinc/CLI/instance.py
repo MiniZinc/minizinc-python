@@ -367,7 +367,7 @@ class CLIInstance(Instance):
                 # Process was reached hard deadline (timeout + 5 sec) or was
                 # cancelled by the user.
                 # Kill process and read remaining output
-                proc.kill()
+                proc.terminate()
                 await proc.wait()
                 remainder = await proc.stdout.read()
 
