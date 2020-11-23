@@ -348,7 +348,7 @@ class CLIInstance(Instance):
             status = Status.UNKNOWN
             code = 0
 
-            remainder: Optional[bytes] = None
+            remainder: bytes = b""
             try:
                 async for raw_sol in _seperate_solutions(proc.stdout, timeout):
                     status = Status.SATISFIED
@@ -364,23 +364,22 @@ class CLIInstance(Instance):
                 code = await proc.wait()
                 remainder = err.partial
             except (asyncio.TimeoutError, asyncio.CancelledError) as e:
-                # Process was reached hard deadline (timeout + 5 sec) or was
+                # Process was reached hard deadline (timeout + 1 sec) or was
                 # cancelled by the user.
-                # Kill process and read remaining output
-                proc.kill()
-                await proc.wait()
-                remainder = await proc.stdout.read()
+                # Terminate process and read remaining output
+                proc.terminate()
+                remainder = await _read_all(proc.stdout)
 
                 if isinstance(e, asyncio.CancelledError):
                     raise
             finally:
                 # parse the remaining statistics
-                if remainder is not None:
-                    final_status = Status.from_output(remainder, self.method)
-                    if final_status is not None:
-                        status = final_status
+                for res in filter(None, remainder.split(SEPARATOR)):
+                    new_status = Status.from_output(res, self.method)
+                    if new_status is not None:
+                        status = new_status
                     solution, statistics = parse_solution(
-                        remainder, self.output_type, self._enum_map
+                        res, self.output_type, self._enum_map
                     )
                     yield Result(status, solution, statistics)
                 # Raise error if required
