@@ -9,6 +9,12 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Fixed
+^^^^^
+
+- Terminate the MiniZinc process when stopping early (instead of killing it).
+  This allows MiniZinc to correctly stop any solver processes.
+
 0.4.1_ - 2020-11-11
 -------------------
 
