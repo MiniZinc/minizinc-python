@@ -14,7 +14,7 @@ jobs:
         python-version: [3.6, 3.9, pypy3]
 
     env:
-      MINIZINC_URL: https://github.com/MiniZinc/MiniZincIDE/releases/download/2.5.0/MiniZincIDE-2.5.0-x86_64.AppImage
+      MINIZINC_URL: https://github.com/MiniZinc/MiniZincIDE/releases/download/2.5.3/MiniZincIDE-2.5.3-x86_64.AppImage
     steps:
     - uses: actions/checkout@v2
     - name: Add bin/ to PATH
