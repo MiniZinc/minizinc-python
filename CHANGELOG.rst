@@ -15,6 +15,14 @@ Fixed
 - Terminate the MiniZinc process when stopping early (instead of killing it).
   This allows MiniZinc to correctly stop any solver processes.
 
+Changed
+^^^^^^^
+
+- Revert change from 0.4.1 where enumerated types unknown to Python would be
+  made stored as anonymous enumerations. Interoperability between the MiniZinc
+  driver and the MiniZinc Python has instead changed to allow JSON strings as
+  valid input for enumerated types. (required MiniZinc 2.5.3)
+
 0.4.1_ - 2020-11-11
 -------------------
 
