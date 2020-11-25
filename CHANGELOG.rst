@@ -9,6 +9,12 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Fixed
+^^^^^
+
+- Always close temporary files before removing them, so that if an exception is
+  raised while a file is still open, it gets removed correctly on Windows.
+
 0.4.2_ - 2020-11-25
 -------------------
 

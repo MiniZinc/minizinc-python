@@ -157,6 +157,7 @@ class CLIInstance(Instance):
             yield files
         finally:
             for file in gen_files:
+                file.close()
                 os.remove(file.name)
 
     @property
