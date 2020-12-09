@@ -14,6 +14,8 @@ Fixed
 
 - Always close temporary files before removing them, so that if an exception is
   raised while a file is still open, it gets removed correctly on Windows.
+- Set the required process creation flags on Windows to allow MiniZinc to
+  terminate its subprocesses correctly.
 
 0.4.2_ - 2020-11-25
 -------------------
