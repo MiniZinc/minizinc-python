@@ -4,12 +4,13 @@
 
 import re
 import subprocess
+import sys
 import warnings
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE, Process
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, List, Optional, Set, Type, Union
+from typing import Any, Dict, List, Optional, Set, Type, Union
 
 import minizinc
 
@@ -101,6 +102,25 @@ class CLIDriver(Driver):
         timeout_flt = None
         if timeout is not None:
             timeout_flt = timeout.total_seconds()
+
+        windows_spawn_options: Dict[str, Any] = {}
+        if sys.platform == "win32":
+            # On Windows, MiniZinc terminates its subprocesses by generating a
+            # Ctrl+C event for its own console using GenerateConsoleCtrlEvent.
+            # Therefore, we must spawn it in its own console to avoid receiving
+            # that Ctrl+C ourselves.
+            #
+            # On POSIX systems, MiniZinc terminates its subprocesses by sending
+            # SIGTERM to the solver's process group, so this workaround is not
+            # necessary as we won't receive that signal.
+            windows_spawn_options = {
+                "startupinfo": subprocess.STARTUPINFO(
+                    dwFlags=subprocess.STARTF_USESHOWWINDOW,
+                    wShowWindow=subprocess.SW_HIDE,
+                ),
+                "creationflags": subprocess.CREATE_NEW_CONSOLE,
+            }
+
         if solver is None:
             cmd = [str(self._executable), "--allow-multiple-assignments"] + [
                 str(arg) for arg in args
@@ -112,9 +132,10 @@ class CLIDriver(Driver):
             output = subprocess.run(
                 cmd,
                 stdin=None,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stdout=PIPE,
+                stderr=PIPE,
                 timeout=timeout_flt,
+                **windows_spawn_options,
             )
         else:
             with solver.configuration() as conf:
@@ -131,9 +152,10 @@ class CLIDriver(Driver):
                 output = subprocess.run(
                     cmd,
                     stdin=None,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
+                    stdout=PIPE,
+                    stderr=PIPE,
                     timeout=timeout_flt,
+                    **windows_spawn_options,
                 )
         if output.returncode != 0:
             raise parse_error(output.stderr)
@@ -149,6 +171,18 @@ class CLIDriver(Driver):
             solver (Union[str, Path, None]): Solver configuration string
                 guaranteed by the user to be valid until the process has ended.
         """
+
+        windows_spawn_options: Dict[str, Any] = {}
+        if sys.platform == "win32":
+            # See corresponding comment in run()
+            windows_spawn_options = {
+                "startupinfo": subprocess.STARTUPINFO(
+                    dwFlags=subprocess.STARTF_USESHOWWINDOW,
+                    wShowWindow=subprocess.SW_HIDE,
+                ),
+                "creationflags": subprocess.CREATE_NEW_CONSOLE,
+            }
+
         if solver is None:
             minizinc.logger.debug(
                 f"CLIDriver:create_process -> program: {str(self._executable)} "
@@ -162,6 +196,7 @@ class CLIDriver(Driver):
                 stdin=None,
                 stdout=PIPE,
                 stderr=PIPE,
+                **windows_spawn_options,
             )
         else:
             minizinc.logger.debug(
@@ -178,6 +213,7 @@ class CLIDriver(Driver):
                 stdin=None,
                 stdout=PIPE,
                 stderr=PIPE,
+                **windows_spawn_options,
             )
         return proc
 
