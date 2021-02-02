@@ -266,9 +266,8 @@ class CLIInstance(Instance):
             "--output-time",
             "--output-objective",
             "--output-output-item",
+            "--statistics",  # Enable statistics
         ]
-        # Enable statistics
-        cmd.append("-s")
 
         # Process number of solutions to be generated
         if all_solutions:
@@ -283,7 +282,7 @@ class CLIInstance(Instance):
                 )
             if "-a" not in self._solver.stdFlags:
                 raise NotImplementedError("Solver does not support the -a flag")
-            cmd.append("-a")
+            cmd.append("--all-solutions")
         elif nr_solutions is not None:
             if nr_solutions <= 0:
                 raise ValueError(
@@ -296,24 +295,24 @@ class CLIInstance(Instance):
                 )
             if "-n" not in self._solver.stdFlags:
                 raise NotImplementedError("Solver does not support the -n flag")
-            cmd.extend(["-n", str(nr_solutions)])
-        if "-a" in self._solver.stdFlags and self.method != Method.SATISFY:
-            cmd.append("-a")
+            cmd.extend(["--num-solutions", str(nr_solutions)])
+        if "-i" in self._solver.stdFlags or "-a" in self._solver.stdFlags:
+            cmd.append("--intermediate-solutions")
         # Set number of processes to be used
         if processes is not None:
             if "-p" not in self._solver.stdFlags:
                 raise NotImplementedError("Solver does not support the -p flag")
-            cmd.extend(["-p", str(processes)])
+            cmd.extend(["--parallel", str(processes)])
         # Set random seed to be used
         if random_seed is not None:
             if "-r" not in self._solver.stdFlags:
                 raise NotImplementedError("Solver does not support the -r flag")
-            cmd.extend(["-r", str(random_seed)])
+            cmd.extend(["--random-seed", str(random_seed)])
         # Enable free search if specified
         if free_search:
             if "-f" not in self._solver.stdFlags:
                 raise NotImplementedError("Solver does not support the -f flag")
-            cmd.append("-f")
+            cmd.append("--free-search")
         # Set compiler optimisation level if specified
         if optimisation_level:
             cmd.extend(["-O", str(optimisation_level)])
@@ -323,7 +322,7 @@ class CLIInstance(Instance):
             cmd.extend(["--time-limit", str(int(timeout.total_seconds() * 1000))])
 
         if verbose:
-            cmd.append("-v")
+            cmd.append("--verbose")
 
         for flag, value in kwargs.items():
             if not flag.startswith("-"):
@@ -333,6 +332,8 @@ class CLIInstance(Instance):
                     cmd.append(flag)
             else:
                 cmd.extend([flag, value])
+
+        self.method  # Ensure self.analyse() is executed
 
         # Add files as last arguments
         with self.files() as files, self._solver.configuration() as solver:
