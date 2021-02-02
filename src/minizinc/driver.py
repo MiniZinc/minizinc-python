@@ -13,7 +13,7 @@ from typing import List, Optional, Type
 from minizinc.instance import Instance
 
 #: MiniZinc version required by the python package
-required_version = (2, 3, 2)
+required_version = (2, 5, 0)
 
 
 class Driver(ABC):
