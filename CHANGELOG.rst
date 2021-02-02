@@ -9,6 +9,11 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Changed
+^^^^^^^
+- **BREAKING:** Update minimal supported MiniZinc version to 2.5.0 to ensure
+  full functionality.
+
 Fixed
 ^^^^^
 
