@@ -21,6 +21,8 @@ Fixed
   raised while a file is still open, it gets removed correctly on Windows.
 - Set the required process creation flags on Windows to allow MiniZinc to
   terminate its subprocesses correctly.
+- Pass ``--intermediate-solutions`` flag when ``-i`` or ``-a`` is supported by
+  the solver.
 
 0.4.2_ - 2020-11-25
 -------------------
