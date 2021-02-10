@@ -4,6 +4,11 @@
 # DO NOT EDIT -- AUTOMATICALLY GENERATED FROM:
 # https://github.com/Dekker1/iro-mzn
 
+# EDIT: This file was edited in the end anyway because the current version of
+# Iro doesn't seems to correctly generate the "pop" instructions for the
+# different rule sets
+
+
 import re
 
 from pygments.lexer import RegexLexer, bygroups
@@ -105,10 +110,12 @@ class MiniZincLexer(RegexLexer):
             (".", String),
         ],
         "main__1": [
+            ("(@)", bygroups(Generic.Inserted), "#pop"),
             ("(\n|\r|\r\n)", String),
             (".", Generic.Inserted),
         ],
         "main__2": [
+            ("(\\})", bygroups(Punctuation), "#pop"),
             ("(\\|)", bygroups(Punctuation)),
             ("(/\\*)", bygroups(Comment), "multi_line_comment__1"),
             ("(%.*)", bygroups(Comment)),
@@ -130,7 +137,7 @@ class MiniZincLexer(RegexLexer):
             ("(;)", bygroups(Punctuation)),
             ("(:)", bygroups(Punctuation)),
             ("(,)", bygroups(Punctuation)),
-            ("(\\{)", bygroups(Punctuation), "main__2"),
+            ("(\\{)", bygroups(Punctuation), "#push"),
             ("(\\[)", bygroups(Punctuation), "main__3"),
             ("(\\()", bygroups(Punctuation), "main__4"),
             ("(\\}|\\]|\\))", bygroups(Generic.Error)),
@@ -195,6 +202,7 @@ class MiniZincLexer(RegexLexer):
             (".", String),
         ],
         "main__3": [
+            ("(\\])", bygroups(Punctuation), "#pop"),
             ("(\\|)", bygroups(Punctuation)),
             ("(/\\*)", bygroups(Comment), "multi_line_comment__1"),
             ("(%.*)", bygroups(Comment)),
@@ -217,7 +225,7 @@ class MiniZincLexer(RegexLexer):
             ("(:)", bygroups(Punctuation)),
             ("(,)", bygroups(Punctuation)),
             ("(\\{)", bygroups(Punctuation), "main__2"),
-            ("(\\[)", bygroups(Punctuation), "main__3"),
+            ("(\\[)", bygroups(Punctuation), "#push"),
             ("(\\()", bygroups(Punctuation), "main__4"),
             ("(\\}|\\]|\\))", bygroups(Generic.Error)),
             ("(\\|)", bygroups(Generic.Error)),
@@ -281,6 +289,7 @@ class MiniZincLexer(RegexLexer):
             (".", String),
         ],
         "main__4": [
+            ("(\\))", bygroups(Punctuation), "#pop"),
             ("(/\\*)", bygroups(Comment), "multi_line_comment__1"),
             ("(%.*)", bygroups(Comment)),
             ("(@)", bygroups(Generic.Inserted), "main__1"),
@@ -303,7 +312,7 @@ class MiniZincLexer(RegexLexer):
             ("(,)", bygroups(Punctuation)),
             ("(\\{)", bygroups(Punctuation), "main__2"),
             ("(\\[)", bygroups(Punctuation), "main__3"),
-            ("(\\()", bygroups(Punctuation), "main__4"),
+            ("(\\()", bygroups(Punctuation), "#push"),
             ("(\\}|\\]|\\))", bygroups(Generic.Error)),
             ("(\\|)", bygroups(Generic.Error)),
             (
