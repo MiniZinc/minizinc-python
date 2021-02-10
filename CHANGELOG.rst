@@ -267,4 +267,4 @@ release is best described in the `documentation
 ..  _0.2.1: https://github.com/MiniZinc/minizinc-python/compare/0.2.0...0.2.1
 ..  _0.2.0: https://github.com/MiniZinc/minizinc-python/compare/0.1.0...0.2.0
 ..  _0.1.0: https://github.com/MiniZinc/minizinc-python/compare/d14654d65eb747470e11c10747e6dd49baaab0b4...0.1.0
-..  _Unreleased: https://github.com/MiniZinc/minizinc-python/compare/stable...prime
+..  _Unreleased: https://github.com/MiniZinc/minizinc-python/compare/stable...develop

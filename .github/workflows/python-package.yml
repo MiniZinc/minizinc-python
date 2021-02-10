@@ -2,9 +2,9 @@ name: Python package
 
 on:
   push:
-    branches: [prime]
+    branches: [develop]
   pull_request:
-    branches: [prime]
+    branches: [develop]
 
 jobs:
   test:
