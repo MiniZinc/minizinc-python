@@ -375,6 +375,7 @@ class MiniZincLexer(RegexLexer):
             (".", String),
         ],
         "main__5": [
+            ("(\\))", bygroups(Punctuation), "#pop"),
             ("(/\\*)", bygroups(Comment), "multi_line_comment__1"),
             ("(%.*)", bygroups(Comment)),
             ("(@)", bygroups(Generic.Inserted), "main__1"),
@@ -453,17 +454,18 @@ class MiniZincLexer(RegexLexer):
             (
                 "(\\b[A-Za-z][A-Za-z0-9_]*|'[^'\\n\\r]*')(\\()",
                 bygroups(Name.Function, Punctuation),
-                "main__5",
+                "#push",
             ),
             ("(\\b[A-Za-z][A-Za-z0-9_]*|'[^'\\n\\r]*')", bygroups(Name.Variable)),
-            ("(\n|\r|\r\n)", String),
             (".", String),
         ],
         "multi_line_comment__1": [
+            ("(\\*/)", bygroups(Comment), "#pop"),
             ("(\n|\r|\r\n)", String),
             (".", Comment),
         ],
         "string__1": [
+            ('(\\")', bygroups(String), "#pop"),
             ("(\\\\\\()", bygroups(Punctuation), "string__2"),
             ("(\\\\[\"'\\\\nrvt])", bygroups(String.Escape)),
             ('([^\\"\\\\\\n\\r]+)', bygroups(String)),
@@ -471,6 +473,7 @@ class MiniZincLexer(RegexLexer):
             (".", String),
         ],
         "string__2": [
+            ("(\\))", bygroups(Punctuation), "#pop"),
             ("(/\\*)", bygroups(Comment), "multi_line_comment__1"),
             ("(%.*)", bygroups(Comment)),
             ("(@)", bygroups(Generic.Inserted), "main__1"),
