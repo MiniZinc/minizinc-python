@@ -97,6 +97,7 @@ class Solver:
     stdFlags: List[str] = field(default_factory=list)
     extraFlags: List[Tuple[str, str, str, str]] = field(default_factory=list)
     requiredFlags: List[str] = field(default_factory=list)
+    inputType: str = "FZN"
     supportsMzn: bool = False
     supportsFzn: bool = True
     supportsNL: bool = False
@@ -246,6 +247,7 @@ class Solver:
         """
         return json.dumps(
             {
+                # TODO: Output inputType flag when fully supported
                 "name": self.name,
                 "version": self.version,
                 "id": self.id,
@@ -275,6 +277,7 @@ class Solver:
                 "tags",
                 "stdFlags",
                 "extraFlags",
+                "inputType",
                 "supportsMzn",
                 "supportsFzn",
                 "needsSolns2Out",
