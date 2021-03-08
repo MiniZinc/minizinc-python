@@ -101,7 +101,7 @@ can be found.
         var int: obj;
 
         constraint obj = sum(x);
-        output ["\\(obj)"]
+        output ["\\(obj)"];
         """
     )
     inst = Instance(gecode, m)
@@ -110,7 +110,7 @@ can be found.
     print(res.solution)
     while res.status == Status.SATISFIED:
         with inst.branch() as child:
-            child.add_string(f"constraint obj > {res['obj']}")
+            child.add_string(f"constraint obj > {res['obj']};")
             res = child.solve()
             if res.solution is not None:
                 print(res.solution)
