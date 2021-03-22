@@ -314,7 +314,7 @@ class CLIInstance(Instance):
                 raise NotImplementedError("Solver does not support the -f flag")
             cmd.append("--free-search")
         # Set compiler optimisation level if specified
-        if optimisation_level:
+        if optimisation_level is not None:
             cmd.extend(["-O", str(optimisation_level)])
 
         # Set time limit for the MiniZinc solving
@@ -477,7 +477,7 @@ class CLIInstance(Instance):
         ozn.close()
 
         # Set compiler optimisation level if specified
-        if optimisation_level:
+        if optimisation_level is not None:
             cmd.extend(["-O", str(optimisation_level)])
 
         for flag, value in kwargs.items():

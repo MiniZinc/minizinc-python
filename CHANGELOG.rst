@@ -28,6 +28,8 @@ Fixed
   generate is automatically unless the bug in upstream Iro is resolved.
 - Resolve a syntax error (a missing semicolon) in the meta-heuristics example in
   the documentation.
+- Correctly pass the ``-O0`` flag to the CLI when ``optimisation_level`` is set
+  to zero.
 
 0.4.2_ - 2020-11-25
 -------------------
