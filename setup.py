@@ -7,8 +7,10 @@ from setuptools import find_packages, setup
 
 setup(
     name="minizinc",
-    use_scm_version=True,
-    setup_requires=['setuptools_scm'],
+    use_scm_version={
+        "write_to": "src/minizinc/_version.py",
+        "write_to_template": 'version = "{version}"\n',
+    },
     python_requires=">=3.6",
     author="Jip J. Dekker",
     author_email="jip.dekker@monash.edu",
@@ -43,8 +45,8 @@ setup(
     extras_require={
         "dzn": ["lark-parser>=0.7.5"],
     },
-    entry_points='''
+    entry_points="""
         [pygments.lexers]
         minizinclexer = minizinc.pygments:MiniZincLexer
-    '''
+    """,
 )

@@ -5,6 +5,7 @@ import logging
 import warnings
 from typing import Optional, Type
 
+from ._version import version as __version__
 from .driver import Driver, find_driver
 from .error import ConfigurationError, MiniZincError
 from .instance import Instance as GenInstance
@@ -35,6 +36,7 @@ except ConfigurationError as err:
     )
 
 __all__ = [
+    "__version__",
     "default_driver",
     "find_driver",
     "Driver",
