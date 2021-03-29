@@ -9,6 +9,11 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Added
+^^^^^
+- Add (generated) ``__version__`` field to the package to abide by the PEP
+  recommendations
+
 Changed
 ^^^^^^^
 - **BREAKING:** Update minimal supported MiniZinc version to 2.5.0 to ensure
