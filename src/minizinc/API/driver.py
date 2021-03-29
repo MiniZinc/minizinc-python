@@ -4,6 +4,8 @@
 
 from minizinc.driver import Driver
 
+API_REQUIRED_VERSION = (2, 99, 0)
+
 
 class APIDriver(Driver):
     pass
@@ -24,6 +26,7 @@ class APIDriver(Driver):
 
     # def __init__(self, library: CDLL):
     #     self.library = library
+    #
 
     #     for (f_name, f_args, f_res) in self.API_DEFINITIONS:
     #         func = getattr(self.library, f_name)
@@ -32,6 +35,7 @@ class APIDriver(Driver):
     #         setattr(self, "_" + f_name, func)
 
     #     super(APIDriver, self).__init__(library)
+    #     self.check_version()
 
     # def make_default(self) -> None:
     #     from . import APInstance, APISolver

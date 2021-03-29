@@ -17,8 +17,8 @@ def test_version():
     assert "MiniZinc" in minizinc.default_driver.minizinc_version
 
     # Test failure
-    tmp = minizinc.driver.required_version
-    minizinc.driver.required_version = (3, 2, 1)
+    tmp = minizinc.CLI.driver.CLI_REQUIRED_VERSION
+    minizinc.CLI.driver.CLI_REQUIRED_VERSION = (9, 8, 7)
     with pytest.raises(ConfigurationError, match="minimal required version is"):
         minizinc.default_driver.check_version()
-    minizinc.driver.required_version = tmp
+    minizinc.CLI.driver.CLI_REQUIRED_VERSION = tmp

@@ -18,6 +18,9 @@ from ..driver import Driver
 from ..error import ConfigurationError, parse_error
 from ..solver import Solver
 
+#: MiniZinc version required by the python package
+CLI_REQUIRED_VERSION = (2, 5, 0)
+
 
 def to_python_type(mzn_type: dict) -> Type:
     """Converts MiniZinc JSON type to Type
@@ -85,6 +88,8 @@ class CLIDriver(Driver):
         assert self._executable.exists()
 
         super(CLIDriver, self).__init__()
+
+        self.check_version()
 
     def make_default(self) -> None:
         from . import CLIInstance
@@ -225,9 +230,9 @@ class CLIDriver(Driver):
         output = self.run(["--version"])
         match = re.search(rb"version (\d+)\.(\d+)\.(\d+)", output.stdout)
         found = tuple([int(i) for i in match.groups()])
-        if found < minizinc.driver.required_version:
+        if found < CLI_REQUIRED_VERSION:
             raise ConfigurationError(
                 f"The MiniZinc driver found at '{self._executable}' has "
                 f"version {found}. The minimal required version is "
-                f"{minizinc.driver.required_version}."
+                f"{CLI_REQUIRED_VERSION}."
             )

@@ -12,9 +12,6 @@ from typing import List, Optional, Type
 
 from minizinc.instance import Instance
 
-#: MiniZinc version required by the python package
-required_version = (2, 5, 0)
-
 
 class Driver(ABC):
     """The abstract representation of a MiniZinc driver within MiniZinc Python."""
@@ -37,7 +34,7 @@ class Driver(ABC):
             ConfigurationError: If an the driver version is found to be
                 incompatible with MiniZinc Python
         """
-        self.check_version()
+        pass
 
     @property
     @abstractmethod
