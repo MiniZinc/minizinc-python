@@ -84,10 +84,10 @@ class Model:
         self._enum_map = {}
         self._lock = threading.Lock()
         if isinstance(files, Path) or isinstance(files, str):
-            self.add_file(files)
+            self._add_file(files)
         elif files is not None:
             for file in files:
-                self.add_file(file)
+                self._add_file(file)
 
     def __setitem__(self, key: str, value: Any):
         """Set parameter of Model.
@@ -156,6 +156,9 @@ class Model:
             MiniZincError: when an error occurs during the parsing or
                 type checking of the model object.
         """
+        return self._add_file(file, parse_data)
+
+    def _add_file(self, file: ParPath, parse_data: bool = False) -> None:
         if not isinstance(file, Path):
             file = Path(file)
         assert file.exists()
