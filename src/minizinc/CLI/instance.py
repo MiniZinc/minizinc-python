@@ -84,16 +84,15 @@ class CLIInstance(Instance):
     def branch(self) -> Iterator[Instance]:  # TODO: Self reference
         child = self.__class__(self._solver)
         child._parent = self
+
         # Copy current information from analysis
         child._method = self.method
         child.output_type = self.output_type
         child._output = self._output
         child._input = self.input
-        try:
-            with self._lock:
-                yield child
-        finally:
-            del child
+
+        with self._lock:
+            yield child
 
     @property
     def method(self) -> Method:
