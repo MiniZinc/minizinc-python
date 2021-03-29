@@ -22,9 +22,9 @@ class MZNJSONDecoder(JSONDecoder):
             self.enum_map = {}
         else:
             self.enum_map = enum_map
-        JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
+        JSONDecoder.__init__(self, object_hook=self.mzn_object_hook, *args, **kwargs)
 
-    def object_hook(self, obj):
+    def mzn_object_hook(self, obj):
         if len(obj) == 1 and "set" in obj:
             if len(obj["set"]) == 1 and isinstance(obj["set"][0], list):
                 assert len(obj["set"][0]) == 2
