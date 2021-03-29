@@ -10,7 +10,6 @@ import re
 import sys
 import tempfile
 import warnings
-from asyncio import StreamReader
 from dataclasses import field, make_dataclass
 from datetime import datetime, timedelta
 from enum import EnumMeta
@@ -340,8 +339,8 @@ class CLIInstance(Instance):
             cmd.extend(files)
             # Run the MiniZinc process
             proc = await self._driver.create_process(cmd, solver=solver)
-            assert isinstance(proc.stderr, StreamReader)
-            assert isinstance(proc.stdout, StreamReader)
+            assert isinstance(proc.stderr, asyncio.StreamReader)
+            assert isinstance(proc.stdout, asyncio.StreamReader)
 
             # Python 3.7+: replace with asyncio.create_task
             read_stderr = asyncio.ensure_future(_read_all(proc.stderr))
@@ -514,7 +513,9 @@ class CLIInstance(Instance):
         return super().add_string(code)
 
 
-async def _seperate_solutions(stream: StreamReader, timeout: Optional[timedelta]):
+async def _seperate_solutions(
+    stream: asyncio.StreamReader, timeout: Optional[timedelta]
+):
     deadline = None
     if timeout is not None:
         deadline = datetime.now() + timeout + timedelta(seconds=1)
@@ -534,7 +535,7 @@ async def _seperate_solutions(stream: StreamReader, timeout: Optional[timedelta]
             solution += await stream.readexactly(err.consumed)
 
 
-async def _read_all(stream: StreamReader):
+async def _read_all(stream: asyncio.StreamReader):
     output: bytes = b""
     while not stream.at_eof():
         try:

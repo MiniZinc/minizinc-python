@@ -2,11 +2,11 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import json
 import re
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum, auto
+from json import loads
 from keyword import kwlist
 from typing import Any, Dict, Optional, Tuple, Type, Union
 
@@ -332,7 +332,7 @@ def parse_solution(
     )
     raw = re.sub(rb"^\w*%.*\n?", b"", raw, flags=re.MULTILINE)
     if b"{" in raw:
-        tmp = json.loads(raw, enum_map=enum_map, cls=MZNJSONDecoder)
+        tmp = loads(raw, enum_map=enum_map, cls=MZNJSONDecoder)
         if "_objective" in tmp:
             tmp["objective"] = tmp.pop("_objective")
         if "_output" in tmp:
