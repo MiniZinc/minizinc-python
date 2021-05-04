@@ -9,6 +9,7 @@ from datetime import timedelta
 from typing import Optional
 
 from .model import Method, Model
+from .result import Result, Status
 from .solver import Solver
 
 
@@ -128,7 +129,6 @@ class Instance(Model, ABC):
                 asyncio.events.set_event_loop(None)
                 loop.close()
 
-    @abstractmethod
     async def solve_async(
         self,
         timeout: Optional[timedelta] = None,
@@ -157,7 +157,34 @@ class Instance(Model, ABC):
                 model instance.
 
         """
-        pass
+        status = Status.UNKNOWN
+        solution = None
+        statistics: Dict[str, Any] = {}
+
+        multiple_solutions = (
+            all_solutions or intermediate_solutions or nr_solutions is not None
+        )
+        if multiple_solutions:
+            solution = []
+
+        async for result in self.solutions(
+            timeout=timeout,
+            nr_solutions=nr_solutions,
+            processes=processes,
+            random_seed=random_seed,
+            all_solutions=all_solutions,
+            free_search=free_search,
+            optimisation_level=optimisation_level,
+            **kwargs,
+        ):
+            status = result.status
+            statistics.update(result.statistics)
+            if result.solution is not None:
+                if multiple_solutions:
+                    solution.append(result.solution)
+                else:
+                    solution = result.solution
+        return Result(status, solution, statistics)
 
     @abstractmethod
     async def solutions(
