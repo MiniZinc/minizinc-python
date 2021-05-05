@@ -6,7 +6,7 @@ import contextlib
 import sys
 from abc import ABC, abstractmethod
 from datetime import timedelta
-from typing import Optional
+from typing import Any, AsyncIterator, Dict, Optional
 
 from .model import Method, Model
 from .result import Result, Status
@@ -46,7 +46,7 @@ class Instance(Model, ABC):
         free_search: bool = False,
         optimisation_level: Optional[int] = None,
         **kwargs,
-    ):
+    ) -> Result:
         """Solves the Instance using its given solver configuration.
 
         Find the solutions to the given MiniZinc instance using the given solver
@@ -140,7 +140,7 @@ class Instance(Model, ABC):
         free_search: bool = False,
         optimisation_level: Optional[int] = None,
         **kwargs,
-    ):
+    ) -> Result:
         """Solves the Instance using its given solver configuration in a coroutine.
 
         This method returns a coroutine that finds solutions to the given
@@ -187,7 +187,7 @@ class Instance(Model, ABC):
         return Result(status, solution, statistics)
 
     @abstractmethod
-    async def solutions(
+    def solutions(
         self,
         timeout: Optional[timedelta] = None,
         nr_solutions: Optional[int] = None,
@@ -198,7 +198,7 @@ class Instance(Model, ABC):
         free_search: bool = False,
         optimisation_level: Optional[int] = None,
         **kwargs,
-    ):
+    ) -> AsyncIterator[Result]:
         """An asynchronous generator for solutions of the MiniZinc instance.
 
         This method provides an asynchronous generator for the solutions of the
@@ -209,9 +209,9 @@ class Instance(Model, ABC):
         arguments, see the documentation of :func:`~MiniZinc.Instance.solve`.
 
         Yields:
-            Tuple[Status, Optional[Dict], Dict]:
-                tuple containing solving status, values assigned, and
-                statistical information.
+            Result:
+                A Result object containing the current solving status, values
+                assigned, and statistical information.
 
         """
         pass
