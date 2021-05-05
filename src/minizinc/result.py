@@ -10,8 +10,8 @@ from json import loads
 from keyword import kwlist
 from typing import Any, Dict, Optional, Tuple, Type, Union
 
-from .instance import Method
 from .json import MZNJSONDecoder
+from .model import Method
 
 StatisticsType = Union[float, int, str, timedelta]
 
