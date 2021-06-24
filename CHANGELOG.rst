@@ -18,6 +18,8 @@ Changed
 ^^^^^^^
 - **BREAKING:** Update minimal supported MiniZinc version to 2.5.0 to ensure
   full functionality.
+- Remove the (additional) hard time-out in from the CLI driver. MiniZinc should
+  correctly enforce set time limit.
 
 Fixed
 ^^^^^
