@@ -8,7 +8,6 @@ import sys
 import warnings
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE, Process
-from datetime import timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Type, Union
 
@@ -101,13 +100,8 @@ class CLIDriver(Driver):
         self,
         args: List[Any],
         solver: Optional[Solver] = None,
-        timeout: Optional[timedelta] = None,
     ):
         # TODO: Add documentation
-        timeout_flt = None
-        if timeout is not None:
-            timeout_flt = timeout.total_seconds()
-
         windows_spawn_options: Dict[str, Any] = {}
         if sys.platform == "win32":
             # On Windows, MiniZinc terminates its subprocesses by generating a
@@ -130,16 +124,12 @@ class CLIDriver(Driver):
             cmd = [str(self._executable), "--allow-multiple-assignments"] + [
                 str(arg) for arg in args
             ]
-            minizinc.logger.debug(
-                f"CLIDriver:run -> command: \"{' '.join(cmd)}\", timeout "
-                f"{timeout_flt}"
-            )
+            minizinc.logger.debug(f"CLIDriver:run -> command: \"{' '.join(cmd)}\"")
             output = subprocess.run(
                 cmd,
                 stdin=None,
                 stdout=PIPE,
                 stderr=PIPE,
-                timeout=timeout_flt,
                 **windows_spawn_options,
             )
         else:
@@ -150,16 +140,12 @@ class CLIDriver(Driver):
                     conf,
                     "--allow-multiple-assignments",
                 ] + [str(arg) for arg in args]
-                minizinc.logger.debug(
-                    f"CLIDriver:run -> command: \"{' '.join(cmd)}\", timeout "
-                    f"{timeout_flt}"
-                )
+                minizinc.logger.debug(f"CLIDriver:run -> command: \"{' '.join(cmd)}\"")
                 output = subprocess.run(
                     cmd,
                     stdin=None,
                     stdout=PIPE,
                     stderr=PIPE,
-                    timeout=timeout_flt,
                     **windows_spawn_options,
                 )
         if output.returncode != 0:

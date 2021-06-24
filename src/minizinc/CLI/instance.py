@@ -11,7 +11,7 @@ import sys
 import tempfile
 import warnings
 from dataclasses import field, make_dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from enum import EnumMeta
 from keyword import iskeyword
 from numbers import Number
@@ -350,7 +350,7 @@ class CLIInstance(Instance):
 
             remainder: bytes = b""
             try:
-                async for raw_sol in _seperate_solutions(proc.stdout, timeout):
+                async for raw_sol in _seperate_solutions(proc.stdout):
                     status = Status.SATISFIED
                     solution, statistics = parse_solution(
                         raw_sol, self.output_type, self._enum_map
@@ -363,9 +363,8 @@ class CLIInstance(Instance):
                 # Read remaining text in buffer
                 code = await proc.wait()
                 remainder = err.partial
-            except (asyncio.TimeoutError, asyncio.CancelledError) as e:
-                # Process was reached hard deadline (timeout + 1 sec) or was
-                # cancelled by the user.
+            except asyncio.CancelledError as e:
+                # Process was cancelled by the user.
                 # Terminate process and read remaining output
                 proc.terminate()
                 remainder = await _read_all(proc.stdout)
@@ -433,6 +432,9 @@ class CLIInstance(Instance):
         cmd.extend(["--ozn", ozn.name])
         ozn.close()
 
+        if timeout is not None:
+            cmd.extend(["--time-limit", str(int(timeout.total_seconds() * 1000))])
+
         # Set compiler optimisation level if specified
         if optimisation_level is not None:
             cmd.extend(["-O", str(optimisation_level)])
@@ -450,7 +452,7 @@ class CLIInstance(Instance):
         with self.files() as files:
             cmd.extend(files)
             # Run the MiniZinc process
-            output = self._driver.run(cmd, solver=self._solver, timeout=timeout)
+            output = self._driver.run(cmd, solver=self._solver)
 
         statistics: Dict[str, Any] = {}
         matches = re.findall(rb"%%%mzn-stat:? (\w*)=([^\r\n]*)", output.stdout)
@@ -472,22 +474,11 @@ class CLIInstance(Instance):
         return super().add_string(code)
 
 
-async def _seperate_solutions(
-    stream: asyncio.StreamReader, timeout: Optional[timedelta]
-):
-    deadline = None
-    if timeout is not None:
-        deadline = datetime.now() + timeout + timedelta(seconds=1)
+async def _seperate_solutions(stream: asyncio.StreamReader):
     solution: bytes = b""
     while not stream.at_eof():
         try:
-            if deadline is None:
-                solution += await stream.readuntil(SEPARATOR)
-            else:
-                t = deadline - datetime.now()
-                solution += await asyncio.wait_for(
-                    stream.readuntil(SEPARATOR), t.total_seconds()
-                )
+            solution += await stream.readuntil(SEPARATOR)
             yield solution
             solution = b""
         except asyncio.LimitOverrunError as err:
