@@ -23,7 +23,7 @@ from minizinc.error import parse_error
 from minizinc.instance import Instance
 from minizinc.json import MZNJSONEncoder
 from minizinc.model import Method, Model, ParPath, UnknownExpression
-from minizinc.result import Result, Status, parse_solution, set_stat
+from minizinc.result import Result, Status, _GeneratedSolution, parse_solution, set_stat
 from minizinc.solver import Solver
 
 from .driver import CLIDriver, to_python_type
@@ -34,10 +34,6 @@ if sys.version_info >= (3, 8):
     SEPARATOR: Final[bytes] = str.encode("----------" + os.linesep)
 else:
     SEPARATOR: bytes = str.encode("----------" + os.linesep)
-
-
-class _GeneratedSolution:
-    pass
 
 
 class CLIInstance(Instance):
