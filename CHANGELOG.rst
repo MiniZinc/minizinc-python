@@ -37,8 +37,6 @@ Fixed
   the documentation.
 - Correctly pass the ``-O0`` flag to the CLI when ``optimisation_level`` is set
   to zero.
-- Ignore the ``_objective`` output by MiniZinc when it is not an optimisation
-  problem.
 
 0.4.2_ - 2020-11-25
 -------------------

@@ -3,7 +3,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import re
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum, auto
 from json import loads
@@ -79,10 +79,6 @@ StdStatisticTypes = {
     # Number of linear constraints removed through chain compression
     "eliminatedLinearConstraints": int,
 }
-
-
-class _GeneratedSolution:
-    pass
 
 
 def set_stat(stats: Dict[str, StatisticsType], name: str, value: str):
@@ -338,13 +334,7 @@ def parse_solution(
     if b"{" in raw:
         tmp = loads(raw, enum_map=enum_map, cls=MZNJSONDecoder)
         if "_objective" in tmp:
-            obj = tmp.pop("_objective")
-            # TODO: Remove this workaround when MiniZinc no longer outputs _objective
-            # in checker models as an objective.
-            if not issubclass(output_type, _GeneratedSolution) or "objective" in {
-                f.name for f in fields(output_type)
-            }:
-                tmp["objective"] = obj
+            tmp["objective"] = tmp.pop("_objective")
         if "_output" in tmp:
             tmp["_output_item"] = tmp.pop("_output")
         for k in kwlist:
