@@ -2,12 +2,14 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import json
 import re
 import subprocess
 import sys
 import warnings
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE, Process
+from dataclasses import fields
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Type, Union
 
@@ -81,6 +83,7 @@ class CLIDriver(Driver):
     """
 
     _executable: Path
+    _solver_cache: Optional[Dict[str, Solver]] = None
 
     def __init__(self, executable: Path):
         self._executable = executable
@@ -222,3 +225,30 @@ class CLIDriver(Driver):
                 f"version {found}. The minimal required version is "
                 f"{CLI_REQUIRED_VERSION}."
             )
+
+    def available_solvers(self, refresh=False):
+        if not refresh and self._solver_cache is not None:
+            return self._solver_cache
+
+        # Find all available solvers
+        output = self.run(["--solvers-json"])
+        solvers = json.loads(output.stdout)
+
+        # Construct Solver objects
+        self._solver_cache = {}
+        allowed_fields = set([f.name for f in fields(Solver)])
+        for s in solvers:
+            obj = Solver(
+                **{key: value for (key, value) in s.items() if key in allowed_fields}
+            )
+            if obj.version == "<unknown version>":
+                obj._identifier = obj.id
+            else:
+                obj._identifier = obj.id + "@" + obj.version
+
+            names = s.get("tags", [])
+            names.extend([s["id"], s["id"].split(".")[-1]])
+            for name in names:
+                self._solver_cache.setdefault(name, []).append(obj)
+
+        return self._solver_cache

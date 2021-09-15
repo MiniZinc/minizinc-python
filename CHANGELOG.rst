@@ -11,17 +11,23 @@ Unreleased_
 
 Added
 ^^^^^
+
 - Add (generated) ``__version__`` field to the package to abide by the PEP
   recommendations
 - Add support for using NumPy types to instantiate Models. (``np.array`` and
   any type that falls under ``np.generic``)
+- Add ``available_solvers`` method to the ``Driver`` objects to explicitly
+  report the available solvers according to the current environment
 
 Changed
 ^^^^^^^
+
 - **BREAKING:** Update minimal supported MiniZinc version to 2.5.0 to ensure
   full functionality.
 - Remove the (additional) hard time-out in from the CLI driver. MiniZinc should
   correctly enforce set time limit.
+- ``Solver.lookup`` now has an extra ``refresh`` argument to signal whether
+  the driver should refresh the found solver configurations.
 
 Fixed
 ^^^^^

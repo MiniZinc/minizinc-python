@@ -6,9 +6,9 @@ import contextlib
 import json
 import os
 import tempfile
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
+from typing import Iterator, List, Optional, Tuple
 
 import minizinc
 
@@ -109,7 +109,7 @@ class Solver:
     _identifier: Optional[str] = None
 
     @classmethod
-    def lookup(cls, tag: str, driver=None):
+    def lookup(cls, tag: str, driver=None, refresh=False):
         """Lookup a solver configuration in the driver registry.
 
         Access the MiniZinc driver's known solver configuration and find the
@@ -121,6 +121,7 @@ class Solver:
             tag (str): tag (or id) of a solver configuration to look up.
             driver (Driver): driver which registry will be searched for the
                 solver. If set to None, then ``default_driver`` will be used.
+            refresh (bool): Forces the driver to refresh the cache of available solvers.
 
         Returns:
             Solver: MiniZinc solver configuration compatible with the driver.
@@ -131,41 +132,17 @@ class Solver:
         """
         if driver is None:
             driver = minizinc.default_driver
-        from .CLI.driver import CLIDriver
+        assert driver is not None
 
-        assert isinstance(driver, CLIDriver)
-        if driver is not None:
-            output = driver.run(["--solvers-json"])
-        else:
-            raise LookupError("Solver is not linked to a MiniZinc driver")
-        # Find all available solvers
-        solvers = json.loads(output.stdout)
+        tag_map = driver.available_solvers(refresh)
 
-        # Find the specified solver
-        lookup: Optional[Dict[str, Any]] = None
-        names: Set[str] = set()
-        for s in solvers:
-            s_names = [s["id"], s["id"].split(".")[-1]]
-            s_names.extend(s.get("tags", []))
-            names = names.union(set(s_names))
-            if tag in s_names:
-                lookup = s
-                break
-        if lookup is None:
+        if tag not in tag_map or len(tag_map[tag]) < 1:
             raise LookupError(
                 f"No solver id or tag '{tag}' found, available options: "
-                f"{sorted([x for x in names])}"
+                f"{sorted(tag_map.keys())}"
             )
 
-        allowed_fields = set([f.name for f in fields(cls)])
-        ret = cls(
-            **{key: value for (key, value) in lookup.items() if key in allowed_fields}
-        )
-        if ret.version == "<unknown version>":
-            ret._identifier = ret.id
-        else:
-            ret._identifier = ret.id + "@" + ret.version
-        return ret
+        return tag_map[tag][0]
 
     @classmethod
     def load(cls, path: Path):

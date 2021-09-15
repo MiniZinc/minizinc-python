@@ -62,6 +62,25 @@ class Driver(ABC):
         """
         pass
 
+    @abstractmethod
+    def available_solvers(self, refresh=False):
+        """Returns a list of available solvers
+
+        This method returns the list of solvers available to the Driver object
+        according to the current environment. Note that the list of solvers might
+        be cached for future usage. The refresh argument can be used to ignore
+        the current cache.
+
+        Args:
+            refresh (bool): When set to true, the Driver will rediscover the
+                available solvers from the current environment.
+
+        Returns:
+            Dict[str, List[Solver]]: A dictionary that maps solver tags to MiniZinc
+                solver configurations that can be used with the Driver object.
+        """
+        pass
+
 
 def find_driver(
     path: Optional[List[str]] = None, name: str = "minizinc"
