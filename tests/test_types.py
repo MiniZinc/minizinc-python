@@ -3,9 +3,11 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import enum
 
+import pytest
 from support import InstanceTestCase
 
 from minizinc import Instance
+from minizinc.result import Status
 
 
 class TestEnum(InstanceTestCase):
@@ -132,3 +134,89 @@ class TestString(InstanceTestCase):
 
         result = self.instance.solve()
         assert result.solution.name in names
+
+
+class TestNumPy(InstanceTestCase):
+    def test_nparray_bool(self):
+        numpy = pytest.importorskip("numpy")
+        self.instance.add_string("array[int] of bool: x;")
+        self.instance["x"] = numpy.array([True, False], dtype=numpy.bool_)
+        result = self.instance.solve()
+        assert result.status is Status.SATISFIED
+
+    def test_nparray_f32(self):
+        numpy = pytest.importorskip("numpy")
+        self.instance.add_string("array[int] of float: x;")
+        self.instance["x"] = numpy.array([1, 2, 3], dtype=numpy.float32)
+        result = self.instance.solve()
+        assert result.status is Status.SATISFIED
+
+    def test_nparray_f64(self):
+        numpy = pytest.importorskip("numpy")
+        self.instance.add_string("array[int] of float: x;")
+        self.instance["x"] = numpy.array([1, 2, 3], dtype=numpy.float64)
+        result = self.instance.solve()
+        assert result.status is Status.SATISFIED
+
+    def test_nparray_int32(self):
+        numpy = pytest.importorskip("numpy")
+        self.instance.add_string("array[int] of int: x;")
+        self.instance["x"] = numpy.array([1, 2, 3], dtype=numpy.int32)
+        result = self.instance.solve()
+        assert result.status is Status.SATISFIED
+
+    def test_nparray_int64(self):
+        numpy = pytest.importorskip("numpy")
+        self.instance.add_string("array[int] of int: x;")
+        self.instance["x"] = numpy.array([1, 2, 3], dtype=numpy.int64)
+        result = self.instance.solve()
+        assert result.status is Status.SATISFIED
+
+    def test_nparray_uint32(self):
+        numpy = pytest.importorskip("numpy")
+        self.instance.add_string("array[int] of int: x;")
+        self.instance["x"] = numpy.array([1, 2, 3], dtype=numpy.uint32)
+        result = self.instance.solve()
+        assert result.status is Status.SATISFIED
+
+    def test_nparray_uint64(self):
+        numpy = pytest.importorskip("numpy")
+        self.instance.add_string("array[int] of int: x;")
+        self.instance["x"] = numpy.array([1, 2, 3], dtype=numpy.uint64)
+        result = self.instance.solve()
+        assert result.status is Status.SATISFIED
+
+    def test_npbool(self):
+        numpy = pytest.importorskip("numpy")
+        self.instance.add_string("bool: x;")
+        self.instance["x"] = numpy.bool_(0)
+        result = self.instance.solve()
+        assert result.status is Status.SATISFIED
+
+    def test_npf32(self):
+        numpy = pytest.importorskip("numpy")
+        self.instance.add_string("float: x;")
+        self.instance["x"] = numpy.float32(0)
+        result = self.instance.solve()
+        assert result.status is Status.SATISFIED
+
+    def test_npf64(self):
+        numpy = pytest.importorskip("numpy")
+        self.instance.add_string("float: x;")
+        self.instance["x"] = numpy.float64(0)
+        result = self.instance.solve()
+        assert result.status is Status.SATISFIED
+
+    def test_npint32(self):
+        numpy = pytest.importorskip("numpy")
+        self.instance.add_string("int: x;")
+        self.instance["x"] = numpy.int32(0)
+        result = self.instance.solve()
+        assert result.status is Status.SATISFIED
+
+    def test_npint64(self):
+        numpy = pytest.importorskip("numpy")
+        self.instance.add_string("int: x;")
+        self.instance["x"] = numpy.int64(0)
+        result = self.instance.solve()
+        assert result.status is Status.SATISFIED
