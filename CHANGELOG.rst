@@ -13,6 +13,8 @@ Added
 ^^^^^
 - Add (generated) ``__version__`` field to the package to abide by the PEP
   recommendations
+- Add support for using NumPy types to instantiate Models. (``np.array`` and
+  any type that falls under ``np.generic``)
 
 Changed
 ^^^^^^^

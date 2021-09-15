@@ -12,7 +12,15 @@ class MZNJSONEncoder(JSONEncoder):
             return {"e": o.name}
         if isinstance(o, set) or isinstance(o, range):
             return {"set": [{"e": i.name} if isinstance(i, Enum) else i for i in o]}
+        try:
+            import numpy
 
+            if isinstance(o, numpy.ndarray):
+                return o.tolist()
+            if isinstance(o, numpy.generic):
+                return o.item()
+        except ImportError:
+            pass
         return super().default(o)
 
 
