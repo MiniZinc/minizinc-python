@@ -5,7 +5,6 @@ import logging
 import warnings
 from typing import Optional
 
-from ._version import version as __version__
 from .driver import Driver
 from .error import ConfigurationError, MiniZincError
 from .instance import Instance
@@ -13,6 +12,8 @@ from .model import Method, Model
 from .result import Result, Status
 from .solver import Solver
 from .types import AnonEnum, ConstrEnum
+
+__version__ = "0.7.0"
 
 logger = logging.getLogger("minizinc")
 
