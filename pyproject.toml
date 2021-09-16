@@ -1,10 +1,97 @@
+[tool.poetry]
+name = "minizinc"
+version = "0.7.0"
+description = "Access MiniZinc directly from Python"
+readme = "README.md"
+authors = ["Jip J. Dekker <jip@dekker.one>"]
+license = "MPL-2.0"
+homepage = "https://www.minizinc.org/"
+documentation = "https://minizinc-python.readthedocs.io"
+repository = "https://github.com/MiniZinc/minizinc-python"
+classifiers=[
+	"Development Status :: 4 - Beta",
+	"Programming Language :: Python :: 3",
+	"Programming Language :: Python :: 3.7",
+	"Programming Language :: Python :: 3.8",
+	"Programming Language :: Python :: 3.9",
+	"Programming Language :: Python :: 3.10",
+	"Programming Language :: Python :: Implementation :: CPython",
+	"Programming Language :: Python :: Implementation :: PyPy",
+	"License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+	"Operating System :: OS Independent",
+	"Topic :: Scientific/Engineering :: Artificial Intelligence",
+	"Topic :: Scientific/Engineering :: Mathematics",
+]
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/MiniZinc/minizinc-python/issues"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+lark-parser = { version = "^0.12.0", optional = true }
+
+[tool.poetry.group.dev.dependencies]
+black = "*"
+isort = "^5.9"
+tox = "^3.24"
+tox-poetry-installer = "^0.8.4"
+
+[tool.poetry.group.ci]
+optional = true
+[tool.poetry.group.ci.dependencies]
+tox-gh-actions = "^2.7.0" # CI distribution
+
+[tool.poetry.group.ext]
+optional = true
+[tool.poetry.group.ext.dependencies]
+pygments = "^2.10"
+numpy = { version = "^1.22.4", python = ">=3.8,<3.11" }
+
+[tool.poetry.group.test]
+optional = true
+[tool.poetry.group.test.dependencies]
+flake8 = "^4.0"
+flake8-black = "^0.3.3"
+flake8-bugbear = "*" # Does not adhere to semantic versioning
+mypy = "^0.950"
+types-dataclasses = "^0.6.5"
+# Testing Framework
+pytest = "^7.1"
+
+[tool.poetry.group.docs]
+optional = true
+[tool.poetry.group.docs.dependencies]
+sphinx = "^4.2.0"
+sphinx-rtd-theme = "^1.0.0"
+
+[tool.poetry.extras]
+dzn = ["lark-parser"]
+
+[tool.poetry.plugins."pygments.lexers"]
+minizinclexer = "minizinc.pygments:MiniZincLexer"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+
 [build-system]
-requires = ["setuptools>=41.0", "setuptools-scm", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.black]
-target-version = ['py36', 'py37', 'py38', 'py39']
+target-version = ['py37', 'py38', 'py39', 'py310']
 
 [tool.isort]
 profile = "black"
 
+[tool.mypy]
+python_version = "3.7"
+platform = "linux"
+
+# do not follow imports (except for ones found in typeshed)
+follow_imports = "skip"
+
+# since we're ignoring imports, writing .mypy_cache doesn't make any sense
+cache_dir = "/dev/null"
+
+# suppress errors about unsatisfied imports
+ignore_missing_imports = true
