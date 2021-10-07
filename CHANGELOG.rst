@@ -13,11 +13,12 @@ Added
 ^^^^^
 
 - Add (generated) ``__version__`` field to the package to abide by the PEP
-  recommendations
+  recommendations.
 - Add support for using NumPy types to instantiate Models. (``np.array`` and
-  any type that falls under ``np.generic``)
+  any type that falls under ``np.generic``).
 - Add ``available_solvers`` method to the ``Driver`` objects to explicitly
-  report the available solvers according to the current environment
+  report the available solvers according to the current environment.
+- Add support for Python 3.10.
 
 Changed
 ^^^^^^^
