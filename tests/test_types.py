@@ -220,3 +220,19 @@ class TestNumPy(InstanceTestCase):
         self.instance["x"] = numpy.int64(0)
         result = self.instance.solve()
         assert result.status is Status.SATISFIED
+
+
+# Enable on MiniZinc 2.6+ (JSON output of annotations is broken before then)
+# class TestAnn(InstanceTestCase):
+#     def test_ann_atom(self):
+#         self.instance.add_string("ann: x :: add_to_output = promise_total;")
+#         result = self.instance.solve()
+#         assert result.status is Status.SATISFIED
+#         assert result["x"] == "promise_total"
+
+#     def test_ann_call(self):
+#         self.instance.add_string(
+#         'ann: x :: add_to_output = expression_name("test");')
+#         result = self.instance.solve()
+#         assert result.status is Status.SATISFIED
+#         assert result["x"] == 'expression_name("test")'
