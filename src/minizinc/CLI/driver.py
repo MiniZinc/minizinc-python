@@ -48,6 +48,8 @@ def to_python_type(mzn_type: dict) -> Type:
         pytype = int
     elif basetype == "string":
         pytype = str
+    elif basetype == "ann":
+        pytype = str
     else:
         warnings.warn(
             f"Unable to determine minizinc type `{basetype}` assuming integer type",

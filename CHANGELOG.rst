@@ -46,6 +46,8 @@ Fixed
   the documentation.
 - Correctly pass the ``-O0`` flag to the CLI when ``optimisation_level`` is set
   to zero.
+- Set type of MiniZinc annotation output type `ann` to `str` in Python in
+  accordance with the JSON output format.
 
 0.4.2_ - 2020-11-25
 -------------------
