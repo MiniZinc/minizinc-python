@@ -9,6 +9,9 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+0.5.0_ - 2021-10-07
+------------
+
 Added
 ^^^^^
 
@@ -277,6 +280,7 @@ release is best described in the `documentation
 <https://minizinc-python.readthedocs.io/en/0.1.0/>`_.
 
 
+..  _0.5.0: https://github.com/MiniZinc/minizinc-python/compare/0.4.2...0.5.0
 ..  _0.4.2: https://github.com/MiniZinc/minizinc-python/compare/0.4.1...0.4.2
 ..  _0.4.1: https://github.com/MiniZinc/minizinc-python/compare/0.4.0...0.4.1
 ..  _0.4.0: https://github.com/MiniZinc/minizinc-python/compare/0.3.3...0.4.0
