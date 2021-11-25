@@ -9,6 +9,14 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+
+Fixed
+^^^^^
+
+- Do not raise error about unsupported solver flags when MiniZinc driver would 
+  not raise an error.
+
+
 0.5.0_ - 2021-10-07
 ------------
 

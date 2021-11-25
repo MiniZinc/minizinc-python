@@ -257,6 +257,7 @@ class CLIInstance(Instance):
         debug_output: Optional[Path] = None,
         **kwargs,
     ):
+        method = self.method  # Ensure self.analyse() has been executed
         # Set standard command line arguments
         cmd: List[Any] = [
             "--output-mode",
@@ -265,6 +266,9 @@ class CLIInstance(Instance):
             "--output-objective",
             "--output-output-item",
             "--statistics",  # Enable statistics
+            # Enable intermediate solutions
+            # (ensure that solvers always output their best solution)
+            "--intermediate-solutions",
         ]
 
         # Process number of solutions to be generated
@@ -274,7 +278,7 @@ class CLIInstance(Instance):
                     "The number of solutions cannot be limited when looking "
                     "for all solutions"
                 )
-            if self.method != Method.SATISFY:
+            if method != Method.SATISFY:
                 raise NotImplementedError(
                     "Finding all optimal solutions is not yet implemented"
                 )
@@ -294,22 +298,14 @@ class CLIInstance(Instance):
             if "-n" not in self._solver.stdFlags:
                 raise NotImplementedError("Solver does not support the -n flag")
             cmd.extend(["--num-solutions", str(nr_solutions)])
-        if "-i" in self._solver.stdFlags or "-a" in self._solver.stdFlags:
-            cmd.append("--intermediate-solutions")
         # Set number of processes to be used
         if processes is not None:
-            if "-p" not in self._solver.stdFlags:
-                raise NotImplementedError("Solver does not support the -p flag")
             cmd.extend(["--parallel", str(processes)])
         # Set random seed to be used
         if random_seed is not None:
-            if "-r" not in self._solver.stdFlags:
-                raise NotImplementedError("Solver does not support the -r flag")
             cmd.extend(["--random-seed", str(random_seed)])
         # Enable free search if specified
         if free_search:
-            if "-f" not in self._solver.stdFlags:
-                raise NotImplementedError("Solver does not support the -f flag")
             cmd.append("--free-search")
         # Set compiler optimisation level if specified
         if optimisation_level is not None:
@@ -330,8 +326,6 @@ class CLIInstance(Instance):
                     cmd.append(flag)
             else:
                 cmd.extend([flag, value])
-
-        self.method  # Ensure self.analyse() is executed
 
         # Add files as last arguments
         with self.files() as files, self._solver.configuration() as solver:
@@ -374,7 +368,7 @@ class CLIInstance(Instance):
             finally:
                 # parse the remaining statistics
                 for res in filter(None, remainder.split(SEPARATOR)):
-                    new_status = Status.from_output(res, self.method)
+                    new_status = Status.from_output(res, method)
                     if new_status is not None:
                         status = new_status
                     solution, statistics = parse_solution(
