@@ -181,6 +181,25 @@ class Status(Enum):
                 s = cls.SATISFIED
         return s
 
+    @classmethod
+    def from_str(cls, status: str):
+        s = None
+        if status == "ERROR":
+            s = cls.ERROR
+        elif status == "UNKNOWN":
+            s = cls.UNKNOWN
+        elif status == "UNBOUNDED" or status == "UNSAT_OR_UNBOUNDED":
+            s = cls.UNBOUNDED
+        elif status == "UNSATISFIABLE":
+            s = cls.UNSATISFIABLE
+        elif status == "SATISFIED":
+            s = cls.SATISFIED
+        elif status == "ALL_SOLUTIONS":
+            s = cls.ALL_SOLUTIONS
+        elif status == "OPTIMAL_SOLUTION":
+            s = cls.OPTIMAL_SOLUTION
+        return s
+
     def __str__(self):
         return self.name
 

@@ -2,8 +2,9 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import asyncio
 from enum import Enum
-from json import JSONDecoder, JSONEncoder
+from json import JSONDecoder, JSONEncoder, loads
 
 try:
     import numpy
@@ -53,3 +54,26 @@ class MZNJSONDecoder(JSONDecoder):
             return self.enum_map.get(obj["e"], obj["e"])
         else:
             return obj
+
+
+def decode_json_stream(byte_stream: bytes):
+    for line in byte_stream.split(b"\n"):
+        line = line.strip()
+        if line != b"":
+            obj = loads(line)
+            if obj["type"] == "error":
+                pass
+            elif obj["type"] == "warning":
+                pass
+            yield obj
+
+
+async def decode_async_json_stream(stream: asyncio.StreamReader):
+    buffer: bytes = b""
+    while not stream.at_eof():
+        try:
+            buffer += await stream.readuntil(b"\n")
+            yield loads(buffer)
+            buffer = b""
+        except asyncio.LimitOverrunError as err:
+            buffer += await stream.readexactly(err.consumed)

@@ -52,17 +52,6 @@ class Driver(ABC):
         pass
 
     @abstractmethod
-    def check_version(self) -> None:
-        """Raises an error if the MiniZinc version is incompatible with
-        MiniZinc Python.
-
-        Raises:
-            ConfigurationError: An error noting the discrepancy between the
-                required version of MiniZinc and the version of MiniZinc found.
-        """
-        pass
-
-    @abstractmethod
     def available_solvers(self, refresh=False):
         """Returns a list of available solvers
 
