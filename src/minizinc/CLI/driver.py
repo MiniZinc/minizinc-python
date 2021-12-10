@@ -11,7 +11,7 @@ from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE, Process
 from dataclasses import fields
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Type, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 
 import minizinc
 
@@ -86,6 +86,7 @@ class CLIDriver(Driver):
 
     _executable: Path
     _solver_cache: Optional[Dict[str, Solver]] = None
+    _version: Optional[Tuple[int]] = None
 
     def __init__(self, executable: Path):
         self._executable = executable
@@ -93,7 +94,12 @@ class CLIDriver(Driver):
 
         super(CLIDriver, self).__init__()
 
-        self.check_version()
+        if self.parsed_version < CLI_REQUIRED_VERSION:
+            raise ConfigurationError(
+                f"The MiniZinc driver found at '{self._executable}' has "
+                f"version {found}. The minimal required version is "
+                f"{CLI_REQUIRED_VERSION}."
+            )
 
     def make_default(self) -> None:
         from . import CLIInstance
@@ -125,6 +131,10 @@ class CLIDriver(Driver):
                 "creationflags": subprocess.CREATE_NEW_CONSOLE,
             }
 
+        # TODO: Always add --json-stream once 2.6.0 is minimum requirement
+        if self.parsed_version >= (2, 6, 0):
+            args.append("--json-stream")
+
         if solver is None:
             cmd = [str(self._executable), "--allow-multiple-assignments"] + [
                 str(arg) for arg in args
@@ -154,7 +164,11 @@ class CLIDriver(Driver):
                     **windows_spawn_options,
                 )
         if output.returncode != 0:
-            raise parse_error(output.stderr)
+            if self.parsed_version >= (2, 6, 0):
+                for x in decode_json_stream(output.stderr):
+                    pass  # Error will be raised in json stream
+            else:
+                raise parse_error(output.stderr)
         return output
 
     async def create_process(
@@ -178,6 +192,10 @@ class CLIDriver(Driver):
                 ),
                 "creationflags": subprocess.CREATE_NEW_CONSOLE,
             }
+
+        # TODO: Always add --json-stream once 2.6.0 is minimum requirement
+        if self.parsed_version >= (2, 6, 0):
+            args.append("--json-stream")
 
         if solver is None:
             minizinc.logger.debug(
@@ -217,16 +235,19 @@ class CLIDriver(Driver):
     def minizinc_version(self) -> str:
         return self.run(["--version"]).stdout.decode()
 
-    def check_version(self):
-        output = self.run(["--version"])
-        match = re.search(rb"version (\d+)\.(\d+)\.(\d+)", output.stdout)
-        found = tuple([int(i) for i in match.groups()])
-        if found < CLI_REQUIRED_VERSION:
-            raise ConfigurationError(
-                f"The MiniZinc driver found at '{self._executable}' has "
-                f"version {found}. The minimal required version is "
-                f"{CLI_REQUIRED_VERSION}."
+    @property
+    def parsed_version(self) -> Tuple[int]:
+        if self._version is None:
+            output = subprocess.run(
+                [str(self._executable), "--version"],
+                stdin=None,
+                stdout=PIPE,
+                stderr=PIPE,
             )
+            match = re.search(rb"version (\d+)\.(\d+)\.(\d+)", output.stdout)
+            if match:
+                self._version = tuple([int(i) for i in match.groups()])
+        return self._version
 
     def available_solvers(self, refresh=False):
         if not refresh and self._solver_cache is not None:

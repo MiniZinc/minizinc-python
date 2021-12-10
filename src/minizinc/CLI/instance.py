@@ -21,7 +21,12 @@ from typing import Any, Dict, Iterator, List, Optional, Type, cast
 import minizinc
 from minizinc.error import parse_error
 from minizinc.instance import Instance
-from minizinc.json import MZNJSONEncoder
+from minizinc.json import (
+    MZNJSONDecoder,
+    MZNJSONEncoder,
+    decode_async_json_stream,
+    decode_json_stream,
+)
 from minizinc.model import Method, Model, ParPath, UnknownExpression
 from minizinc.result import Result, Status, parse_solution, set_stat
 from minizinc.solver import Solver
@@ -181,9 +186,14 @@ class CLIInstance(Instance):
         with self.files() as files:
             assert len(files) > 0
             output = self._driver.run(["--model-interface-only"] + files, self._solver)
-        interface = json.loads(
-            output.stdout
-        )  # TODO: Possibly integrate with the MZNJSONDecoder
+        if self._driver.parsed_version >= (2, 6, 0):
+            interface = None
+            for obj in decode_json_stream(output.stdout):
+                if obj["type"] == "interface":
+                    interface = obj
+                    break
+        else:
+            interface = json.loads(output.stdout)
         old_method = self._method
         self._method = Method.from_string(interface["method"])
         self._input = {}
@@ -341,15 +351,26 @@ class CLIInstance(Instance):
 
             status = Status.UNKNOWN
             code = 0
-
             remainder: bytes = b""
+            statistics = {}
+
             try:
-                async for raw_sol in _seperate_solutions(proc.stdout):
-                    status = Status.SATISFIED
-                    solution, statistics = parse_solution(
-                        raw_sol, self.output_type, self._enum_map
-                    )
-                    yield Result(Status.SATISFIED, solution, statistics)
+                if self._driver.parsed_version >= (2, 6, 0):
+                    solution = None
+                    async for obj in decode_async_json_stream(proc.stdout):
+                        y, status, solution, statistics = self._parse_stream_obj(
+                            obj, status, solution, statistics
+                        )
+                        if y:
+                            yield Result(Status.SATISFIED, solution, statistics)
+                            statistics = {}
+                else:
+                    async for raw_sol in _seperate_solutions(proc.stdout):
+                        status = Status.SATISFIED
+                        solution, statistics = parse_solution(
+                            raw_sol, self.output_type, self._enum_map
+                        )
+                        yield Result(Status.SATISFIED, solution, statistics)
 
                 code = await proc.wait()
             except asyncio.IncompleteReadError as err:
@@ -367,19 +388,33 @@ class CLIInstance(Instance):
                     raise
             finally:
                 # parse the remaining statistics
-                for res in filter(None, remainder.split(SEPARATOR)):
-                    new_status = Status.from_output(res, method)
-                    if new_status is not None:
-                        status = new_status
-                    solution, statistics = parse_solution(
-                        res, self.output_type, self._enum_map
-                    )
-                    yield Result(status, solution, statistics)
-                # Raise error if required
-                stderr = None
-                if code != 0 or status == Status.ERROR:
-                    stderr = await read_stderr
-                    raise parse_error(stderr)
+                if self._driver.parsed_version >= (2, 6, 0):
+                    for obj in decode_json_stream(remainder):
+                        y, status, solution, statistics = self._parse_stream_obj(
+                            obj, status, solution, statistics
+                        )
+                        if y:
+                            yield Result(Status.SATISFIED, solution, statistics)
+                            statistics = {}
+                    if (
+                        not status in [Status.UNKNOWN, Status.SATISFIED]
+                    ) or statistics != {}:
+                        yield Result(status, None, statistics)
+                else:
+                    for res in filter(None, remainder.split(SEPARATOR)):
+                        new_status = Status.from_output(res, method)
+                        if new_status is not None:
+                            status = new_status
+                        solution, statistics = parse_solution(
+                            res, self.output_type, self._enum_map
+                        )
+                        yield Result(status, solution, statistics)
+                    # Raise error if required
+                    stderr = None
+                    if code != 0 or status == Status.ERROR:
+                        stderr = await read_stderr
+                        raise parse_error(stderr)
+
                 if debug_output is not None:
                     if stderr is None:
                         stderr = await read_stderr
@@ -466,6 +501,56 @@ class CLIInstance(Instance):
     def add_string(self, code: str) -> None:
         self._reset_analysis()
         return super().add_string(code)
+
+    def _parse_stream_obj(self, obj, status, solution, statistics):
+        yeet = False
+        if obj["type"] == "solution":
+            status = Status.SATISFIED
+
+            tmp = obj["output"]["json"]
+            for k in tmp:
+                if len(tmp[k]) == 1:
+                    if "set" in tmp[k]:
+                        if len(tmp[k]["set"]) == 1 and isinstance(
+                            tmp[k]["set"][0], list
+                        ):
+                            assert len(tmp[k]["set"][0]) == 2
+                            return range(tmp[k]["set"][0][0], tmp[k]["set"][0][1] + 1)
+
+                        li = []
+                        for item in tmp[k]["set"]:
+                            if isinstance(item, list):
+                                assert len(item) == 2
+                                li.extend([i for i in range(item[0], item[1] + 1)])
+                            elif len(tmp[k]) == 1 and "e" in tmp[k]:
+                                li.append(self._enum_map.get(tmp[k]["e"], tmp[k]["e"]))
+                            else:
+                                li.append(item)
+                        tmp[k] = set(li)
+                    elif "e" in tmp[k]:
+                        tmp[k] = self._enum_map.get(tmp[k]["e"], tmp[k]["e"])
+
+                if k == "_objective":
+                    tmp["objective"] = tmp.pop("_objective")
+                elif k == "_output":
+                    tmp["_output_item"] = tmp.pop("_output")
+                elif iskeyword(k):
+                    tmp["mzn_" + k] = tmp.pop(k)
+
+                solution = self.output_type(**tmp)
+
+            statistics["time"] = obj["time"]
+
+            yeet = True
+        elif obj["type"] == "time":
+            statistics["time"] = obj["time"]
+        elif obj["type"] == "statistics":
+            statistics.update(obj["statistics"])
+        elif obj["type"] == "status":
+            status = Status.from_str(obj["status"])
+        else:
+            assert False
+        return (yeet, status, solution, statistics)
 
 
 async def _seperate_solutions(stream: asyncio.StreamReader):
