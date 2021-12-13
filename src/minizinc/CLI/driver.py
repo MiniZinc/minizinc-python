@@ -17,6 +17,7 @@ import minizinc
 
 from ..driver import Driver
 from ..error import ConfigurationError, parse_error
+from ..json import decode_json_stream
 from ..solver import Solver
 
 #: MiniZinc version required by the python package
