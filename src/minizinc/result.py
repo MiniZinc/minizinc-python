@@ -8,7 +8,7 @@ from datetime import timedelta
 from enum import Enum, auto
 from json import loads
 from keyword import kwlist
-from typing import Any, Dict, Optional, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from .json import MZNJSONDecoder
 from .model import Method
@@ -308,7 +308,10 @@ class Result:
 
 
 def parse_solution(
-    raw: bytes, output_type: Type, enum_map: Dict[str, Enum]
+    raw: bytes,
+    output_type: Type,
+    enum_map: Dict[str, Enum] = {},
+    renames: List[Tuple[str, str]] = [],
 ) -> Tuple[Optional[Any], Dict]:
     """Parses a solution from the output of a MiniZinc process.
 
@@ -325,6 +328,8 @@ def parse_solution(
         output_type (Type): The type used for every solution
         enum_map (Dict[str, Enum]): A map to map enumeration identifiers to
             the internal values used in Python
+        ranames (List[Tuple[str, str]]): A list of keys to be renamed from
+            the raw solution to the solution object input
 
     Returns:
         Tuple[Optional[Dict], Dict]: A tuple containing the parsed solution
@@ -356,9 +361,8 @@ def parse_solution(
             tmp["objective"] = tmp.pop("_objective")
         if "_output" in tmp:
             tmp["_output_item"] = tmp.pop("_output")
-        for k in kwlist:
-            if k in tmp:
-                tmp["mzn_" + k] = tmp.pop(k)
+        for before, after in renames:
+            tmp[after] = tmp.pop(before)
 
         solution = output_type(**tmp)
 

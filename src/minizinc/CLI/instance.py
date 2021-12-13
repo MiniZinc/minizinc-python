@@ -13,10 +13,10 @@ import warnings
 from dataclasses import field, make_dataclass
 from datetime import timedelta
 from enum import EnumMeta
-from keyword import iskeyword
+from keyword import iskeyword, kwlist
 from numbers import Number
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Type, cast
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Type, cast
 
 import minizinc
 from minizinc.error import parse_error
@@ -52,6 +52,7 @@ class CLIInstance(Instance):
     _output: Optional[Dict[str, Type]] = None
     _method: Optional[Method] = None
     _parent: Optional["CLIInstance"] = None
+    _field_renames: List[Tuple[str, str]]
 
     def __init__(
         self,
@@ -61,6 +62,7 @@ class CLIInstance(Instance):
     ):
         super().__init__(solver, model)
         self._solver = solver
+        self._field_renames = []
         if driver is not None:
             self._driver = driver
         elif minizinc.default_driver is not None and isinstance(
@@ -213,6 +215,7 @@ class CLIInstance(Instance):
             and (self._output != old_output or self._method != old_method)
         ):
             fields = []
+            self._field_renames = []
             if self._method is not Method.SATISFY and "objective" not in self._output:
                 fields.append(("objective", Number))
             for k, v in self._output.items():
@@ -224,6 +227,7 @@ class CLIInstance(Instance):
                         f"renamed to 'mzn_{k}'",
                         SyntaxWarning,
                     )
+                    self._field_renames.append((k, "mzn_" + k))
                     fields.append(("mzn_" + k, v))
                 else:
                     fields.append((k, v))
@@ -357,18 +361,24 @@ class CLIInstance(Instance):
             try:
                 if self._driver.parsed_version >= (2, 6, 0):
                     solution = None
-                    async for obj in decode_async_json_stream(proc.stdout):
-                        y, status, solution, statistics = self._parse_stream_obj(
-                            obj, status, solution, statistics
+                    async for obj in decode_async_json_stream(
+                        proc.stdout, cls=MZNJSONDecoder, enum_map=self._enum_map
+                    ):
+                        solution, status, statistics = self._parse_stream_obj(
+                            obj, solution, status, statistics
                         )
-                        if y:
+                        if solution is not None:
                             yield Result(Status.SATISFIED, solution, statistics)
+                            solution = None
                             statistics = {}
                 else:
                     async for raw_sol in _seperate_solutions(proc.stdout):
                         status = Status.SATISFIED
                         solution, statistics = parse_solution(
-                            raw_sol, self.output_type, self._enum_map
+                            raw_sol,
+                            self.output_type,
+                            self._enum_map,
+                            self._field_renames,
                         )
                         yield Result(Status.SATISFIED, solution, statistics)
 
@@ -389,12 +399,16 @@ class CLIInstance(Instance):
             finally:
                 # parse the remaining statistics
                 if self._driver.parsed_version >= (2, 6, 0):
-                    for obj in decode_json_stream(remainder):
-                        y, status, solution, statistics = self._parse_stream_obj(
-                            obj, status, solution, statistics
+                    solution = None
+                    for obj in decode_json_stream(
+                        remainder, cls=MZNJSONDecoder, enum_map=self._enum_map
+                    ):
+                        solution, status, statistics = self._parse_stream_obj(
+                            obj, solution, status, statistics
                         )
-                        if y:
+                        if solution is not None:
                             yield Result(Status.SATISFIED, solution, statistics)
+                            solution = None
                             statistics = {}
                     if (
                         not status in [Status.UNKNOWN, Status.SATISFIED]
@@ -406,7 +420,10 @@ class CLIInstance(Instance):
                         if new_status is not None:
                             status = new_status
                         solution, statistics = parse_solution(
-                            res, self.output_type, self._enum_map
+                            res,
+                            self.output_type,
+                            self._enum_map,
+                            self._field_renames,
                         )
                         yield Result(status, solution, statistics)
                     # Raise error if required
@@ -502,46 +519,20 @@ class CLIInstance(Instance):
         self._reset_analysis()
         return super().add_string(code)
 
-    def _parse_stream_obj(self, obj, status, solution, statistics):
-        yeet = False
+    def _parse_stream_obj(self, obj, solution, status, statistics):
         if obj["type"] == "solution":
             status = Status.SATISFIED
 
             tmp = obj["output"]["json"]
-            for k in tmp:
-                if len(tmp[k]) == 1:
-                    if "set" in tmp[k]:
-                        if len(tmp[k]["set"]) == 1 and isinstance(
-                            tmp[k]["set"][0], list
-                        ):
-                            assert len(tmp[k]["set"][0]) == 2
-                            return range(tmp[k]["set"][0][0], tmp[k]["set"][0][1] + 1)
+            if "_objective" in tmp:
+                tmp["objective"] = tmp.pop("_objective")
+            if "_output" in tmp:
+                tmp["_output_item"] = tmp.pop("_output")
+            for before, after in self._field_renames:
+                tmp[after] = tmp.pop(before)
 
-                        li = []
-                        for item in tmp[k]["set"]:
-                            if isinstance(item, list):
-                                assert len(item) == 2
-                                li.extend([i for i in range(item[0], item[1] + 1)])
-                            elif len(tmp[k]) == 1 and "e" in tmp[k]:
-                                li.append(self._enum_map.get(tmp[k]["e"], tmp[k]["e"]))
-                            else:
-                                li.append(item)
-                        tmp[k] = set(li)
-                    elif "e" in tmp[k]:
-                        tmp[k] = self._enum_map.get(tmp[k]["e"], tmp[k]["e"])
-
-                if k == "_objective":
-                    tmp["objective"] = tmp.pop("_objective")
-                elif k == "_output":
-                    tmp["_output_item"] = tmp.pop("_output")
-                elif iskeyword(k):
-                    tmp["mzn_" + k] = tmp.pop(k)
-
-                solution = self.output_type(**tmp)
-
+            solution = self.output_type(**tmp)
             statistics["time"] = obj["time"]
-
-            yeet = True
         elif obj["type"] == "time":
             statistics["time"] = obj["time"]
         elif obj["type"] == "statistics":
@@ -550,7 +541,7 @@ class CLIInstance(Instance):
             status = Status.from_str(obj["status"])
         else:
             assert False
-        return (yeet, status, solution, statistics)
+        return solution, status, statistics
 
 
 async def _seperate_solutions(stream: asyncio.StreamReader):
@@ -572,4 +563,5 @@ async def _read_all(stream: asyncio.StreamReader):
             return output
         except asyncio.LimitOverrunError as err:
             output += await stream.readexactly(err.consumed)
+    return output
     return output

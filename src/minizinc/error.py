@@ -21,7 +21,7 @@ class Location:
     """
 
     file: Optional[Path]
-    line: int = 0
+    lines: Tuple[int, int] = (0, 0)
     columns: Tuple[int, int] = (0, 0)
 
 
@@ -51,6 +51,10 @@ class MiniZincError(Exception):
         self.location = location
 
 
+class MiniZincWarning(Warning):
+    """Warning created for warnings originating from a MiniZinc Driver"""
+
+
 class EvaluationError(MiniZincError):
     """Exception raised for errors due to an error during instance evaluation by
     the MiniZinc Driver"""
@@ -58,20 +62,32 @@ class EvaluationError(MiniZincError):
     pass
 
 
-class MiniZincAssertionError(EvaluationError):
+class AssertionError(EvaluationError):
     """Exception raised for MiniZinc assertions that failed during instance
     evaluation"""
 
     pass
 
 
-class MiniZincTypeError(MiniZincError):
+class TypeError(MiniZincError):
     """Exception raised for type errors found in an MiniZinc Instance"""
 
     pass
 
 
-class MiniZincSyntaxError(MiniZincError):
+class IncludeError(MiniZincError):
+    """Exception raised for type errors found in an MiniZinc Instance"""
+
+    pass
+
+
+class CyclicIncludeError(MiniZincError):
+    """Exception raised for type errors found in an MiniZinc Instance"""
+
+    pass
+
+
+class SyntaxError(MiniZincError):
     """Exception raised for syntax errors found in an MiniZinc Instance"""
 
     pass
@@ -98,11 +114,11 @@ def parse_error(error_txt: bytes) -> MiniZincError:
     if b"MiniZinc: evaluation error:" in error_txt:
         error = EvaluationError
         if b"Assertion failed:" in error_txt:
-            error = MiniZincAssertionError
+            error = AssertionError
     elif b"MiniZinc: type error:" in error_txt:
-        error = MiniZincTypeError
+        error = TypeError
     elif b"Error: syntax error" in error_txt:
-        error = MiniZincSyntaxError
+        error = SyntaxError
 
     location = None
     match = re.search(rb"([^\s]+):(\d+)(.(\d+)-(\d+))?:\s", error_txt)
@@ -110,7 +126,8 @@ def parse_error(error_txt: bytes) -> MiniZincError:
         columns = (0, 0)
         if match[3]:
             columns = (int(match[4].decode()), int(match[5].decode()))
-        location = Location(Path(match[1].decode()), int(match[2].decode()), columns)
+        lines = (int(match[2].decode()), int(match[2].decode()))
+        location = Location(Path(match[1].decode()), lines, columns)
 
     message = error_txt.decode().strip()
     if not message:
@@ -137,3 +154,42 @@ def parse_error(error_txt: bytes) -> MiniZincError:
                     )
 
     return error(location, message)
+
+
+def error_from_stream_obj(obj):
+    """Convert object from JSON stream into MiniZinc Python error
+
+    Args:
+        obj (Dict): Parsed JSON object from the ``--json-stream``
+            mode of MiniZinc.
+
+    Returns:
+        An error generated from the object
+
+    """
+    assert obj["type"] == "error"
+    error = MiniZincError
+    if obj["what"] == "syntax error":
+        error = SyntaxError
+    elif obj["what"] == "type error":
+        error = TypeError
+    elif obj["what"] == "include error":
+        error = IncludeError
+    elif obj["what"] == "cyclic include error":
+        error = CyclicIncludeError
+    elif obj["what"] == "evaluation error":
+        error = EvaluationError
+    elif obj["what"] == "assertion failed":
+        error = AssertionError
+
+    location = None
+    if "location" in obj:
+        location = Location(
+            obj["location"]["filename"],
+            (obj["location"]["firstLine"], obj["location"]["lastLine"]),
+            (obj["location"]["firstColumn"], obj["location"]["lastColumn"]),
+        )
+
+    # TODO: Process stack information
+
+    return error(location, obj["message"])

@@ -5,11 +5,7 @@
 import pytest
 from support import InstanceTestCase
 
-from minizinc.error import (
-    MiniZincAssertionError,
-    MiniZincSyntaxError,
-    MiniZincTypeError,
-)
+from minizinc.error import AssertionError, SyntaxError, TypeError
 
 
 class AssertionTest(InstanceTestCase):
@@ -22,12 +18,12 @@ class AssertionTest(InstanceTestCase):
     """
 
     def test_assertion_error(self):
-        with pytest.raises(MiniZincAssertionError, match="a not decreasing") as error:
+        with pytest.raises(AssertionError, match="a not decreasing") as error:
             self.instance.solve()
-        loc = error.value.location
-        assert str(loc.file).endswith(".mzn")
-        assert loc.line == 3
-        assert loc.columns == (0, 0)
+            loc = error.value.location
+            assert str(loc.file).endswith(".mzn")
+            assert loc.lines == (3, 3)
+            assert loc.columns == (0, 0)
 
 
 class TypeErrorTest(InstanceTestCase):
@@ -37,25 +33,21 @@ class TypeErrorTest(InstanceTestCase):
     """
 
     def test_type_error(self):
-        with pytest.raises(
-            MiniZincTypeError, match="No matching operator found"
-        ) as error:
+        with pytest.raises(TypeError, match="No matching operator found") as error:
             self.instance.solve()
-        loc = error.value.location
-        assert str(loc.file).endswith(".mzn")
-        assert loc.line == 3
-        assert loc.columns == (20, 26)
+            loc = error.value.location
+            assert str(loc.file).endswith(".mzn")
+            assert loc.lines == (3, 3)
+            assert loc.columns == (20, 26)
 
 
 class SyntaxErrorTest(InstanceTestCase):
     code = "constrain true;"
 
     def test_syntax_error(self):
-        with pytest.raises(
-            MiniZincSyntaxError, match="unexpected bool literal"
-        ) as error:
+        with pytest.raises(SyntaxError, match="unexpected bool literal") as error:
             self.instance.solve()
-        loc = error.value.location
-        assert str(loc.file).endswith(".mzn")
-        assert loc.line == 1
-        assert loc.columns == (11, 14)
+            loc = error.value.location
+            assert str(loc.file).endswith(".mzn")
+            assert loc.lines == (1, 1)
+            assert loc.columns == (11, 14)
