@@ -80,6 +80,9 @@ async def decode_async_json_stream(stream: asyncio.StreamReader, cls=None, **kw)
     while not stream.at_eof():
         try:
             buffer += await stream.readuntil(b"\n")
+            buffer = buffer.strip()
+            if buffer == b"":
+                continue
             obj = loads(buffer, cls=cls, **kw)
             if obj["type"] == "warning" or (
                 obj["type"] == "error" and obj["what"] == "warning"

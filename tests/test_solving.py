@@ -2,6 +2,8 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
+import tempfile
 from dataclasses import fields
 
 from support import InstanceTestCase
@@ -33,6 +35,22 @@ class TestSatisfy(InstanceTestCase):
         assert len(result) == 3
         for sol in result.solution:
             assert sol.x in range(1, 5 + 1)
+
+    def test_checker(self):
+        try:
+            checker = tempfile.NamedTemporaryFile(
+                prefix="checker_test_", suffix=".mzc.mzn", delete=False
+            )
+            checker.write(b'output["SIMPLE CHECK"];\n')
+            checker.close()
+            self.instance.add_file(checker.name)
+            assert self.instance.method == Method.SATISFY
+            result = self.instance.solve()
+            assert result.status == Status.SATISFIED
+            assert result["x"] in range(1, 5 + 1)
+            assert result.solution.check().strip() == "SIMPLE CHECK"
+        finally:
+            os.remove(checker.name)
 
 
 class TestMaximise(InstanceTestCase):

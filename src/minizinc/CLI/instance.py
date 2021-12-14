@@ -360,15 +360,18 @@ class CLIInstance(Instance):
 
             try:
                 if self._driver.parsed_version >= (2, 6, 0):
-                    solution = None
                     async for obj in decode_async_json_stream(
                         proc.stdout, cls=MZNJSONDecoder, enum_map=self._enum_map
                     ):
-                        solution, status, statistics = self._parse_stream_obj(
-                            obj, solution, status, statistics
+                        solution, new_status, statistics = self._parse_stream_obj(
+                            obj, statistics
                         )
-                        if solution is not None:
-                            yield Result(Status.SATISFIED, solution, statistics)
+                        if new_status is not None:
+                            status = new_status
+                        elif solution is not None:
+                            if status == Status.UNKNOWN:
+                                status = Status.SATISFIED
+                            yield Result(status, solution, statistics)
                             solution = None
                             statistics = {}
                 else:
@@ -399,15 +402,18 @@ class CLIInstance(Instance):
             finally:
                 # parse the remaining statistics
                 if self._driver.parsed_version >= (2, 6, 0):
-                    solution = None
                     for obj in decode_json_stream(
                         remainder, cls=MZNJSONDecoder, enum_map=self._enum_map
                     ):
-                        solution, status, statistics = self._parse_stream_obj(
-                            obj, solution, status, statistics
+                        solution, new_status, statistics = self._parse_stream_obj(
+                            obj, statistics
                         )
-                        if solution is not None:
-                            yield Result(Status.SATISFIED, solution, statistics)
+                        if new_status is not None:
+                            status = new_status
+                        elif solution is not None:
+                            if status == Status.UNKNOWN:
+                                status = Status.SATISFIED
+                            yield Result(status, solution, statistics)
                             solution = None
                             statistics = {}
                     if (
@@ -520,10 +526,10 @@ class CLIInstance(Instance):
         self._reset_analysis()
         return super().add_string(code)
 
-    def _parse_stream_obj(self, obj, solution, status, statistics):
+    def _parse_stream_obj(self, obj, statistics):
+        solution = None
+        status = None
         if obj["type"] == "solution":
-            status = Status.SATISFIED
-
             tmp = obj["output"]["json"]
             if "_objective" in tmp:
                 tmp["objective"] = tmp.pop("_objective")
@@ -531,6 +537,9 @@ class CLIInstance(Instance):
                 tmp["_output_item"] = tmp.pop("_output")
             for before, after in self._field_renames:
                 tmp[after] = tmp.pop(before)
+
+            if "_checker" in statistics:
+                tmp["_checker"] = statistics.pop("_checker")
 
             solution = self.output_type(**tmp)
             statistics["time"] = obj["time"]
@@ -540,6 +549,8 @@ class CLIInstance(Instance):
             statistics.update(obj["statistics"])
         elif obj["type"] == "status":
             status = Status.from_str(obj["status"])
+        elif obj["type"] == "checker":
+            statistics["_checker"] = obj["output"]["raw"]
         return solution, status, statistics
 
 
