@@ -2,9 +2,13 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import warnings
+
 import pytest
 from support import InstanceTestCase
 
+import minizinc
+from minizinc.error import MiniZincWarning
 from minizinc.result import Status
 
 
@@ -86,6 +90,11 @@ class TestBranch(InstanceTestCase):
         assert len(result.solution) == 7
         with self.instance.branch() as child:
             child["n"] = 15
-            result = child.solve(all_solutions=True)
-            assert result.status == Status.UNSATISFIABLE
-            assert len(result.solution) == 0
+            with warnings.catch_warnings(record=True) as w:
+                result = child.solve(all_solutions=True)
+                assert result.status == Status.UNSATISFIABLE
+                assert len(result.solution) == 0
+                if minizinc.default_driver.parsed_version >= (2, 6, 0):
+                    assert len(w) == 1
+                    assert issubclass(w[-1].category, MiniZincWarning)
+                    assert "model inconsistency" in str(w[-1].message)

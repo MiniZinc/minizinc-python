@@ -9,6 +9,10 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Added
+^^^^^
+
+- Add support for the usage of JSON Stream output when using MiniZinc 2.6+
 
 Fixed
 ^^^^^

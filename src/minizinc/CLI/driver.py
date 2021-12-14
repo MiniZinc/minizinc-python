@@ -2,7 +2,6 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import json
 import re
 import subprocess
 import sys
@@ -10,6 +9,7 @@ import warnings
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE, Process
 from dataclasses import fields
+from json import loads
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 
@@ -87,7 +87,7 @@ class CLIDriver(Driver):
 
     _executable: Path
     _solver_cache: Optional[Dict[str, Solver]] = None
-    _version: Optional[Tuple[int]] = None
+    _version: Optional[Tuple[int, ...]] = None
 
     def __init__(self, executable: Path):
         self._executable = executable
@@ -98,7 +98,7 @@ class CLIDriver(Driver):
         if self.parsed_version < CLI_REQUIRED_VERSION:
             raise ConfigurationError(
                 f"The MiniZinc driver found at '{self._executable}' has "
-                f"version {found}. The minimal required version is "
+                f"version {self.parsed_version}. The minimal required version is "
                 f"{CLI_REQUIRED_VERSION}."
             )
 
@@ -166,7 +166,7 @@ class CLIDriver(Driver):
                 )
         if output.returncode != 0:
             if self.parsed_version >= (2, 6, 0):
-                for x in decode_json_stream(output.stderr):
+                for _ in decode_json_stream(output.stderr):
                     pass  # Error will be raised in json stream
             else:
                 raise parse_error(output.stderr)
@@ -237,7 +237,7 @@ class CLIDriver(Driver):
         return self.run(["--version"]).stdout.decode()
 
     @property
-    def parsed_version(self) -> Tuple[int]:
+    def parsed_version(self) -> Tuple[int, ...]:
         if self._version is None:
             output = subprocess.run(
                 [str(self._executable), "--version"],
@@ -246,8 +246,8 @@ class CLIDriver(Driver):
                 stderr=PIPE,
             )
             match = re.search(rb"version (\d+)\.(\d+)\.(\d+)", output.stdout)
-            if match:
-                self._version = tuple([int(i) for i in match.groups()])
+            assert match
+            self._version = tuple([int(i) for i in match.groups()])
         return self._version
 
     def available_solvers(self, refresh=False):
@@ -256,7 +256,7 @@ class CLIDriver(Driver):
 
         # Find all available solvers
         output = self.run(["--solvers-json"])
-        solvers = json.loads(output.stdout)
+        solvers = loads(output.stdout)
 
         # Construct Solver objects
         self._solver_cache = {}

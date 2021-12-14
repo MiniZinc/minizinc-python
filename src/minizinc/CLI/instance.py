@@ -13,7 +13,7 @@ import warnings
 from dataclasses import field, make_dataclass
 from datetime import timedelta
 from enum import EnumMeta
-from keyword import iskeyword, kwlist
+from keyword import iskeyword
 from numbers import Number
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Type, cast
@@ -356,7 +356,7 @@ class CLIInstance(Instance):
             status = Status.UNKNOWN
             code = 0
             remainder: bytes = b""
-            statistics = {}
+            statistics: Dict[str, Any] = {}
 
             try:
                 if self._driver.parsed_version >= (2, 6, 0):
@@ -411,8 +411,9 @@ class CLIInstance(Instance):
                             solution = None
                             statistics = {}
                     if (
-                        not status in [Status.UNKNOWN, Status.SATISFIED]
-                    ) or statistics != {}:
+                        status not in [Status.UNKNOWN, Status.SATISFIED]
+                        or statistics != {}
+                    ):
                         yield Result(status, None, statistics)
                 else:
                     for res in filter(None, remainder.split(SEPARATOR)):
@@ -539,8 +540,6 @@ class CLIInstance(Instance):
             statistics.update(obj["statistics"])
         elif obj["type"] == "status":
             status = Status.from_str(obj["status"])
-        else:
-            assert False
         return solution, status, statistics
 
 
@@ -563,5 +562,4 @@ async def _read_all(stream: asyncio.StreamReader):
             return output
         except asyncio.LimitOverrunError as err:
             output += await stream.readexactly(err.consumed)
-    return output
     return output
