@@ -193,7 +193,15 @@ def error_from_stream_obj(obj):
             (obj["location"]["firstLine"], obj["location"]["lastLine"]),
             (obj["location"]["firstColumn"], obj["location"]["lastColumn"]),
         )
-
     # TODO: Process stack information
 
-    return error(location, obj["message"])
+    message = (
+        "MiniZinc stopped with a non-zero exit code, but did not output an "
+        "error message. "
+    )
+    if "message" in obj:
+        message = obj["message"]
+    elif "cycle" in obj:
+        message = " includes ".join(obj["cycle"])
+
+    return error(location, message)
