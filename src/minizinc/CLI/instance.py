@@ -433,11 +433,12 @@ class CLIInstance(Instance):
                             self._field_renames,
                         )
                         yield Result(status, solution, statistics)
-                    # Raise error if required
-                    stderr = None
-                    if code != 0 or status == Status.ERROR:
-                        stderr = await read_stderr
-                        raise parse_error(stderr)
+
+                # Raise error if required
+                stderr = None
+                if code != 0 or status == Status.ERROR:
+                    stderr = await read_stderr
+                    raise parse_error(stderr)
 
                 if debug_output is not None:
                     if stderr is None:

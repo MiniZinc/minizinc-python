@@ -5,7 +5,8 @@
 import pytest
 from support import InstanceTestCase
 
-from minizinc.error import AssertionError, SyntaxError, TypeError
+import minizinc
+from minizinc.error import AssertionError, MiniZincError, SyntaxError, TypeError
 
 
 class AssertionTest(InstanceTestCase):
@@ -20,9 +21,12 @@ class AssertionTest(InstanceTestCase):
     def test_assertion_error(self):
         with pytest.raises(AssertionError, match="a not decreasing") as error:
             self.instance.solve()
-            loc = error.value.location
-            assert str(loc.file).endswith(".mzn")
-            assert loc.lines == (3, 3)
+        loc = error.value.location
+        assert str(loc.file).endswith(".mzn")
+        assert loc.lines == (3, 3)
+        if minizinc.default_driver.parsed_version >= (2, 6, 0):
+            assert loc.columns == (27, 62)
+        else:
             assert loc.columns == (0, 0)
 
 
@@ -35,10 +39,10 @@ class TypeErrorTest(InstanceTestCase):
     def test_type_error(self):
         with pytest.raises(TypeError, match="No matching operator found") as error:
             self.instance.solve()
-            loc = error.value.location
-            assert str(loc.file).endswith(".mzn")
-            assert loc.lines == (3, 3)
-            assert loc.columns == (20, 26)
+        loc = error.value.location
+        assert str(loc.file).endswith(".mzn")
+        assert loc.lines == (3, 3)
+        assert loc.columns == (20, 26)
 
 
 class SyntaxErrorTest(InstanceTestCase):
@@ -47,7 +51,25 @@ class SyntaxErrorTest(InstanceTestCase):
     def test_syntax_error(self):
         with pytest.raises(SyntaxError, match="unexpected bool literal") as error:
             self.instance.solve()
-            loc = error.value.location
-            assert str(loc.file).endswith(".mzn")
-            assert loc.lines == (1, 1)
-            assert loc.columns == (11, 14)
+        loc = error.value.location
+        assert str(loc.file).endswith(".mzn")
+        assert loc.lines == (1, 1)
+        assert loc.columns == (11, 14)
+
+
+class EvaluationErrorTest(InstanceTestCase):
+    def test_infinite_recursion(self):
+        self.instance.add_string(
+            """
+test overflow(int: x) = overflow(x + 1);
+int: cause_overflow = overflow(1);
+"""
+        )
+
+        with pytest.raises(
+            MiniZincError,
+            match="stack overflow"
+            if minizinc.default_driver.parsed_version >= (2, 6, 0)
+            else "non-zero exit code",
+        ):
+            print(self.instance.solve())

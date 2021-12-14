@@ -166,10 +166,10 @@ class CLIDriver(Driver):
                 )
         if output.returncode != 0:
             if self.parsed_version >= (2, 6, 0):
+                # Error will (usually) be raised in json stream
                 for _ in decode_json_stream(output.stderr):
-                    pass  # Error will be raised in json stream
-            else:
-                raise parse_error(output.stderr)
+                    pass
+            raise parse_error(output.stderr)
         return output
 
     async def create_process(
