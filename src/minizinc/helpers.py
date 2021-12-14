@@ -13,7 +13,6 @@ if sys.version_info >= (3, 8):
         # ascertain that something is a dataclass
         __dataclass_fields__: Dict
 
-
 else:
     DataClass = Any
 

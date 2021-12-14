@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum, auto
 from json import loads
-from keyword import kwlist
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from .json import MZNJSONDecoder
@@ -310,8 +309,8 @@ class Result:
 def parse_solution(
     raw: bytes,
     output_type: Type,
-    enum_map: Dict[str, Enum] = {},
-    renames: List[Tuple[str, str]] = [],
+    enum_map: Optional[Dict[str, Enum]] = None,
+    renames: Optional[List[Tuple[str, str]]] = None,
 ) -> Tuple[Optional[Any], Dict]:
     """Parses a solution from the output of a MiniZinc process.
 
@@ -326,9 +325,9 @@ def parse_solution(
         raw (bytes): The output on stdout for one solution of the process
             solving the MiniZinc instance.
         output_type (Type): The type used for every solution
-        enum_map (Dict[str, Enum]): A map to map enumeration identifiers to
+        enum_map (Optional[Dict[str, Enum]]): A map to map enumeration identifiers to
             the internal values used in Python
-        ranames (List[Tuple[str, str]]): A list of keys to be renamed from
+        ranames (Optional[List[Tuple[str, str]]]): A list of keys to be renamed from
             the raw solution to the solution object input
 
     Returns:
@@ -336,6 +335,10 @@ def parse_solution(
             assignments and the parsed statistics.
 
     """
+    if enum_map is None:
+        enum_map = {}
+    if renames is None:
+        renames = []
     # Parse statistics
     statistics: Dict[str, StatisticsType] = {}
     matches = re.findall(rb"%%%mzn-stat:? (\w*)=([^\r\n]*)", raw)

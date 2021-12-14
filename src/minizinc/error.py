@@ -137,16 +137,20 @@ def parse_error(error_txt: bytes) -> MiniZincError:
         )
     elif location is not None and location.file is not None and location.file.exists():
         with location.file.open() as f:
-            for _ in range(location.line - 2):
+            for _ in range(location.lines[0] - 2):
                 f.readline()
             message += "\nFile fragment:\n"
-            for nr in range(max(1, location.line - 1), location.line + 2):
+            for nr in range(max(1, location.lines[0] - 1), location.lines[1] + 2):
                 line = f.readline()
                 if line == "":
                     break
                 message += f"{nr}: {line.rstrip()}\n"
                 diff = location.columns[1] - location.columns[0]
-                if nr == location.line and diff > 0:
+                if (
+                    (location.lines[0] == location.lines[1])
+                    and nr == location.lines[0]
+                    and diff > 0
+                ):
                     message += (
                         " " * (len(str(nr)) + 2 + location.columns[0] - 1)
                         + "^" * (diff + 1)
