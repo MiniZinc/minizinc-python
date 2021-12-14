@@ -6,7 +6,13 @@ import pytest
 from support import InstanceTestCase
 
 import minizinc
-from minizinc.error import AssertionError, MiniZincError, SyntaxError, TypeError
+from minizinc.error import (
+    AssertionError,
+    EvaluationError,
+    MiniZincError,
+    SyntaxError,
+    TypeError,
+)
 
 
 class AssertionTest(InstanceTestCase):
@@ -26,8 +32,6 @@ class AssertionTest(InstanceTestCase):
         assert loc.lines == (3, 3)
         if minizinc.default_driver.parsed_version >= (2, 6, 0):
             assert loc.columns == (27, 62)
-        else:
-            assert loc.columns == (0, 0)
 
 
 class TypeErrorTest(InstanceTestCase):
@@ -72,4 +76,21 @@ int: cause_overflow = overflow(1);
             if minizinc.default_driver.parsed_version >= (2, 6, 0)
             else "non-zero exit code",
         ):
-            print(self.instance.solve())
+            self.instance.solve()
+
+    def test_evaluation_error(self):
+        self.instance.add_string(
+            """
+array [1..3] of int: a = [1, 2, 3, 4];
+
+solve satisfy;
+"""
+        )
+        with pytest.raises(EvaluationError, match="index set") as error:
+            self.instance.solve()
+        loc = error.value.location
+        print(loc)
+        assert str(loc.file).endswith(".mzn")
+        assert loc.lines == (2, 2)
+        if minizinc.default_driver.parsed_version >= (2, 6, 0):
+            assert loc.columns == (1, 22)

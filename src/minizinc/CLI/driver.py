@@ -167,7 +167,7 @@ class CLIDriver(Driver):
         if output.returncode != 0:
             if self.parsed_version >= (2, 6, 0):
                 # Error will (usually) be raised in json stream
-                for _ in decode_json_stream(output.stderr):
+                for _ in decode_json_stream(output.stdout):
                     pass
             raise parse_error(output.stderr)
         return output
