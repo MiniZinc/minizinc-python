@@ -37,7 +37,7 @@ class TestSatisfy(InstanceTestCase):
             assert sol.x in range(1, 5 + 1)
 
 
-class TestSatisfy(InstanceTestCase):
+class TestChecker(InstanceTestCase):
     code = "var 1..5: x"
 
     def test_checker(self):
