@@ -550,7 +550,12 @@ class CLIInstance(Instance):
         elif obj["type"] == "status":
             status = Status.from_str(obj["status"])
         elif obj["type"] == "checker":
-            statistics["_checker"] = obj["output"]["raw"]
+            if "raw" in obj["output"]:
+                statistics["_checker"] = obj["output"]["raw"]
+            else:
+                # TODO: can we ensure this is made JSON?
+                statistics["_checker"] = obj["output"]["dzn"]
+
         return solution, status, statistics
 
 

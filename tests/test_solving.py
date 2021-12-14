@@ -36,6 +36,10 @@ class TestSatisfy(InstanceTestCase):
         for sol in result.solution:
             assert sol.x in range(1, 5 + 1)
 
+
+class TestSatisfy(InstanceTestCase):
+    code = "var 1..5: x"
+
     def test_checker(self):
         try:
             checker = tempfile.NamedTemporaryFile(
@@ -49,6 +53,22 @@ class TestSatisfy(InstanceTestCase):
             assert result.status == Status.SATISFIED
             assert result["x"] in range(1, 5 + 1)
             assert result.solution.check().strip() == "SIMPLE CHECK"
+        finally:
+            os.remove(checker.name)
+
+    def test_no_output_checker(self):
+        try:
+            checker = tempfile.NamedTemporaryFile(
+                prefix="checker_test_", suffix=".mzc.mzn", delete=False
+            )
+            checker.write(b"int: data :: add_to_output = 2;\n")
+            checker.close()
+            self.instance.add_file(checker.name)
+            assert self.instance.method == Method.SATISFY
+            result = self.instance.solve()
+            assert result.status == Status.SATISFIED
+            assert result["x"] in range(1, 5 + 1)
+            assert result.solution.check().strip() == "data = 2;"
         finally:
             os.remove(checker.name)
 
