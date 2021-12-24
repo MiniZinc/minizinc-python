@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Tuple, Type, cast
 
 import minizinc
-from minizinc.error import parse_error
+from minizinc.error import MiniZincError, parse_error
 from minizinc.instance import Instance
 from minizinc.json import (
     MZNJSONDecoder,
@@ -345,20 +345,21 @@ class CLIInstance(Instance):
         with self.files() as files, self._solver.configuration() as solver:
             assert self.output_type is not None
             cmd.extend(files)
-            # Run the MiniZinc process
-            proc = await self._driver.create_process(cmd, solver=solver)
-            assert isinstance(proc.stderr, asyncio.StreamReader)
-            assert isinstance(proc.stdout, asyncio.StreamReader)
-
-            # Python 3.7+: replace with asyncio.create_task
-            read_stderr = asyncio.ensure_future(_read_all(proc.stderr))
 
             status = Status.UNKNOWN
+            last_status = Status.UNKNOWN
             code = 0
-            remainder: bytes = b""
             statistics: Dict[str, Any] = {}
 
             try:
+                # Run the MiniZinc process
+                proc = await self._driver.create_process(cmd, solver=solver)
+                assert isinstance(proc.stderr, asyncio.StreamReader)
+                assert isinstance(proc.stdout, asyncio.StreamReader)
+
+                # Python 3.7+: replace with asyncio.create_task
+                read_stderr = asyncio.ensure_future(_read_all(proc.stderr))
+
                 if self._driver.parsed_version >= (2, 6, 0):
                     async for obj in decode_async_json_stream(
                         proc.stdout, cls=MZNJSONDecoder, enum_map=self._enum_map
@@ -372,6 +373,7 @@ class CLIInstance(Instance):
                             if status == Status.UNKNOWN:
                                 status = Status.SATISFIED
                             yield Result(status, solution, statistics)
+                            last_status = status
                             solution = None
                             statistics = {}
                 else:
@@ -391,16 +393,8 @@ class CLIInstance(Instance):
                 # Read remaining text in buffer
                 code = await proc.wait()
                 remainder = err.partial
-            except asyncio.CancelledError as e:
-                # Process was cancelled by the user.
-                # Terminate process and read remaining output
-                proc.terminate()
-                remainder = await _read_all(proc.stdout)
 
-                if isinstance(e, asyncio.CancelledError):
-                    raise
-            finally:
-                # parse the remaining statistics
+                # Parse and output the remaining statistics and status messages
                 if self._driver.parsed_version >= (2, 6, 0):
                     for obj in decode_json_stream(
                         remainder, cls=MZNJSONDecoder, enum_map=self._enum_map
@@ -416,11 +410,6 @@ class CLIInstance(Instance):
                             yield Result(status, solution, statistics)
                             solution = None
                             statistics = {}
-                    if (
-                        status not in [Status.UNKNOWN, Status.SATISFIED]
-                        or statistics != {}
-                    ):
-                        yield Result(status, None, statistics)
                 else:
                     for res in filter(None, remainder.split(SEPARATOR)):
                         new_status = Status.from_output(res, method)
@@ -433,17 +422,26 @@ class CLIInstance(Instance):
                             self._field_renames,
                         )
                         yield Result(status, solution, statistics)
+            except (asyncio.CancelledError, MiniZincError, Exception):
+                # Process was cancelled by the user, a MiniZincError occurred, or
+                # an unexpected Python exception occurred
+                # First, terminate the process
+                proc.terminate()
+                _ = await proc.wait()
+                # Then, reraise the error that occurred
+                raise
+            if self._driver.parsed_version >= (2, 6, 0) and (
+                status != last_status or statistics != {}
+            ):
+                yield Result(status, None, statistics)
 
-                # Raise error if required
-                stderr = None
-                if code != 0 or status == Status.ERROR:
-                    stderr = await read_stderr
-                    raise parse_error(stderr)
+            # Raise error if required
+            stderr = await read_stderr
+            if code != 0 or status == Status.ERROR:
+                raise parse_error(stderr)
 
-                if debug_output is not None:
-                    if stderr is None:
-                        stderr = await read_stderr
-                    debug_output.write_bytes(stderr)
+            if debug_output is not None:
+                debug_output.write_bytes(stderr)
 
     @contextlib.contextmanager
     def flat(
