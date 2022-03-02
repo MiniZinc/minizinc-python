@@ -9,6 +9,9 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+0.6.0_ - 2022-03-02
+-------------------
+
 Added
 ^^^^^
 
@@ -19,10 +22,12 @@ Fixed
 
 - Do not raise error about unsupported solver flags when MiniZinc driver would 
   not raise an error.
+- Fix warnings caused by unterminated coroutines when using the asynchronous
+  iterators
 
 
 0.5.0_ - 2021-10-07
-------------
+-------------------
 
 Added
 ^^^^^
@@ -292,6 +297,7 @@ release is best described in the `documentation
 <https://minizinc-python.readthedocs.io/en/0.1.0/>`_.
 
 
+..  _0.6.0: https://github.com/MiniZinc/minizinc-python/compare/0.5.0...0.6.0
 ..  _0.5.0: https://github.com/MiniZinc/minizinc-python/compare/0.4.2...0.5.0
 ..  _0.4.2: https://github.com/MiniZinc/minizinc-python/compare/0.4.1...0.4.2
 ..  _0.4.1: https://github.com/MiniZinc/minizinc-python/compare/0.4.0...0.4.1
