@@ -72,17 +72,17 @@ Errors
 ..  autoexception:: minizinc.error.EvaluationError
     :members:
 
-..  autoexception:: minizinc.error.MiniZincAssertionError
+..  autoexception:: minizinc.error.AssertionError
     :members:
 
-..  autoexception:: minizinc.error.MiniZincTypeError
+..  autoexception:: minizinc.error.TypeError
     :members:
 
-..  autoexception:: minizinc.error.MiniZincSyntaxError
+..  autoexception:: minizinc.error.SyntaxError
     :members:
 
 Helper Functions
--------
+----------------
 
 ..  autofunction:: minizinc.helpers.check_result
 
