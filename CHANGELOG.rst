@@ -9,6 +9,11 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Fixed
+^^^^^
+
+- Store statistics as a string when incorrectly reported by the solver.
+
 0.6.0_ - 2022-03-02
 -------------------
 

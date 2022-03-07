@@ -96,21 +96,21 @@ def set_stat(stats: Dict[str, StatisticsType], name: str, value: str):
     """
     value = value.strip('"')
     tt = StdStatisticTypes.get(name, None)
-    if tt is timedelta or (tt is None and ("time" in name or "Time" in name)):
-        time_us = int(float(value) * 1000000)
-        stats[name] = timedelta(microseconds=time_us)
-    elif tt is not None:
-        stats[name] = tt(value)
-    else:
-        try:
-            stats[name] = int(value)
-            return
-        except ValueError:
+    if tt is None and ("time" in name or "Time" in name):
+        tt = timedelta
+    try:
+        if tt is timedelta:
+            time_us = int(float(value) * 1000000)
+            stats[name] = timedelta(microseconds=time_us)
+        elif tt is not None:
+            stats[name] = tt(value)
+        else:
             try:
-                stats[name] = float(value)
-                return
+                stats[name] = int(value)
             except ValueError:
-                stats[name] = value
+                stats[name] = float(value)
+    except ValueError:
+        stats[name] = value
 
 
 class Status(Enum):
