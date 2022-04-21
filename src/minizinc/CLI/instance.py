@@ -545,7 +545,8 @@ class CLIInstance(Instance):
         elif obj["type"] == "time":
             statistics["time"] = obj["time"]
         elif obj["type"] == "statistics":
-            statistics.update(obj["statistics"])
+            for key, val in obj["statistics"].items():
+                set_stat(statistics, key, str(val))
         elif obj["type"] == "status":
             status = Status.from_str(obj["status"])
         elif obj["type"] == "checker":

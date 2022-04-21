@@ -13,6 +13,7 @@ Fixed
 ^^^^^
 
 - Store statistics as a string when incorrectly reported by the solver.
+- Fix the conversion of statistics when using MiniZinc 2.6+
 
 0.6.0_ - 2022-03-02
 -------------------
