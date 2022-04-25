@@ -86,7 +86,7 @@ class CLIDriver(Driver):
     """
 
     _executable: Path
-    _solver_cache: Optional[Dict[str, Solver]] = None
+    _solver_cache: Optional[Dict[str, List[Solver]]] = None
     _version: Optional[Tuple[int, ...]] = None
 
     def __init__(self, executable: Path):
