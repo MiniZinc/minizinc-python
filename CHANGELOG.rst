@@ -9,10 +9,16 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Added
+^^^^^
+
+- Add additional ``Driver.executable`` property to safely access the location
+  of the executable used by the ``Driver`` object.
+
 Removed
 ^^^^^^^
 
-- *BREAKING:** The project no longer contains the (uncompleted) direct library
+- **BREAKING:** The project no longer contains the (uncompleted) direct library
   connection to libminizinc. With this change come some simplications in methods of
   relocated from ``CLIDriver`` and ``CLIInstance``, and the move of ``find_driver`` to
   ``Driver.find``. 

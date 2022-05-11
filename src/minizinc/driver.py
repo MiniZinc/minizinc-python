@@ -78,6 +78,15 @@ class Driver:
         minizinc.default_driver = self
 
     @property
+    def executable(self) -> Path:
+        """Reports the Path of the MiniZinc executable used by the Driver object
+
+        Returns:
+            Path: location of the MiniZinc executable
+        """
+        return self._executable
+
+    @property
     def minizinc_version(self) -> str:
         """Reports the version text of the MiniZinc Driver
 

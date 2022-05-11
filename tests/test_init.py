@@ -6,6 +6,7 @@ import minizinc
 
 def test_default_driver():
     assert minizinc.default_driver is not None
+    assert minizinc.default_driver.executable.exists()
 
 
 def test_version():
