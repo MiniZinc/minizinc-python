@@ -4,54 +4,114 @@
 
 import os
 import platform
+import re
 import shutil
-from abc import ABC, abstractmethod
-from ctypes.util import find_library
+import subprocess
+import sys
+from asyncio import create_subprocess_exec
+from asyncio.subprocess import PIPE, Process
+from dataclasses import fields
+from json import loads
 from pathlib import Path
-from typing import List, Optional, Type
+from typing import Any, Dict, List, Optional, Tuple
 
-from minizinc.instance import Instance
+import minizinc
+
+from .error import ConfigurationError, parse_error
+from .json import decode_json_stream
+from .solver import Solver
+
+#: MiniZinc version required by the python package
+CLI_REQUIRED_VERSION = (2, 5, 0)
+#: Default locations on MacOS where the MiniZinc packaged release would be installed
+MAC_LOCATIONS = [
+    str(Path("/Applications/MiniZincIDE.app/Contents/Resources")),
+    str(Path("~/Applications/MiniZincIDE.app/Contents/Resources").expanduser()),
+]
+#: Default locations on Windows where the MiniZinc packaged release would be installed
+WIN_LOCATIONS = [
+    str(Path("c:/Program Files/MiniZinc")),
+    str(Path("c:/Program Files/MiniZinc IDE (bundled)")),
+    str(Path("c:/Program Files (x86)/MiniZinc")),
+    str(Path("c:/Program Files (x86)/MiniZinc IDE (bundled)")),
+]
 
 
-class Driver(ABC):
-    """The abstract representation of a MiniZinc driver within MiniZinc Python."""
+class Driver:
+    """Driver that interfaces with MiniZinc through the command line interface.
 
-    Solver: Type
-    Instance: Instance
+    The command line driver will interact with MiniZinc and its solvers through
+    the use of a ``minizinc`` executable. Driving MiniZinc using its executable
+    is non-incremental and can often trigger full recompilation and might
+    restart the solver from the beginning when changes are made to the instance.
 
-    @abstractmethod
+    Raises:
+        ConfigurationError: If an the driver version is found to be incompatible with
+            MiniZinc Python
+
+    Attributes:
+        _executable (Path): The path to the executable used to access the MiniZinc
+    """
+
+    _executable: Path
+    _solver_cache: Optional[Dict[str, List[Solver]]] = None
+    _version: Optional[Tuple[int, ...]] = None
+
+    def __init__(self, executable: Path):
+        self._executable = executable
+        if not self._executable.exists():
+            raise ConfigurationError(
+                f"No MiniZinc executable was found at '{self._executable}'."
+            )
+
+        if self.parsed_version < CLI_REQUIRED_VERSION:
+            raise ConfigurationError(
+                f"The MiniZinc driver found at '{self._executable}' has "
+                f"version {self.parsed_version}. The minimal required version is "
+                f"{CLI_REQUIRED_VERSION}."
+            )
+
     def make_default(self) -> None:
         """Method to override the current default MiniZinc Python driver with the
         current driver.
         """
-        pass
-
-    @abstractmethod
-    def __init__(self):
-        """Creates a new MiniZinc driver
-
-        Raises:
-            ConfigurationError: If an the driver version is found to be
-                incompatible with MiniZinc Python
-        """
-        pass
+        minizinc.default_driver = self
 
     @property
-    @abstractmethod
     def minizinc_version(self) -> str:
-        """Reports the version of the MiniZinc Driver
+        """Reports the version text of the MiniZinc Driver
 
-        Report the full version of MiniZinc as reported by the driver,
+        Report the full version text of MiniZinc as reported by the driver,
         including the driver name, the semantic version, the build reference,
         and its authors.
 
         Returns:
             str: the version of as reported by the MiniZinc driver
-
         """
-        pass
+        # Note: cannot use "_run" as it already required the parsed version
+        return subprocess.run(
+            [str(self._executable), "--version"],
+            stdin=None,
+            stdout=PIPE,
+            stderr=PIPE,
+        ).stdout.decode()
 
-    @abstractmethod
+    @property
+    def parsed_version(self) -> Tuple[int, ...]:
+        """Reports the version of the MiniZinc Driver
+
+        Report the parsed version of the MiniZinc Driver as a tuple of integers.
+        The tuple is ordered: major, minor, patch.
+
+        Returns:
+            Tuple[int, ...]: the parsd version reported by the MiniZinc driver
+        """
+        if self._version is None:
+            match = re.search(r"version (\d+)\.(\d+)\.(\d+)", self.minizinc_version)
+            assert match
+            self._version = tuple([int(i) for i in match.groups()])
+        return self._version
+
     def available_solvers(self, refresh=False):
         """Returns a list of available solvers
 
@@ -68,80 +128,190 @@ class Driver(ABC):
             Dict[str, List[Solver]]: A dictionary that maps solver tags to MiniZinc
                 solver configurations that can be used with the Driver object.
         """
-        pass
+        if not refresh and self._solver_cache is not None:
+            return self._solver_cache
 
+        # Find all available solvers
+        output = self._run(["--solvers-json"])
+        solvers = loads(output.stdout)
 
-def find_driver(
-    path: Optional[List[str]] = None, name: str = "minizinc"
-) -> Optional[Driver]:
-    """Finds MiniZinc Driver on default or specified path.
+        # Construct Solver objects
+        self._solver_cache = {}
+        allowed_fields = set([f.name for f in fields(Solver)])
+        for s in solvers:
+            obj = Solver(
+                **{key: value for (key, value) in s.items() if key in allowed_fields}
+            )
+            if obj.version == "<unknown version>":
+                obj._identifier = obj.id
+            else:
+                obj._identifier = obj.id + "@" + obj.version
 
-    Find driver will look for the the MiniZinc API or the MiniZinc executable
-    to create a Driver for MiniZinc Python. If no path is specified, then the
-    paths given by the environment variables appended by MiniZinc's default
-    locations will be tried.
+            names = s.get("tags", [])
+            names.extend([s["id"], s["id"].split(".")[-1]])
+            for name in names:
+                self._solver_cache.setdefault(name, []).append(obj)
 
-    Args:
-        path: List of locations to search.
-        name: Name of the API or executable.
+        return self._solver_cache
 
-    Returns:
-        Optional[Driver]: Returns a Driver object when found or None.
+    def _run(
+        self,
+        args: List[Any],
+        solver: Optional[Solver] = None,
+    ):
+        """Start a driver process with given arguments
 
-    """
-    driver: Optional[Driver] = None
-    if path is None:
-        path_bin = os.environ.get("PATH", "").split(os.pathsep)
-        path_lib = os.environ.get("LD_LIBRARY_PATH", "").split(os.pathsep)
-        path_lib.extend(os.environ.get("DYLD_LIBRARY_PATH", "").split(os.pathsep))
-        # Add default MiniZinc locations to the path
-        if platform.system() == "Darwin":
-            MAC_LOCATIONS = [
-                str(Path("/Applications/MiniZincIDE.app/Contents/Resources")),
-                str(
-                    Path(
-                        "~/Applications/MiniZincIDE.app/Contents/Resources"
-                    ).expanduser()
+        Args:
+            args (List[str]): direct arguments to the driver
+            solver (Union[str, Path, None]): Solver configuration string
+                guaranteed by the user to be valid until the process has ended.
+        """
+        # TODO: Add documentation
+        windows_spawn_options: Dict[str, Any] = {}
+        if sys.platform == "win32":
+            # On Windows, MiniZinc terminates its subprocesses by generating a
+            # Ctrl+C event for its own console using GenerateConsoleCtrlEvent.
+            # Therefore, we must spawn it in its own console to avoid receiving
+            # that Ctrl+C ourselves.
+            #
+            # On POSIX systems, MiniZinc terminates its subprocesses by sending
+            # SIGTERM to the solver's process group, so this workaround is not
+            # necessary as we won't receive that signal.
+            windows_spawn_options = {
+                "startupinfo": subprocess.STARTUPINFO(
+                    dwFlags=subprocess.STARTF_USESHOWWINDOW,
+                    wShowWindow=subprocess.SW_HIDE,
                 ),
+                "creationflags": subprocess.CREATE_NEW_CONSOLE,
+            }
+
+        # TODO: Always add --json-stream once 2.6.0 is minimum requirement
+        if self.parsed_version >= (2, 6, 0):
+            args.append("--json-stream")
+
+        if solver is None:
+            cmd = [str(self._executable), "--allow-multiple-assignments"] + [
+                str(arg) for arg in args
             ]
-            path_bin.extend(MAC_LOCATIONS)
-            path_lib.extend(MAC_LOCATIONS)
-        elif platform.system() == "Windows":
-            WIN_LOCATIONS = [
-                str(Path("c:/Program Files/MiniZinc")),
-                str(Path("c:/Program Files/MiniZinc IDE (bundled)")),
-                str(Path("c:/Program Files (x86)/MiniZinc")),
-                str(Path("c:/Program Files (x86)/MiniZinc IDE (bundled)")),
-            ]
-            path_bin.extend(WIN_LOCATIONS)
-            path_lib.extend(WIN_LOCATIONS)
-    else:
-        path_bin = path
-        path_lib = path
+            minizinc.logger.debug(f"CLIDriver:run -> command: \"{' '.join(cmd)}\"")
+            output = subprocess.run(
+                cmd,
+                stdin=None,
+                stdout=PIPE,
+                stderr=PIPE,
+                **windows_spawn_options,
+            )
+        else:
+            with solver.configuration() as conf:
+                cmd = [
+                    str(self._executable),
+                    "--solver",
+                    conf,
+                    "--allow-multiple-assignments",
+                ] + [str(arg) for arg in args]
+                minizinc.logger.debug(f"CLIDriver:run -> command: \"{' '.join(cmd)}\"")
+                output = subprocess.run(
+                    cmd,
+                    stdin=None,
+                    stdout=PIPE,
+                    stderr=PIPE,
+                    **windows_spawn_options,
+                )
+        if output.returncode != 0:
+            if self.parsed_version >= (2, 6, 0):
+                # Error will (usually) be raised in json stream
+                for _ in decode_json_stream(output.stdout):
+                    pass
+            raise parse_error(output.stderr)
+        return output
 
-    path_bin_list = os.pathsep.join(path_bin)
-    path_lib_list = os.pathsep.join(path_lib)
+    async def _create_process(
+        self, args: List[str], solver: Optional[str] = None
+    ) -> Process:
+        """Start an asynchronous driver process with given arguments
 
-    # Try to load the MiniZinc C API
-    env_backup = os.environ.copy()
-    os.environ["LD_LIBRARY_PATH"] = path_lib_list
-    os.environ["DYLD_LIBRARY_PATH"] = path_lib_list
-    lib = find_library(name)
-    os.environ.clear()
-    os.environ.update(env_backup)
-    if lib and Path(lib).suffix in [".dll", ".dylib", ".so"]:
-        pass
-        # TODO:
-        # from minizinc.API import APIDriver
+        Args:
+            args (List[str]): direct arguments to the driver
+            solver (Union[str, Path, None]): Solver configuration string
+                guaranteed by the user to be valid until the process has ended.
+        """
 
-        # library = cdll.LoadLibrary(lib)
-        # driver = APIDriver(library)
-    else:
+        windows_spawn_options: Dict[str, Any] = {}
+        if sys.platform == "win32":
+            # See corresponding comment in run()
+            windows_spawn_options = {
+                "startupinfo": subprocess.STARTUPINFO(
+                    dwFlags=subprocess.STARTF_USESHOWWINDOW,
+                    wShowWindow=subprocess.SW_HIDE,
+                ),
+                "creationflags": subprocess.CREATE_NEW_CONSOLE,
+            }
+
+        # TODO: Always add --json-stream once 2.6.0 is minimum requirement
+        if self.parsed_version >= (2, 6, 0):
+            args.append("--json-stream")
+
+        if solver is None:
+            minizinc.logger.debug(
+                f"CLIDriver:create_process -> program: {str(self._executable)} "
+                f'args: "--allow-multiple-assignments '
+                f"{' '.join(str(arg) for arg in args)}\""
+            )
+            proc = await create_subprocess_exec(
+                str(self._executable),
+                "--allow-multiple-assignments",
+                *[str(arg) for arg in args],
+                stdin=None,
+                stdout=PIPE,
+                stderr=PIPE,
+                **windows_spawn_options,
+            )
+        else:
+            minizinc.logger.debug(
+                f"CLIDriver:create_process -> program: {str(self._executable)} "
+                f'args: "--solver {solver} --allow-multiple-assignments '
+                f"{' '.join(str(arg) for arg in args)}\""
+            )
+            proc = await create_subprocess_exec(
+                str(self._executable),
+                "--solver",
+                solver,
+                "--allow-multiple-assignments",
+                *[str(arg) for arg in args],
+                stdin=None,
+                stdout=PIPE,
+                stderr=PIPE,
+                **windows_spawn_options,
+            )
+        return proc
+
+    @classmethod
+    def find(
+        cls, path: Optional[List[str]] = None, name: str = "minizinc"
+    ) -> Optional["Driver"]:
+        """Finds MiniZinc Driver on default or specified path.
+
+        Find driver will look for the MiniZinc executable to create a Driver for
+        MiniZinc Python. If no path is specified, then the paths given by the
+        environment variables appended by MiniZinc's default locations will be tried.
+
+        Args:
+            path: List of locations to search.
+            name: Name of the executable.
+
+        Returns:
+            Optional[Driver]: Returns a Driver object when found or None.
+        """
+        if path is None:
+            path = os.environ.get("PATH", "").split(os.pathsep)
+            # Add default MiniZinc locations to the path
+            if platform.system() == "Darwin":
+                path.extend(MAC_LOCATIONS)
+            elif platform.system() == "Windows":
+                path.extend(WIN_LOCATIONS)
+
         # Try to locate the MiniZinc executable
-        executable = shutil.which(name, path=path_bin_list)
+        executable = shutil.which(name, path=os.pathsep.join(path))
         if executable is not None:
-            from minizinc.CLI import CLIDriver
-
-            driver = CLIDriver(Path(executable))
-
-    return driver
+            return cls(Path(executable))
+        return None

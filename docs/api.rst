@@ -28,10 +28,6 @@ Instances
     :members:
     :special-members:  __getitem__, __setitem__
 
-..  autoclass:: minizinc.CLI.CLIInstance
-    :members:
-    :special-members:  __getitem__, __setitem__
-
 Results
 -------
 
@@ -42,18 +38,10 @@ Results
 ..  autoclass:: minizinc.result.Status
     :members:
 
-Utilities
----------
-
-..  autofunction:: find_driver
-
 Drivers
 -------
 
 ..  autoclass:: minizinc.driver.Driver
-    :members:
-
-..  autoclass:: minizinc.CLI.CLIDriver
     :members:
 
 Errors

@@ -3,23 +3,21 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import logging
 import warnings
-from typing import Optional, Type
+from typing import Optional
 
 from ._version import version as __version__
-from .driver import Driver, find_driver
+from .driver import Driver
 from .error import ConfigurationError, MiniZincError
-from .instance import Instance as GenInstance
+from .instance import Instance
 from .model import Method, Model
 from .result import Result, Status
 from .solver import Solver
-
-Instance: Type[GenInstance]
 
 logger = logging.getLogger("minizinc")
 
 #: Default MiniZinc driver used by the python package
 try:
-    default_driver: Optional[Driver] = find_driver()
+    default_driver: Optional[Driver] = Driver.find()
     if default_driver is not None:
         default_driver.make_default()
     else:
@@ -38,7 +36,6 @@ except ConfigurationError as err:
 __all__ = [
     "__version__",
     "default_driver",
-    "find_driver",
     "Driver",
     "Instance",
     "Method",

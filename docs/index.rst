@@ -2,12 +2,11 @@ MiniZinc Python
 ===============
 
 MiniZinc Python provides a native python interface for the MiniZinc toolchain.
-The package can interface with MiniZinc in two ways: using the command line
-interface, the ``minizinc`` executable, or the experimental C API to MiniZinc
-that is currently in development. The main goal of this library is to allow
-users to use all of MiniZinc's capabilities directly from Python. This allows
-you to use MiniZinc in your application, but also enables you to use MiniZinc in
-new ways! Using MiniZinc in a procedural language allows you to use incremental
+The package can interface with MiniZinc using the command line interface, the
+``minizinc`` executable. The main goal of this library is to allow users to
+use all of MiniZinc's capabilities directly from Python. This allows you to
+use MiniZinc in your application, but also enables you to use MiniZinc in new
+ways! Using MiniZinc in a procedural language allows you to use incremental
 solving techniques that can be used to implement different kinds of
 meta-heuristics.
 
@@ -36,7 +35,6 @@ patterns.
 
     getting_started
     basic_usage
-    library_structure
     advanced_usage
 
 API Reference

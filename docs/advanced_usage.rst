@@ -264,23 +264,23 @@ use multiple versions of MiniZinc at the same time. This can be useful to
 compare different versions of MiniZinc.
 
 In MiniZinc Python a MiniZinc executable or shared library is represented by a
-:class:`Driver` object. The :func:`find_driver` function can help finding a
+:class:`Driver` object. The :func:`Driver.find` function can help finding a
 compatible MiniZinc executable or shared library and create an associated Driver
 object. The following example shows how to load two versions of MiniZinc and
 sets one as the new default.
 
 ..  code-block:: python
 
-    from minizinc import Driver, Instance, Solver, default_driver, find_driver
+    from minizinc import Driver, Instance, Solver, default_driver
 
     print(default_driver.minizinc_version)
 
-    v23: Driver = find_driver(["/minizinc/2.3.2/bin"])
+    v23: Driver = Diver.find(["/minizinc/2.3.2/bin"])
     print(v23.minizinc_version)
     gecode = Solver.lookup("gecode", driver=v23)
     v23_instance = Instance(gecode, driver=v23)
 
-    v24: Driver = find_driver(["/minizinc/2.4.0/bin"])
+    v24: Driver = Driver.find(["/minizinc/2.4.0/bin"])
     print(v24.minizinc_version)
     gecode = Solver.lookup("gecode", driver=v24)
     v24_instance = Instance(gecode, driver=v24)
@@ -290,11 +290,6 @@ sets one as the new default.
     gecode = Solver.lookup("gecode")  # using the new default_driver
     instance = Instance(gecode)
 
-..  seealso::
-
-    For more information about how MiniZinc Python connect to MiniZinc using
-    either an executable or shared library, please read about the :ref:`library
-    structure <library-structure>`
 
 Debugging the Python to MiniZinc connection
 -------------------------------------------

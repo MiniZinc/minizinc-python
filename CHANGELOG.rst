@@ -9,6 +9,14 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Removed
+^^^^^^^
+
+- *BREAKING:** The project no longer contains the (uncompleted) direct library
+  connection to libminizinc. With this change come some simplications in methods of
+  relocated from ``CLIDriver`` and ``CLIInstance``, and the move of ``find_driver`` to
+  ``Driver.find``. 
+
 Fixed
 ^^^^^
 
