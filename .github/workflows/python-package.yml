@@ -14,9 +14,11 @@ jobs:
         python-version: ["3.6", "3.10", "pypy3"]
 
     env:
-      MINIZINC_URL: https://github.com/MiniZinc/MiniZincIDE/releases/download/2.5.5/MiniZincIDE-2.5.5-x86_64.AppImage
+      MINIZINC_URL: https://github.com/MiniZinc/MiniZincIDE/releases/download/2.6.3/MiniZincIDE-2.6.3-x86_64.AppImage
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Add bin/ to PATH
         run: |
           mkdir -p ${{ github.workspace }}/bin
