@@ -2,10 +2,13 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import asyncio
 import os
+import sys
 import tempfile
 from dataclasses import fields
 
+import pytest
 from support import InstanceTestCase
 
 from minizinc.instance import Method
@@ -125,3 +128,26 @@ class CheckEmpty(InstanceTestCase):
         result = self.instance.solve()
         assert len(fields(result.solution)) == 0
         assert result.status == Status.SATISFIED
+
+
+class FromAsync(InstanceTestCase):
+    code = """int: x ::output = 5;"""
+
+    @pytest.mark.skipif(sys.version_info < (3, 7), reason="requires asyncio.run()")
+    def test_async_error(self):
+        async def bad_run():
+            return self.instance.solve()
+
+        with pytest.raises(RuntimeError) as exc_info:
+            _ = asyncio.run(bad_run())
+
+        assert "solve_async" in str(exc_info.value)
+
+    @pytest.mark.skipif(sys.version_info < (3, 7), reason="requires asyncio.run()")
+    def test_async_success(self):
+        async def good_run():
+            return await self.instance.solve_async()
+
+        result = asyncio.run(good_run())
+        assert result.status == Status.SATISFIED
+        assert result["x"] == 5
