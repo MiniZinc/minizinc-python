@@ -14,7 +14,7 @@ jobs:
         python-version: ["3.6", "3.10", "pypy3"]
 
     env:
-      MINIZINC_URL: https://github.com/MiniZinc/MiniZincIDE/releases/download/2.6.3/MiniZincIDE-2.6.3-x86_64.AppImage
+      MINIZINC_URL: https://github.com/MiniZinc/MiniZincIDE/releases/download/2.6.4/MiniZincIDE-2.6.4-x86_64.AppImage
     steps:
       - uses: actions/checkout@v3
         with:
