@@ -8,6 +8,7 @@ from support import InstanceTestCase
 
 from minizinc import Instance
 from minizinc.result import Status
+from minizinc.types import AnonEnum, ConstrEnum
 
 
 class TestEnum(InstanceTestCase):
@@ -103,6 +104,36 @@ class TestEnum(InstanceTestCase):
 
         # TODO: assert result["arr_t"] == [TT(3), TT(2), TT(1)]
         assert result["set_t"] == {TT(1), TT(2)}
+
+    def test_constructor_enum(self):
+        self.instance = Instance(self.solver)
+        self.instance.add_string(
+            """
+            enum T = X(1..3);
+            var T: x;
+            constraint x > X(1) /\\ x < X(3); % TODO: Remove for MiniZinc 2.7+
+            """
+        )
+        # TODO: Remove for MiniZinc 2.7+
+        # self.instance["x"] = ConstrEnum("X", 2)
+        result = self.instance.solve()
+        assert isinstance(result["x"], ConstrEnum)
+        assert result["x"] == ConstrEnum("X", 2)
+        assert str(result["x"]) == "X(2)"
+
+    def test_anon_enum(self):
+        self.instance = Instance(self.solver)
+        self.instance.add_string(
+            """
+            enum T = _(1..5);
+            var T: x;
+            """
+        )
+        self.instance["x"] = AnonEnum("T", 3)
+        result = self.instance.solve()
+        assert isinstance(result["x"], AnonEnum)
+        assert result["x"].value == 3
+        assert str(result["x"]) == "to_enum(T,3)"
 
 
 class TestSets(InstanceTestCase):

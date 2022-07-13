@@ -12,6 +12,7 @@ from .instance import Instance
 from .model import Method, Model
 from .result import Result, Status
 from .solver import Solver
+from .types import AnonEnum, ConstrEnum
 
 logger = logging.getLogger("minizinc")
 
@@ -36,6 +37,8 @@ except ConfigurationError as err:
 __all__ = [
     "__version__",
     "default_driver",
+    "AnonEnum",
+    "ConstrEnum",
     "Driver",
     "Instance",
     "Method",

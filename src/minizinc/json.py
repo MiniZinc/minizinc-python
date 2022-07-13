@@ -8,6 +8,7 @@ from enum import Enum
 from json import JSONDecoder, JSONEncoder, loads
 
 from .error import MiniZincWarning, error_from_stream_obj
+from .types import AnonEnum, ConstrEnum
 
 try:
     import numpy
@@ -19,6 +20,10 @@ class MZNJSONEncoder(JSONEncoder):
     def default(self, o):
         if isinstance(o, Enum):
             return {"e": o.name}
+        if isinstance(o, AnonEnum):
+            return {"e": o.enumName, "i": o.value}
+        if isinstance(o, ConstrEnum):
+            return {"c": o.constructor, "e": o.argument}
         if isinstance(o, set) or isinstance(o, range):
             return {"set": [{"e": i.name} if isinstance(i, Enum) else i for i in o]}
         if numpy is not None:
@@ -37,9 +42,20 @@ class MZNJSONDecoder(JSONDecoder):
             self.enum_map = enum_map
         JSONDecoder.__init__(self, object_hook=self.mzn_object_hook, *args, **kwargs)
 
+    def transform_enum_object(self, obj):
+        # TODO: This probably is an enum, but could still be a record
+        if "e" in obj:
+            if len(obj) == 1:
+                return self.enum_map.get(obj["e"], obj["e"])
+            elif len(obj) == 2 and "c" in obj:
+                return ConstrEnum(obj["c"], obj["e"])
+            elif len(obj) == 2 and "i" in obj:
+                return AnonEnum(obj["e"], obj["i"])
+        return obj
+
     def mzn_object_hook(self, obj):
-        if isinstance(obj, dict) and len(obj) == 1:
-            if "set" in obj:
+        if isinstance(obj, dict):
+            if len(obj) == 1 and "set" in obj:
                 if len(obj["set"]) == 1 and isinstance(obj["set"][0], list):
                     assert len(obj["set"][0]) == 2
                     return range(obj["set"][0][0], obj["set"][0][1] + 1)
@@ -49,13 +65,13 @@ class MZNJSONDecoder(JSONDecoder):
                     if isinstance(item, list):
                         assert len(item) == 2
                         li.extend([i for i in range(item[0], item[1] + 1)])
-                    elif isinstance(item, dict) and len(item) == 1 and "e" in item:
-                        li.append(self.enum_map.get(item["e"], item["e"]))
+                    elif isinstance(item, dict):
+                        li.append(self.transform_enum_object(item))
                     else:
                         li.append(item)
                 return set(li)
-            elif "e" in obj:
-                return self.enum_map.get(obj["e"], obj["e"])
+            else:
+                return self.transform_enum_object(obj)
         return obj
 
 
