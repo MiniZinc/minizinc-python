@@ -14,6 +14,8 @@ Added
 
 - Add additional ``Driver.executable`` property to safely access the location
   of the executable used by the ``Driver`` object.
+- Support for input and output of complex MiniZinc enumerated types, such as
+  anonymous enumerated types or enumerated types using constructor functions.
 
 Removed
 ^^^^^^^
