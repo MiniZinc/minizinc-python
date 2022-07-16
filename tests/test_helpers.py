@@ -16,7 +16,10 @@ class CheckResults(InstanceTestCase):
         array[1..2] of var 1..10: x;
         constraint x[1] + 1 = x[2];
     """
-    other_solver = Solver.lookup("chuffed")
+
+    @classmethod
+    def setUpClass(cls):
+        cls.other_solver = Solver.lookup("chuffed")
 
     def test_correct(self):
         assert self.instance.method == Method.SATISFY
