@@ -19,6 +19,7 @@ class CheckResults(InstanceTestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.other_solver = Solver.lookup("chuffed")
 
     def test_correct(self):

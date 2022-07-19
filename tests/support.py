@@ -3,17 +3,20 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import unittest
+from typing import ClassVar
 
 from minizinc import Instance, Solver
-from minizinc.instance import Instance as GenInstance
 
 
 class InstanceTestCase(unittest.TestCase):
     code = ""
-    instance: GenInstance
-    solver: Solver
+    instance: Instance
+    solver: ClassVar[Solver]
+
+    @classmethod
+    def setUpClass(cls):
+        cls.solver = Solver.lookup("gecode")
 
     def setUp(self):
-        self.solver = Solver.lookup("gecode")
         self.instance = Instance(self.solver)
         self.instance.add_string(self.code)
