@@ -4,7 +4,6 @@
 
 import asyncio
 import os
-import sys
 import tempfile
 from dataclasses import fields
 
@@ -133,7 +132,6 @@ class CheckEmpty(InstanceTestCase):
 class FromAsync(InstanceTestCase):
     code = """int: x ::output = 5;"""
 
-    @pytest.mark.skipif(sys.version_info < (3, 7), reason="requires asyncio.run()")
     def test_async_error(self):
         async def bad_run():
             return self.instance.solve()
@@ -143,7 +141,6 @@ class FromAsync(InstanceTestCase):
 
         assert "solve_async" in str(exc_info.value)
 
-    @pytest.mark.skipif(sys.version_info < (3, 7), reason="requires asyncio.run()")
     def test_async_success(self):
         async def good_run():
             return await self.instance.solve_async()
