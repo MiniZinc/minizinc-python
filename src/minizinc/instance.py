@@ -178,24 +178,9 @@ class Instance(Model):
             **kwargs,
         )
         try:
-            if sys.version_info >= (3, 7):
-                if sys.platform == "win32":
-                    asyncio.set_event_loop_policy(
-                        asyncio.WindowsProactorEventLoopPolicy()
-                    )
-                return asyncio.run(coroutine)
-            else:
-                if sys.platform == "win32":
-                    loop = asyncio.ProactorEventLoop()
-                else:
-                    loop = asyncio.events.new_event_loop()
-
-                try:
-                    asyncio.events.set_event_loop(loop)
-                    return loop.run_until_complete(coroutine)
-                finally:
-                    asyncio.events.set_event_loop(None)
-                    loop.close()
+            if sys.platform == "win32":
+                asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+            return asyncio.run(coroutine)
         except RuntimeError as r:
             if "called from a running event loop" in r.args[0]:
                 raise RuntimeError(
