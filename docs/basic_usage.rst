@@ -50,7 +50,7 @@ solutions for set variables.
     )
 
     instance = Instance(gecode, model)
-    instance["A"] = range(3, 8)  # MiniZinc: 3..8
+    instance["A"] = range(3, 8)  # MiniZinc: 3..7
     instance["B"] = {4, 3, 2, 1, 0}  # MiniZinc: {4, 3, 2, 1, 0}
 
     result = instance.solve()
