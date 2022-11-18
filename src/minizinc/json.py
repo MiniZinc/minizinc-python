@@ -40,7 +40,8 @@ class MZNJSONDecoder(JSONDecoder):
             self.enum_map = {}
         else:
             self.enum_map = enum_map
-        JSONDecoder.__init__(self, object_hook=self.mzn_object_hook, *args, **kwargs)
+        kwargs["object_hook"] = self.mzn_object_hook
+        JSONDecoder.__init__(self, *args, **kwargs)
 
     def transform_enum_object(self, obj):
         # TODO: This probably is an enum, but could still be a record
@@ -64,7 +65,7 @@ class MZNJSONDecoder(JSONDecoder):
                 for item in obj["set"]:
                     if isinstance(item, list):
                         assert len(item) == 2
-                        li.extend([i for i in range(item[0], item[1] + 1)])
+                        li.extend(list(range(item[0], item[1] + 1)))
                     elif isinstance(item, dict):
                         li.append(self.transform_enum_object(item))
                     else:

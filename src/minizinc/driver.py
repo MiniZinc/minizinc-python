@@ -146,7 +146,7 @@ class Driver:
 
         # Construct Solver objects
         self._solver_cache = {}
-        allowed_fields = set([f.name for f in fields(Solver)])
+        allowed_fields = {f.name for f in fields(Solver)}
         for s in solvers:
             obj = Solver(
                 **{key: value for (key, value) in s.items() if key in allowed_fields}

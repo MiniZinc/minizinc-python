@@ -12,7 +12,17 @@
 import re
 
 from pygments.lexer import RegexLexer, bygroups
-from pygments.token import *
+from pygments.token import (
+    Comment,
+    Generic,
+    Keyword,
+    Literal,
+    Name,
+    Number,
+    Operator,
+    Punctuation,
+    String,
+)
 
 __all__ = ["MiniZincLexer"]
 

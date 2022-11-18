@@ -500,9 +500,7 @@ class Instance(Model):
                 if isinstance(v, UnknownExpression) or k in data:
                     fragments.append(f"{k} = {v};\n")
                 elif isinstance(v, EnumMeta):
-                    fragments.append(
-                        f"{k} = {{{', '.join([i for i in v.__members__])}}};\n"
-                    )
+                    fragments.append(f"{k} = {{{', '.join(v.__members__)}}};\n")
                 else:
                     data[k] = v
             fragments.extend(inst._code_fragments)

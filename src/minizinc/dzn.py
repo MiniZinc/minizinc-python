@@ -62,7 +62,7 @@ class TreeToDZN(Transformer):
 
     @staticmethod
     def array2d(s):
-        return [li for li in s]
+        return list(s)
 
     @staticmethod
     def set(s):

@@ -27,7 +27,7 @@ class TestAssign(InstanceTestCase):
         result = self.instance.solve(all_solutions=True)
         assert result.status == Status.ALL_SOLUTIONS
         assert len(result.solution) == 1
-        assert result[0, "x"] == [i for i in range(2, 5 + 1)]
+        assert result[0, "x"] == list(range(2, 5 + 1))
 
     def test_reassign(self):
         self.instance["n"] = 14
