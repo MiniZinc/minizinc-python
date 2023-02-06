@@ -500,7 +500,15 @@ class Instance(Model):
                 if isinstance(v, UnknownExpression) or k in data:
                     fragments.append(f"{k} = {v};\n")
                 elif isinstance(v, EnumMeta):
-                    fragments.append(f"{k} = {{{', '.join(v.__members__)}}};\n")
+                    enumDecl = k + " = {"
+                    first = True
+                    for mem in v.__members__:
+                        if not first:
+                            enumDecl += ", "
+                        enumDecl += "'" + str(mem) + "'"
+                        first = False
+                    enumDecl += "};"
+                    fragments.append(enumDecl)
                 else:
                     data[k] = v
             fragments.extend(inst._code_fragments)
@@ -595,7 +603,7 @@ class Instance(Model):
             self._input_cache[key] = _to_python_type(value)
         old_output = self._output_cache
         self._output_cache = {}
-        for (key, value) in interface["output"].items():
+        for key, value in interface["output"].items():
             self._output_cache[key] = _to_python_type(value)
         if interface.get("has_output_item", True):
             self._output_cache["_output_item"] = str
