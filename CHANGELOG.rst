@@ -9,6 +9,19 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+
+Removed
+^^^^^^^
+
+- **BREAKING:** The project no longer supports Python 3.6. This change will make
+  it easier to manage MiniZinc Python's build system.
+
+Fixed
+^^^^^
+
+- Fix the conversion when using a Python enumerated type in MiniZinc that uses
+  non-ascii identifiers.
+
 0.7.0_ - 2022-07-13
 -------------------
 

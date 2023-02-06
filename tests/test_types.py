@@ -135,6 +135,21 @@ class TestEnum(InstanceTestCase):
         assert result["x"].value == 3
         assert str(result["x"]) == "to_enum(T,3)"
 
+    def test_non_ascii(self):
+        self.instance = Instance(self.solver)
+        self.instance.add_string(
+            """
+            include "strictly_increasing.mzn";
+            enum TT;
+            array[1..3] of var TT: x;
+            constraint strictly_increasing(x);
+            """
+        )
+        TT = enum.Enum("TT", ["this one", "🍻", "∑"])
+        self.instance["TT"] = TT
+        result = self.instance.solve()
+        assert result["x"] == [TT(1), TT(2), TT(3)]
+
 
 class TestSets(InstanceTestCase):
     def test_ranges(self):
