@@ -1,0 +1,35 @@
+# This file contains metadata to help users cite MiniZinc in academic
+# publications. To add more details, see https://citation-file-format.github.io
+# for help.
+
+cff-version: 1.2.0
+title: MiniZinc Python
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Jip J.
+    family-names: Dekker
+    email: jip.dekker@monash.edu
+    affiliation: Monash University
+    orcid: 'https://orcid.org/0000-0002-0053-6724'
+repository-code: 'https://github.com/MiniZinc/minizinc-python'
+url: 'https://www.minizinc.org/'
+abstract: >-
+  MiniZinc Python provides an interface from Python to the
+  MiniZinc driver. The most important goal of this project
+  are to allow easy access to MiniZinc using native Python
+  structures. This will allow you to more easily make
+  scripts to run MiniZinc, but will also allow the
+  integration of MiniZinc models within bigger (Python)
+  projects. This module also aims to expose an interface for
+  meta-search. For problems that are hard to solve,
+  meta-search can provide solutions to reach more or better
+  solutions quickly.
+keywords:
+  - MiniZinc
+  - Python
+  - Constraint Programming
+  - Optimisation
+license: MPL-2.0
