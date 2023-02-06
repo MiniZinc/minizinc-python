@@ -9,6 +9,8 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+0.8.0_ - 2023-02-06
+-------------------
 
 Removed
 ^^^^^^^
@@ -335,6 +337,7 @@ release is best described in the `documentation
 <https://minizinc-python.readthedocs.io/en/0.1.0/>`_.
 
 
+..  _0.8.0: https://github.com/MiniZinc/minizinc-python/compare/0.7.0...0.8.0
 ..  _0.7.0: https://github.com/MiniZinc/minizinc-python/compare/0.6.0...0.7.0
 ..  _0.6.0: https://github.com/MiniZinc/minizinc-python/compare/0.5.0...0.6.0
 ..  _0.5.0: https://github.com/MiniZinc/minizinc-python/compare/0.4.2...0.5.0
