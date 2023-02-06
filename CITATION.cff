@@ -14,6 +14,10 @@ authors:
     email: jip.dekker@monash.edu
     affiliation: Monash University
     orcid: 'https://orcid.org/0000-0002-0053-6724'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.7608747
+    description: Zenodo Software Archival DOI
 repository-code: 'https://github.com/MiniZinc/minizinc-python'
 url: 'https://www.minizinc.org/'
 abstract: >-
@@ -33,5 +37,6 @@ keywords:
   - Constraint Programming
   - Optimisation
 license: MPL-2.0
+commit: 7324d34eb6e59130f468ce9a43f3b55861365d0f
 version: 0.8.0
 date-released: '2023-02-06'

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "minizinc"
-version = "0.8.0"
+version = "0.8.1"
 description = "Access MiniZinc directly from Python"
 readme = "README.md"
 authors = ["Jip J. Dekker <jip@dekker.one>"]
