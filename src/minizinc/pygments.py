@@ -65,14 +65,14 @@ class MiniZincLexer(RegexLexer):
                 bygroups(Keyword),
             ),
             (
-                "(\\b(?:ann|array|bool|enum|float|int|list|of|par|set|string|tuple|var)\\b)",
+                "(\\b(?:ann|array|bool|enum|float|int|list|of|par|set|string|tuple|var|record|any|opt)\\b)",
                 bygroups(Keyword.Type),
             ),
             (
-                "(\\b(?:for|forall|if|then|elseif|else|endif|where|let|in)\\b)",
+                "(\\b(?:for|forall|exists|if|then|elseif|else|endif|where|let|in)\\b)",
                 bygroups(Keyword),
             ),
-            ("(\\b(?:any|case|op|record)\\b)", bygroups(Generic.Error)),
+            ("(\\b(?:case|op)\\b)", bygroups(Generic.Error)),
             (
                 "(\\b(?:abort|abs|acosh|array_intersect|array_union|array1d|array2d|array3d|array4d|array5d|array6d|asin|assert|atan|bool2int|card|ceil|concat|cos|cosh|dom|dom_array|dom_size|fix|exp|floor|index_set|index_set_1of2|index_set_2of2|index_set_1of3|index_set_2of3|index_set_3of3|int2float|is_fixed|join|lb|lb_array|length|ln|log|log2|log10|min|max|pow|product|round|set2array|show|show_int|show_float|sin|sinh|sqrt|sum|tan|tanh|trace|ub|ub_array)\\b)",
                 bygroups(Name.Builtin),
@@ -157,14 +157,14 @@ class MiniZincLexer(RegexLexer):
                 bygroups(Keyword),
             ),
             (
-                "(\\b(?:ann|array|bool|enum|float|int|list|of|par|set|string|tuple|var)\\b)",
+                "(\\b(?:ann|array|bool|enum|float|int|list|of|par|set|string|tuple|var|record|any|opt)\\b)",
                 bygroups(Keyword.Type),
             ),
             (
-                "(\\b(?:for|forall|if|then|elseif|else|endif|where|let|in)\\b)",
+                "(\\b(?:for|forall|exists|if|then|elseif|else|endif|where|let|in)\\b)",
                 bygroups(Keyword),
             ),
-            ("(\\b(?:any|case|op|record)\\b)", bygroups(Generic.Error)),
+            ("(\\b(?:case|op)\\b)", bygroups(Generic.Error)),
             (
                 "(\\b(?:abort|abs|acosh|array_intersect|array_union|array1d|array2d|array3d|array4d|array5d|array6d|asin|assert|atan|bool2int|card|ceil|concat|cos|cosh|dom|dom_array|dom_size|fix|exp|floor|index_set|index_set_1of2|index_set_2of2|index_set_1of3|index_set_2of3|index_set_3of3|int2float|is_fixed|join|lb|lb_array|length|ln|log|log2|log10|min|max|pow|product|round|set2array|show|show_int|show_float|sin|sinh|sqrt|sum|tan|tanh|trace|ub|ub_array)\\b)",
                 bygroups(Name.Builtin),
@@ -244,14 +244,14 @@ class MiniZincLexer(RegexLexer):
                 bygroups(Keyword),
             ),
             (
-                "(\\b(?:ann|array|bool|enum|float|int|list|of|par|set|string|tuple|var)\\b)",
+                "(\\b(?:ann|array|bool|enum|float|int|list|of|par|set|string|tuple|var|record|any|opt)\\b)",
                 bygroups(Keyword.Type),
             ),
             (
-                "(\\b(?:for|forall|if|then|elseif|else|endif|where|let|in)\\b)",
+                "(\\b(?:for|forall|exists|if|then|elseif|else|endif|where|let|in)\\b)",
                 bygroups(Keyword),
             ),
-            ("(\\b(?:any|case|op|record)\\b)", bygroups(Generic.Error)),
+            ("(\\b(?:case|op)\\b)", bygroups(Generic.Error)),
             (
                 "(\\b(?:abort|abs|acosh|array_intersect|array_union|array1d|array2d|array3d|array4d|array5d|array6d|asin|assert|atan|bool2int|card|ceil|concat|cos|cosh|dom|dom_array|dom_size|fix|exp|floor|index_set|index_set_1of2|index_set_2of2|index_set_1of3|index_set_2of3|index_set_3of3|int2float|is_fixed|join|lb|lb_array|length|ln|log|log2|log10|min|max|pow|product|round|set2array|show|show_int|show_float|sin|sinh|sqrt|sum|tan|tanh|trace|ub|ub_array)\\b)",
                 bygroups(Name.Builtin),
@@ -330,14 +330,14 @@ class MiniZincLexer(RegexLexer):
                 bygroups(Keyword),
             ),
             (
-                "(\\b(?:ann|array|bool|enum|float|int|list|of|par|set|string|tuple|var)\\b)",
+                "(\\b(?:ann|array|bool|enum|float|int|list|of|par|set|string|tuple|var|record|any|opt)\\b)",
                 bygroups(Keyword.Type),
             ),
             (
-                "(\\b(?:for|forall|if|then|elseif|else|endif|where|let|in)\\b)",
+                "(\\b(?:for|forall|exists|if|then|elseif|else|endif|where|let|in)\\b)",
                 bygroups(Keyword),
             ),
-            ("(\\b(?:any|case|op|record)\\b)", bygroups(Generic.Error)),
+            ("(\\b(?:case|op)\\b)", bygroups(Generic.Error)),
             (
                 "(\\b(?:abort|abs|acosh|array_intersect|array_union|array1d|array2d|array3d|array4d|array5d|array6d|asin|assert|atan|bool2int|card|ceil|concat|cos|cosh|dom|dom_array|dom_size|fix|exp|floor|index_set|index_set_1of2|index_set_2of2|index_set_1of3|index_set_2of3|index_set_3of3|int2float|is_fixed|join|lb|lb_array|length|ln|log|log2|log10|min|max|pow|product|round|set2array|show|show_int|show_float|sin|sinh|sqrt|sum|tan|tanh|trace|ub|ub_array)\\b)",
                 bygroups(Name.Builtin),
@@ -416,14 +416,14 @@ class MiniZincLexer(RegexLexer):
                 bygroups(Keyword),
             ),
             (
-                "(\\b(?:ann|array|bool|enum|float|int|list|of|par|set|string|tuple|var)\\b)",
+                "(\\b(?:ann|array|bool|enum|float|int|list|of|par|set|string|tuple|var|record|any|opt)\\b)",
                 bygroups(Keyword.Type),
             ),
             (
-                "(\\b(?:for|forall|if|then|elseif|else|endif|where|let|in)\\b)",
+                "(\\b(?:for|forall|exists|if|then|elseif|else|endif|where|let|in)\\b)",
                 bygroups(Keyword),
             ),
-            ("(\\b(?:any|case|op|record)\\b)", bygroups(Generic.Error)),
+            ("(\\b(?:case|op)\\b)", bygroups(Generic.Error)),
             (
                 "(\\b(?:abort|abs|acosh|array_intersect|array_union|array1d|array2d|array3d|array4d|array5d|array6d|asin|assert|atan|bool2int|card|ceil|concat|cos|cosh|dom|dom_array|dom_size|fix|exp|floor|index_set|index_set_1of2|index_set_2of2|index_set_1of3|index_set_2of3|index_set_3of3|int2float|is_fixed|join|lb|lb_array|length|ln|log|log2|log10|min|max|pow|product|round|set2array|show|show_int|show_float|sin|sinh|sqrt|sum|tan|tanh|trace|ub|ub_array)\\b)",
                 bygroups(Name.Builtin),
@@ -514,14 +514,14 @@ class MiniZincLexer(RegexLexer):
                 bygroups(Keyword),
             ),
             (
-                "(\\b(?:ann|array|bool|enum|float|int|list|of|par|set|string|tuple|var)\\b)",
+                "(\\b(?:ann|array|bool|enum|float|int|list|of|par|set|string|tuple|var|record|any|opt)\\b)",
                 bygroups(Keyword.Type),
             ),
             (
-                "(\\b(?:for|forall|if|then|elseif|else|endif|where|let|in)\\b)",
+                "(\\b(?:for|forall|exists|if|then|elseif|else|endif|where|let|in)\\b)",
                 bygroups(Keyword),
             ),
-            ("(\\b(?:any|case|op|record)\\b)", bygroups(Generic.Error)),
+            ("(\\b(?:case|op)\\b)", bygroups(Generic.Error)),
             (
                 "(\\b(?:abort|abs|acosh|array_intersect|array_union|array1d|array2d|array3d|array4d|array5d|array6d|asin|assert|atan|bool2int|card|ceil|concat|cos|cosh|dom|dom_array|dom_size|fix|exp|floor|index_set|index_set_1of2|index_set_2of2|index_set_1of3|index_set_2of3|index_set_3of3|int2float|is_fixed|join|lb|lb_array|length|ln|log|log2|log10|min|max|pow|product|round|set2array|show|show_int|show_float|sin|sinh|sqrt|sum|tan|tanh|trace|ub|ub_array)\\b)",
                 bygroups(Name.Builtin),
