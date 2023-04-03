@@ -758,9 +758,9 @@ class Instance(Model):
                 tmp["_checker"] = statistics.pop("_checker")
 
             solution = self.output_type(**tmp)
-            statistics["time"] = obj["time"]
+            statistics["time"] = timedelta(milliseconds=obj["time"])
         elif obj["type"] == "time":
-            statistics["time"] = obj["time"]
+            statistics["time"] = timedelta(milliseconds=obj["time"])
         elif obj["type"] == "statistics":
             for key, val in obj["statistics"].items():
                 set_stat(statistics, key, str(val))
