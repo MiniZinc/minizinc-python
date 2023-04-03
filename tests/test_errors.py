@@ -91,5 +91,7 @@ solve satisfy;
         loc = error.value.location
         assert str(loc.file).endswith(".mzn")
         assert loc.lines == (2, 2)
-        if minizinc.default_driver.parsed_version >= (2, 6, 0):
+        if minizinc.default_driver.parsed_version >= (2, 7, 1):
+            assert loc.columns == (26, 37)
+        elif minizinc.default_driver.parsed_version >= (2, 6, 0):
             assert loc.columns == (1, 22)
