@@ -9,10 +9,15 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Changed
+^^^^^^^
+
+- Minimum supported version of MiniZinc has increased from 2.5.0 to 2.5.4.
+
 Fixed
 ^^^^^
 
-- Ensure time events send using the json stream are parsed as ``timedelta``
+- Ensure time events send using the JSON stream are parsed as ``timedelta``
   objects.
 - Pass JSON definitions in using JSON instead of generated DZN files..
 

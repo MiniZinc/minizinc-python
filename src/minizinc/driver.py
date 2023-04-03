@@ -22,7 +22,7 @@ from .json import decode_json_stream
 from .solver import Solver
 
 #: MiniZinc version required by the python package
-CLI_REQUIRED_VERSION = (2, 5, 0)
+CLI_REQUIRED_VERSION = (2, 5, 4)
 #: Default locations on MacOS where the MiniZinc packaged release would be installed
 MAC_LOCATIONS = [
     str(Path("/Applications/MiniZincIDE.app/Contents/Resources")),
