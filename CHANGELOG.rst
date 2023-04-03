@@ -9,6 +9,13 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Fixed
+^^^^^
+
+- Ensure time events send using the json stream are parsed as ``timedelta``
+  objects.
+- Pass JSON definitions in using JSON instead of generated DZN files..
+
 0.8.0_ - 2023-02-06
 -------------------
 

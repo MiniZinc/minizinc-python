@@ -500,15 +500,7 @@ class Instance(Model):
                 if isinstance(v, UnknownExpression) or k in data:
                     fragments.append(f"{k} = {v};\n")
                 elif isinstance(v, EnumMeta):
-                    enumDecl = k + " = {"
-                    first = True
-                    for mem in v.__members__:
-                        if not first:
-                            enumDecl += ", "
-                        enumDecl += "'" + str(mem) + "'"
-                        first = False
-                    enumDecl += "};"
-                    fragments.append(enumDecl)
+                    data[k] = [str(mem) for mem in v.__members__]
                 else:
                     data[k] = v
             fragments.extend(inst._code_fragments)
@@ -523,7 +515,9 @@ class Instance(Model):
                     prefix="mzn_data", suffix=".json", delete=False
                 )
                 gen_files.append(file)
-                file.write(json.dumps(data, cls=MZNJSONEncoder).encode())
+                file.write(
+                    json.dumps(data, cls=MZNJSONEncoder, ensure_ascii=False).encode()
+                )
                 file.close()
                 files.append(Path(file.name))
             if len(fragments) > 0 or len(files) == 0:
