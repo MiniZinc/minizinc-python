@@ -89,7 +89,6 @@ solve satisfy;
         with pytest.raises(EvaluationError, match="index set") as error:
             self.instance.solve()
         loc = error.value.location
-        print(loc)
         assert str(loc.file).endswith(".mzn")
         assert loc.lines == (2, 2)
         if minizinc.default_driver.parsed_version >= (2, 6, 0):
