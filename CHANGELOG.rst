@@ -9,6 +9,11 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Added
+^^^^^
+
+- Add support for MiniZinc tuple and record types.
+
 Changed
 ^^^^^^^
 

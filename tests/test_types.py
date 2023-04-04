@@ -182,6 +182,82 @@ class TestString(InstanceTestCase):
         assert result.solution.name in names
 
 
+class TestTuple(InstanceTestCase):
+    def test_simple_tuple(self):
+        self.instance.add_string(
+            """
+        var tuple(1..3, bool, 1.0..3.0): x;
+        """
+        )
+        result = self.instance.solve()
+        tup = result["x"]
+        assert isinstance(tup, list)
+        assert len(tup) == 3
+        assert isinstance(tup[0], int)
+        assert tup[0] in range(1, 4)
+        assert isinstance(tup[1], bool)
+        assert isinstance(tup[2], float)
+        assert 1.0 <= tup[2] and tup[2] <= 3.0
+
+    def test_rec_tuple(self):
+        self.instance.add_string(
+            """
+        var tuple(1..3, bool, tuple(2..3, 4..6)): x;
+        """
+        )
+        result = self.instance.solve()
+        tup = result["x"]
+        assert isinstance(tup, list)
+        assert len(tup) == 3
+        assert isinstance(tup[0], int)
+        assert tup[0] in range(1, 4)
+        assert isinstance(tup[1], bool)
+        assert isinstance(tup[2], list)
+        assert len(tup[2]) == 2
+        assert isinstance(tup[2][0], int)
+        assert tup[2][0] in range(2, 4)
+        assert isinstance(tup[2][1], int)
+        assert tup[2][1] in range(4, 7)
+
+
+class TestRecord(InstanceTestCase):
+    def test_simple_record(self):
+        self.instance.add_string(
+            """
+        var record(1..3: a, bool: b, 1.0..3.0: c): x;
+        """
+        )
+        result = self.instance.solve()
+        rec = result["x"]
+        assert isinstance(rec, dict)
+        assert len(rec) == 3
+        assert isinstance(rec["a"], int)
+        assert rec["a"] in range(1, 4)
+        assert isinstance(rec["b"], bool)
+        assert isinstance(rec["c"], float)
+        assert 1.0 <= rec["c"] and rec["c"] <= 3.0
+
+    def test_rec_record(self):
+        self.instance.add_string(
+            """
+        var record(1..3: a, bool: b, record(2..3: d, 4..6: e): c): x;
+        """
+        )
+        result = self.instance.solve()
+        rec = result["x"]
+        assert isinstance(rec, dict)
+        assert len(rec) == 3
+        assert isinstance(rec["a"], int)
+        assert rec["a"] in range(1, 4)
+        assert isinstance(rec["b"], bool)
+        assert isinstance(rec["c"], dict)
+        assert len(rec["c"]) == 2
+        assert isinstance(rec["c"]["d"], int)
+        assert rec["c"]["d"] in range(2, 4)
+        assert isinstance(rec["c"]["e"], int)
+        assert rec["c"]["e"] in range(4, 7)
+
+
 class TestNumPy(InstanceTestCase):
     def test_nparray_bool(self):
         numpy = pytest.importorskip("numpy")

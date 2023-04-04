@@ -797,6 +797,10 @@ def _to_python_type(mzn_type: dict) -> Type:
         pytype = str
     elif basetype == "ann":
         pytype = str
+    elif basetype == "tuple":
+        pytype = list
+    elif basetype == "record":
+        pytype = dict
     else:
         warnings.warn(
             f"Unable to determine minizinc type `{basetype}` assuming integer type",
