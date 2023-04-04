@@ -128,7 +128,7 @@ class CheckEmpty(InstanceTestCase):
 
 
 class FromAsync(InstanceTestCase):
-    code = """int: x ::output = 5;"""
+    code = """int: x ::add_to_output = 5;"""
 
     def test_async_error(self):
         async def bad_run():

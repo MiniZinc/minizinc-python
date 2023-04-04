@@ -6,7 +6,7 @@ import enum
 import pytest
 from support import InstanceTestCase
 
-from minizinc import Instance
+from minizinc import Instance, default_driver
 from minizinc.result import Status
 from minizinc.types import AnonEnum, ConstrEnum
 
@@ -105,6 +105,10 @@ class TestEnum(InstanceTestCase):
         # TODO: assert result["arr_t"] == [TT(3), TT(2), TT(1)]
         assert result["set_t"] == {TT(1), TT(2)}
 
+    @pytest.mark.skipif(
+        default_driver is None or default_driver.parsed_version < (2, 6, 0),
+        reason="requires MiniZinc 2.6 or higher",
+    )
     def test_constructor_enum(self):
         self.instance = Instance(self.solver)
         self.instance.add_string(
@@ -121,6 +125,10 @@ class TestEnum(InstanceTestCase):
         assert result["x"] == ConstrEnum("X", 2)
         assert str(result["x"]) == "X(2)"
 
+    @pytest.mark.skipif(
+        default_driver is None or default_driver.parsed_version < (2, 6, 0),
+        reason="requires MiniZinc 2.6 or higher",
+    )
     def test_anon_enum(self):
         self.instance = Instance(self.solver)
         self.instance.add_string(
@@ -183,6 +191,10 @@ class TestString(InstanceTestCase):
 
 
 class TestTuple(InstanceTestCase):
+    @pytest.mark.skipif(
+        default_driver is None or default_driver.parsed_version < (2, 7, 0),
+        reason="requires MiniZinc 2.7 or higher",
+    )
     def test_simple_tuple(self):
         self.instance.add_string(
             """
@@ -199,6 +211,10 @@ class TestTuple(InstanceTestCase):
         assert isinstance(tup[2], float)
         assert 1.0 <= tup[2] and tup[2] <= 3.0
 
+    @pytest.mark.skipif(
+        default_driver is None or default_driver.parsed_version < (2, 7, 0),
+        reason="requires MiniZinc 2.7 or higher",
+    )
     def test_rec_tuple(self):
         self.instance.add_string(
             """
@@ -221,7 +237,12 @@ class TestTuple(InstanceTestCase):
 
 
 class TestRecord(InstanceTestCase):
+    @pytest.mark.skipif(
+        default_driver is None or default_driver.parsed_version < (2, 7, 0),
+        reason="requires MiniZinc 2.7 or higher",
+    )
     def test_simple_record(self):
+        pytest.skip
         self.instance.add_string(
             """
         var record(1..3: a, bool: b, 1.0..3.0: c): x;
@@ -237,6 +258,10 @@ class TestRecord(InstanceTestCase):
         assert isinstance(rec["c"], float)
         assert 1.0 <= rec["c"] and rec["c"] <= 3.0
 
+    @pytest.mark.skipif(
+        default_driver is None or default_driver.parsed_version < (2, 7, 0),
+        reason="requires MiniZinc 2.7 or higher",
+    )
     def test_rec_record(self):
         self.instance.add_string(
             """
@@ -345,12 +370,20 @@ class TestNumPy(InstanceTestCase):
 
 
 class TestAnn(InstanceTestCase):
+    @pytest.mark.skipif(
+        default_driver is None or default_driver.parsed_version < (2, 6, 0),
+        reason="requires MiniZinc 2.6 or higher",
+    )
     def test_ann_atom(self):
         self.instance.add_string("ann: x :: add_to_output = promise_total;")
         result = self.instance.solve()
         assert result.status is Status.SATISFIED
         assert result["x"] == "promise_total"
 
+    @pytest.mark.skipif(
+        default_driver is None or default_driver.parsed_version < (2, 6, 0),
+        reason="requires MiniZinc 2.6 or higher",
+    )
     def test_ann_call(self):
         self.instance.add_string('ann: x :: add_to_output = expression_name("test");')
         result = self.instance.solve()
