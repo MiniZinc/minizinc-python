@@ -282,16 +282,13 @@ class Instance(Model):
         """
         method = self.method  # Ensure self.analyse() has been executed
         # Set standard command line arguments
-        cmd: List[Any] = [
+        cmd: List[Union[str, Path]] = [
             "--output-mode",
-            "json",
-            "--output-time",
-            "--output-objective",
-            "--output-output-item",
+            "json",  # Ensure MiniZinc's solutions are given as parsable JSON
+            "--output-time",  # Output MiniZinc recorded time with every solution
+            "--output-objective",  # Output objective value with every solution
+            "--output-output-item",  # Add the model's evaluated output item to the json output object
             "--statistics",  # Enable statistics
-            # Enable intermediate solutions
-            # (ensure that solvers always output their best solution)
-            "--intermediate-solutions",
         ]
 
         # Process number of solutions to be generated
@@ -301,26 +298,32 @@ class Instance(Model):
                     "The number of solutions cannot be limited when looking "
                     "for all solutions"
                 )
-            if method != Method.SATISFY:
-                raise NotImplementedError(
-                    "Finding all optimal solutions is not yet implemented"
-                )
-            if "-a" not in self._solver.stdFlags:
-                raise NotImplementedError("Solver does not support the -a flag")
-            cmd.append("--all-solutions")
+            if method == Method.SATISFY:
+                if "-a" not in self._solver.stdFlags:
+                    raise NotImplementedError("Solver does not support the -a flag")
+                cmd.append("--all-solutions")
+            else:
+                if "-a-o" not in self._solver.stdFlags:
+                    raise NotImplementedError("Solver does not support the -a-o flag")
+                cmd.append("--all-optimal")
         elif nr_solutions is not None:
             if nr_solutions <= 0:
                 raise ValueError(
                     "The number of solutions can only be set to a positive "
                     "integer number"
                 )
-            if self.method != Method.SATISFY:
-                raise NotImplementedError(
-                    "Finding multiple optimal solutions is not yet implemented"
-                )
-            if "-n" not in self._solver.stdFlags:
-                raise NotImplementedError("Solver does not support the -n flag")
-            cmd.extend(["--num-solutions", str(nr_solutions)])
+            if self.method == Method.SATISFY:
+                if "-n" not in self._solver.stdFlags:
+                    raise NotImplementedError("Solver does not support the -n flag")
+                cmd.extend(["--num-solutions", str(nr_solutions)])
+            else:
+                if "-n-o" not in self._solver.stdFlags:
+                    raise NotImplementedError("Solver does not support the -n-o flag")
+                cmd.extend(["--num-optimal", str(nr_solutions)])
+        elif "-i" not in self._solver.stdFlags or "-a" not in self._solver.stdFlags:
+            # Enable intermediate solutions when possible
+            # (ensure that solvers always output their best solution)
+            cmd.append("--intermediate-solutions")
         # Set number of processes to be used
         if processes is not None:
             cmd.extend(["--parallel", str(processes)])

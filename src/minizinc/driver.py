@@ -13,7 +13,7 @@ from asyncio.subprocess import PIPE, Process
 from dataclasses import fields
 from json import loads
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import minizinc
 
@@ -165,7 +165,7 @@ class Driver:
 
     def _run(
         self,
-        args: List[Any],
+        args: List[Union[str, Path]],
         solver: Optional[Solver] = None,
     ):
         """Start a driver process with given arguments
@@ -235,7 +235,7 @@ class Driver:
         return output
 
     async def _create_process(
-        self, args: List[str], solver: Optional[str] = None
+        self, args: List[Union[str, Path]], solver: Optional[str] = None
     ) -> Process:
         """Start an asynchronous driver process with given arguments
 
