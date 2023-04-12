@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.7", "3.10", "pypy3.7"]
-        minizinc-version: ["2.7.0", "2.5.4"]
+        minizinc-version: ["2.7.2", "2.5.4"]
 
     env:
       MINIZINC_URL: https://github.com/MiniZinc/MiniZincIDE/releases/download/${{ matrix.minizinc-version }}/MiniZincIDE-${{ matrix.minizinc-version }}-x86_64.AppImage
@@ -27,7 +27,7 @@ jobs:
       - name: Install libfuse (AppImage dependency)
         run: |
           sudo apt-get update
-          sudo apt-get install libfuse2
+          sudo apt-get install libfuse2 libegl1
       - name: Cache MiniZinc
         id: cache-minizinc
         uses: actions/cache@v2
