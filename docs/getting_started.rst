@@ -15,7 +15,7 @@ MiniZinc Python requires the following software to be installed on you machine:
     environmental variable. When MiniZinc cannot be located, the following
     warning will be shown: **MiniZinc was not found on the system: no default
     driver could be initialised**. The path can manually be provided using
-    ``Diver.find`` function.
+    ``Driver.find`` function.
 
 Installation
 ------------

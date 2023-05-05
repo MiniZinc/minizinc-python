@@ -275,7 +275,7 @@ sets one as the new default.
 
     print(default_driver.minizinc_version)
 
-    v23: Driver = Diver.find(["/minizinc/2.3.2/bin"])
+    v23: Driver = Driver.find(["/minizinc/2.3.2/bin"])
     print(v23.minizinc_version)
     gecode = Solver.lookup("gecode", driver=v23)
     v23_instance = Instance(gecode, driver=v23)
