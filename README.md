@@ -106,7 +106,7 @@ its coding style and functionality. The code style tests are executed using
 [Black](https://pypi.org/project/black/),
 [Flake8](https://pypi.org/project/flake8/), and
 [isort](https://pypi.org/project/isort/). The functionality tests are
-constructed using the [PyTest](https://docs.pytest.org) unit testing framework.
+constructed using the [PyTest](https://pypi.org/project/pytest/) unit testing framework.
 
   * To install test-suite dependencies, run `poetry install --with dev` (requires installation of [Poetry](https://python-poetry.org))
   * To run all tests, simply execute `poetry run tox` in the repository directory.
