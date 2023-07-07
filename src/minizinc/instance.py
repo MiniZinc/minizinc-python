@@ -238,6 +238,7 @@ class Instance(Model):
             processes=processes,
             random_seed=random_seed,
             all_solutions=all_solutions,
+            intermediate_solutions=intermediate_solutions,
             free_search=free_search,
             optimisation_level=optimisation_level,
             **kwargs,
@@ -353,6 +354,8 @@ class Instance(Model):
             else:
                 cmd.extend([flag, value])
 
+        multiple_solutions = all_solutions or intermediate_solutions or nr_solutions is not None
+
         # Add files as last arguments
         with self.files() as files, self._solver.configuration() as solver:
             assert self.output_type is not None
@@ -360,6 +363,7 @@ class Instance(Model):
 
             status = Status.UNKNOWN
             last_status = Status.UNKNOWN
+            last_solution = None
             code = 0
             statistics: Dict[str, Any] = {}
 
@@ -384,8 +388,10 @@ class Instance(Model):
                         elif solution is not None:
                             if status == Status.UNKNOWN:
                                 status = Status.SATISFIED
-                            yield Result(status, solution, statistics)
+                            if multiple_solutions:
+                                yield Result(status, solution, statistics)
                             last_status = status
+                            last_solution = solution
                             solution = None
                             statistics = {}
                 else:
@@ -397,7 +403,13 @@ class Instance(Model):
                             self._enum_map,
                             self._field_renames,
                         )
-                        yield Result(Status.SATISFIED, solution, statistics)
+                        if multiple_solutions:
+                            yield Result(Status.SATISFIED, solution, statistics)
+                        last_solution = solution
+
+
+                if not multiple_solutions:
+                    yield Result(status, last_solution, statistics)
 
                 code = await proc.wait()
             except asyncio.IncompleteReadError as err:
@@ -405,6 +417,8 @@ class Instance(Model):
                 # Read remaining text in buffer
                 code = await proc.wait()
                 remainder = err.partial
+
+                last_statistics: Dict[str, Any] = {}
 
                 # Parse and output the remaining statistics and status messages
                 if self._driver.parsed_version >= (2, 6, 0):
@@ -419,7 +433,11 @@ class Instance(Model):
                         elif solution is not None:
                             if status == Status.UNKNOWN:
                                 status = Status.SATISFIED
-                            yield Result(status, solution, statistics)
+
+                            if multiple_solutions:
+                                yield Result(status, solution, statistics)
+                            last_solution = solution
+                            last_statistics = statistics
                             solution = None
                             statistics = {}
                 else:
@@ -433,7 +451,13 @@ class Instance(Model):
                             self._enum_map,
                             self._field_renames,
                         )
-                        yield Result(status, solution, statistics)
+                        if multiple_solutions:
+                            yield Result(status, solution, statistics)
+                        last_solution = solution
+                        last_statistics = statistics
+
+                if not multiple_solutions:
+                    yield Result(status, last_solution, last_statistics)
             except (asyncio.CancelledError, MiniZincError, Exception):
                 # Process was cancelled by the user, a MiniZincError occurred, or
                 # an unexpected Python exception occurred
