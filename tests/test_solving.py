@@ -90,6 +90,17 @@ class TestMaximise(InstanceTestCase):
         assert len(result) == 21
         assert result.objective == 25
 
+    def test_solutions_no_intermediate(self):
+        async def run():
+            results = []
+            async for result in self.instance.solutions(intermediate_solutions=False):
+                results.append(result)
+            return results
+
+        results = asyncio.run(run())
+        assert len(results) == 1
+        assert results[0].solution.objective == 25
+
 
 class TestParameter(InstanceTestCase):
     code = """

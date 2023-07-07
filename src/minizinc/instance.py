@@ -238,6 +238,7 @@ class Instance(Model):
             processes=processes,
             random_seed=random_seed,
             all_solutions=all_solutions,
+            intermediate_solutions=intermediate_solutions,
             free_search=free_search,
             optimisation_level=optimisation_level,
             **kwargs,
@@ -353,15 +354,20 @@ class Instance(Model):
             else:
                 cmd.extend([flag, value])
 
+        multiple_solutions = all_solutions or intermediate_solutions or nr_solutions is not None
+
         # Add files as last arguments
         with self.files() as files, self._solver.configuration() as solver:
             assert self.output_type is not None
             cmd.extend(files)
 
             status = Status.UNKNOWN
-            last_status = Status.UNKNOWN
             code = 0
+            solution = None
             statistics: Dict[str, Any] = {}
+
+            # Whether the status has changed since the last `yield`
+            status_changed = False
 
             try:
                 # Run the MiniZinc process
@@ -376,28 +382,38 @@ class Instance(Model):
                     async for obj in decode_async_json_stream(
                         proc.stdout, cls=MZNJSONDecoder, enum_map=self._enum_map
                     ):
-                        solution, new_status, statistics = self._parse_stream_obj(
+                        new_solution, new_status, statistics = self._parse_stream_obj(
                             obj, statistics
                         )
                         if new_status is not None:
                             status = new_status
-                        elif solution is not None:
+                            status_changed = True
+                        elif new_solution is not None:
+                            solution = new_solution
                             if status == Status.UNKNOWN:
                                 status = Status.SATISFIED
-                            yield Result(status, solution, statistics)
-                            last_status = status
-                            solution = None
-                            statistics = {}
+                            if multiple_solutions:
+                                yield Result(status, solution, statistics)
+                                solution = None
+                                statistics = {}
+                                status_changed = False
                 else:
                     async for raw_sol in _seperate_solutions(proc.stdout):
                         status = Status.SATISFIED
-                        solution, statistics = parse_solution(
+                        new_solution, new_statistics = parse_solution(
                             raw_sol,
                             self.output_type,
                             self._enum_map,
                             self._field_renames,
                         )
-                        yield Result(Status.SATISFIED, solution, statistics)
+                        statistics.update(new_statistics)
+                        if new_solution is not None:
+                            solution = new_solution
+                            if multiple_solutions:
+                                yield Result(Status.SATISFIED, solution, statistics)
+                                solution = None
+                                statistics = {}
+                                status_changed = False
 
                 code = await proc.wait()
             except asyncio.IncompleteReadError as err:
@@ -411,29 +427,42 @@ class Instance(Model):
                     for obj in decode_json_stream(
                         remainder, cls=MZNJSONDecoder, enum_map=self._enum_map
                     ):
-                        solution, new_status, statistics = self._parse_stream_obj(
+                        new_solution, new_status, statistics = self._parse_stream_obj(
                             obj, statistics
                         )
                         if new_status is not None:
                             status = new_status
-                        elif solution is not None:
+                            status_changed = True
+                        elif new_solution is not None:
+                            solution = new_solution
                             if status == Status.UNKNOWN:
                                 status = Status.SATISFIED
-                            yield Result(status, solution, statistics)
-                            solution = None
-                            statistics = {}
+                            if multiple_solutions:
+                                yield Result(status, solution, statistics)
+                                solution = None
+                                statistics = {}
+                                status_changed = False
                 else:
                     for res in filter(None, remainder.split(SEPARATOR)):
                         new_status = Status.from_output(res, method)
                         if new_status is not None:
                             status = new_status
-                        solution, statistics = parse_solution(
+                            status_changed = True
+                        new_solution, new_statistics = parse_solution(
                             res,
                             self.output_type,
                             self._enum_map,
                             self._field_renames,
                         )
-                        yield Result(status, solution, statistics)
+                        statistics.update(new_statistics)
+                        if new_solution is not None:
+                            solution = new_solution
+                            if multiple_solutions:
+                                yield Result(status, solution, statistics)
+                                solution = None
+                                statistics = {}
+                                status_changed = False
+
             except (asyncio.CancelledError, MiniZincError, Exception):
                 # Process was cancelled by the user, a MiniZincError occurred, or
                 # an unexpected Python exception occurred
@@ -442,8 +471,11 @@ class Instance(Model):
                 _ = await proc.wait()
                 # Then, reraise the error that occurred
                 raise
-            if self._driver.parsed_version >= (2, 6, 0) and (
-                status != last_status or statistics != {}
+
+            if not multiple_solutions:
+                yield Result(status, solution, statistics)
+            elif self._driver.parsed_version >= (2, 6, 0) and (
+                status_changed or statistics != {}
             ):
                 yield Result(status, None, statistics)
 
