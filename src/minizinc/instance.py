@@ -362,10 +362,12 @@ class Instance(Model):
             cmd.extend(files)
 
             status = Status.UNKNOWN
-            last_status = Status.UNKNOWN
-            last_solution = None
             code = 0
             statistics: Dict[str, Any] = {}
+
+            last_status = Status.UNKNOWN
+            last_solution = None
+            last_statistics: Dict[str, Any] = {}
 
             try:
                 # Run the MiniZinc process
@@ -392,6 +394,7 @@ class Instance(Model):
                                 yield Result(status, solution, statistics)
                             last_status = status
                             last_solution = solution
+                            last_statistics.update(statistics)
                             solution = None
                             statistics = {}
                 else:
@@ -405,11 +408,11 @@ class Instance(Model):
                         )
                         if multiple_solutions:
                             yield Result(Status.SATISFIED, solution, statistics)
+
+                        last_status = status
                         last_solution = solution
+                        last_statistics.update(statistics)
 
-
-                if not multiple_solutions:
-                    yield Result(status, last_solution, statistics)
 
                 code = await proc.wait()
             except asyncio.IncompleteReadError as err:
@@ -436,8 +439,9 @@ class Instance(Model):
 
                             if multiple_solutions:
                                 yield Result(status, solution, statistics)
+                            last_status = status
                             last_solution = solution
-                            last_statistics = statistics
+                            last_statistics.update(statistics)
                             solution = None
                             statistics = {}
                 else:
@@ -453,11 +457,10 @@ class Instance(Model):
                         )
                         if multiple_solutions:
                             yield Result(status, solution, statistics)
+                        last_status = status
                         last_solution = solution
-                        last_statistics = statistics
+                        last_statistics.update(statistics)
 
-                if not multiple_solutions:
-                    yield Result(status, last_solution, last_statistics)
             except (asyncio.CancelledError, MiniZincError, Exception):
                 # Process was cancelled by the user, a MiniZincError occurred, or
                 # an unexpected Python exception occurred
@@ -466,7 +469,11 @@ class Instance(Model):
                 _ = await proc.wait()
                 # Then, reraise the error that occurred
                 raise
-            if self._driver.parsed_version >= (2, 6, 0) and (
+
+            if not multiple_solutions:
+                yield Result(last_status, last_solution, last_statistics)
+
+            elif self._driver.parsed_version >= (2, 6, 0) and (
                 status != last_status or statistics != {}
             ):
                 yield Result(status, None, statistics)

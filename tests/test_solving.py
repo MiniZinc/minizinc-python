@@ -98,8 +98,8 @@ class TestMaximise(InstanceTestCase):
             return results
             
         results = asyncio.run(run())
-        assert len(results) == 2
-        assert results[0].solution.objective == 25 and results[1].solution is None
+        assert len(results) == 1
+        assert results[0].solution.objective == 25 
 
 
 class TestParameter(InstanceTestCase):
