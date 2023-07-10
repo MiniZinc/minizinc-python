@@ -105,10 +105,6 @@ class TestEnum(InstanceTestCase):
         # TODO: assert result["arr_t"] == [TT(3), TT(2), TT(1)]
         assert result["set_t"] == {TT(1), TT(2)}
 
-    @pytest.mark.skipif(
-        default_driver is None or default_driver.parsed_version < (2, 6, 0),
-        reason="requires MiniZinc 2.6 or higher",
-    )
     def test_constructor_enum(self):
         self.instance = Instance(self.solver)
         self.instance.add_string(
@@ -125,10 +121,6 @@ class TestEnum(InstanceTestCase):
         assert result["x"] == ConstrEnum("X", 2)
         assert str(result["x"]) == "X(2)"
 
-    @pytest.mark.skipif(
-        default_driver is None or default_driver.parsed_version < (2, 6, 0),
-        reason="requires MiniZinc 2.6 or higher",
-    )
     def test_anon_enum(self):
         self.instance = Instance(self.solver)
         self.instance.add_string(
@@ -370,20 +362,12 @@ class TestNumPy(InstanceTestCase):
 
 
 class TestAnn(InstanceTestCase):
-    @pytest.mark.skipif(
-        default_driver is None or default_driver.parsed_version < (2, 6, 0),
-        reason="requires MiniZinc 2.6 or higher",
-    )
     def test_ann_atom(self):
         self.instance.add_string("ann: x :: add_to_output = promise_total;")
         result = self.instance.solve()
         assert result.status is Status.SATISFIED
         assert result["x"] == "promise_total"
 
-    @pytest.mark.skipif(
-        default_driver is None or default_driver.parsed_version < (2, 6, 0),
-        reason="requires MiniZinc 2.6 or higher",
-    )
     def test_ann_call(self):
         self.instance.add_string('ann: x :: add_to_output = expression_name("test");')
         result = self.instance.solve()
