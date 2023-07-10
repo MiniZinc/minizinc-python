@@ -106,16 +106,17 @@ its coding style and functionality. The code style tests are executed using
 [Black](https://pypi.org/project/black/),
 [Flake8](https://pypi.org/project/flake8/), and
 [isort](https://pypi.org/project/isort/). The functionality tests are
-constructed using the [PyTest]() unit testing framework.
+constructed using the [PyTest](https://pypi.org/project/pytest/) unit testing framework.
 
-  * To run all tests, simply execute `tox` in the repository directory.
+  * To install test-suite dependencies, run `poetry install --with dev` (requires installation of [Poetry](https://python-poetry.org))
+  * To run all tests, simply execute `poetry run tox` in the repository directory.
   * Individual environments can be triggered using the `-e` flag.
-    * To test the coding style of the repository run `tox -e check`
+    * To test the coding style of the repository run `poetry run tox -e check`
     * The `py3x` environments are used to test a specific Python version; for
-      example, to test using Python version 3.7 run `tox -e py37`
+      example, to test using Python version 3.7 run `poetry run tox -e py37`
 
-Tox can also be used to generate the documentation, `tox -e docs`, and to
-typeset the Python code, `tox -e format`.
+Tox can also be used to generate the documentation, `poetry run tox -e docs`, and to
+typeset the Python code, `poetry run tox -e format`.
 
 <!-- ROADMAP -->
 ## Roadmap
