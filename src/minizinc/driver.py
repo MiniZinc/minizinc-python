@@ -22,7 +22,7 @@ from .json import decode_json_stream
 from .solver import Solver
 
 #: MiniZinc version required by the python package
-CLI_REQUIRED_VERSION = (2, 5, 4)
+CLI_REQUIRED_VERSION = (2, 6, 0)
 #: Default locations on MacOS where the MiniZinc packaged release would be installed
 MAC_LOCATIONS = [
     str(Path("/Applications/MiniZincIDE.app/Contents/Resources")),
@@ -194,9 +194,7 @@ class Driver:
                 "creationflags": subprocess.CREATE_NEW_CONSOLE,
             }
 
-        # TODO: Always add --json-stream once 2.6.0 is minimum requirement
-        if self.parsed_version >= (2, 6, 0):
-            args.append("--json-stream")
+        args.append("--json-stream")
 
         if solver is None:
             cmd = [str(self._executable), "--allow-multiple-assignments"] + [
@@ -227,10 +225,9 @@ class Driver:
                     **windows_spawn_options,
                 )
         if output.returncode != 0:
-            if self.parsed_version >= (2, 6, 0):
-                # Error will (usually) be raised in json stream
-                for _ in decode_json_stream(output.stdout):
-                    pass
+            # Error will (usually) be raised in json stream
+            for _ in decode_json_stream(output.stdout):
+                pass
             raise parse_error(output.stderr)
         return output
 
@@ -256,9 +253,7 @@ class Driver:
                 "creationflags": subprocess.CREATE_NEW_CONSOLE,
             }
 
-        # TODO: Always add --json-stream once 2.6.0 is minimum requirement
-        if self.parsed_version >= (2, 6, 0):
-            args.append("--json-stream")
+        args.append("--json-stream")
 
         if solver is None:
             minizinc.logger.debug(

@@ -55,8 +55,8 @@ To get a MiniZinc Python up and running follow these simple steps.
 ### Installation
 
 _MiniZinc Python_ can be installed by running `pip install minizinc`. It
-requires [MiniZinc](https://www.minizinc.org/) 2.5.0+ and
-[Python](https://www.python.org/) 3.6.0+ to be installed on the system. MiniZinc
+requires [MiniZinc](https://www.minizinc.org/) 2.6+ and
+[Python](https://www.python.org/) 3.7+ to be installed on the system. MiniZinc
 python expects the `minizinc` executable to be available on the executable path,
 the `$PATH` environmental variable, or in a default installation location.
 

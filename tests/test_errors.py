@@ -72,9 +72,7 @@ int: cause_overflow = overflow(1);
 
         with pytest.raises(
             MiniZincError,
-            match="stack overflow"
-            if minizinc.default_driver.parsed_version >= (2, 6, 0)
-            else "non-zero exit code",
+            match="stack overflow",
         ):
             self.instance.solve()
 
@@ -93,5 +91,5 @@ solve satisfy;
         assert loc.lines == (2, 2)
         if minizinc.default_driver.parsed_version >= (2, 7, 1):
             assert loc.columns == (26, 37)
-        elif minizinc.default_driver.parsed_version >= (2, 6, 0):
+        else:
             assert loc.columns == (1, 22)

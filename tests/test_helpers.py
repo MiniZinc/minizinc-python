@@ -6,7 +6,7 @@ import warnings
 
 from support import InstanceTestCase
 
-from minizinc import Method, Solver, Status, default_driver
+from minizinc import Method, Solver, Status
 from minizinc.error import MiniZincWarning
 from minizinc.helpers import check_result, check_solution
 
@@ -33,10 +33,9 @@ class CheckResults(InstanceTestCase):
             result = self.instance.solve()
             result.solution = self.instance.output_type(x=[2, 1])
             assert not check_result(self.instance, result, self.other_solver)
-            if default_driver.parsed_version >= (2, 6, 0):
-                assert len(w) == 1
-                assert issubclass(w[-1].category, MiniZincWarning)
-                assert "model inconsistency" in str(w[-1].message)
+            assert len(w) == 1
+            assert issubclass(w[-1].category, MiniZincWarning)
+            assert "model inconsistency" in str(w[-1].message)
 
     def test_check_all(self):
         assert self.instance.method == Method.SATISFY

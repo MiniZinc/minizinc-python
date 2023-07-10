@@ -2,14 +2,11 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import re
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum, auto
-from json import loads
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, Optional, Union
 
-from .json import MZNJSONDecoder
 from .model import Method
 
 StatisticsType = Union[float, int, str, timedelta]
@@ -304,69 +301,3 @@ class Result:
 
     def __str__(self):
         return str(self.solution)
-
-
-def parse_solution(
-    raw: bytes,
-    output_type: Type,
-    enum_map: Optional[Dict[str, Enum]] = None,
-    renames: Optional[List[Tuple[str, str]]] = None,
-) -> Tuple[Optional[Any], Dict]:
-    """Parses a solution from the output of a MiniZinc process.
-
-    Parses the MiniZinc output between solution separators. The solution is
-    expected to be formatted according to the MiniZinc JSON standards.
-    Statistical information can be included in the output in accordance with
-    the MiniZinc statistics standard. Statistics will be parsed and retyped
-    according to the types given in StatisticTypes. Statistics will be parsed
-    even if no solution is found.
-
-    Args:
-        raw (bytes): The output on stdout for one solution of the process
-            solving the MiniZinc instance.
-        output_type (Type): The type used for every solution
-        enum_map (Optional[Dict[str, Enum]]): A map to map enumeration identifiers to
-            the internal values used in Python
-        ranames (Optional[List[Tuple[str, str]]]): A list of keys to be renamed from
-            the raw solution to the solution object input
-
-    Returns:
-        Tuple[Optional[Dict], Dict]: A tuple containing the parsed solution
-            assignments and the parsed statistics.
-
-    """
-    if enum_map is None:
-        enum_map = {}
-    if renames is None:
-        renames = []
-    # Parse statistics
-    statistics: Dict[str, StatisticsType] = {}
-    matches = re.findall(rb"%%%mzn-stat:? (\w*)=([^\r\n]*)", raw)
-    for m in matches:
-        set_stat(statistics, m[0].decode(), m[1].decode())
-    match = re.search(rb"% time elapsed: (\d+.\d+) s", raw)
-    if match:
-        time_us = int(float(match[1]) * 1000000)
-        statistics["time"] = timedelta(microseconds=time_us)
-
-    # Parse solution
-    solution = None
-    raw = re.sub(
-        rb"^-{10}|={5}(ERROR|UNKNOWN|UNSATISFIABLE|UNSATorUNBOUNDED|UNBOUNDED|)?={5}",
-        b"",
-        raw,
-        flags=re.MULTILINE,
-    )
-    raw = re.sub(rb"^\w*%.*\n?", b"", raw, flags=re.MULTILINE)
-    if b"{" in raw:
-        tmp = loads(raw, enum_map=enum_map, cls=MZNJSONDecoder)
-        if "_objective" in tmp:
-            tmp["objective"] = tmp.pop("_objective")
-        if "_output" in tmp:
-            tmp["_output_item"] = tmp.pop("_output")
-        for before, after in renames:
-            tmp[after] = tmp.pop(before)
-
-        solution = output_type(**tmp)
-
-    return solution, statistics

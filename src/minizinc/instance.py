@@ -39,7 +39,7 @@ from .json import (
     decode_json_stream,
 )
 from .model import Method, Model, ParPath, UnknownExpression
-from .result import Result, Status, parse_solution, set_stat
+from .result import Result, Status, set_stat
 from .solver import Solver
 
 if sys.version_info >= (3, 8):
@@ -354,7 +354,9 @@ class Instance(Model):
             else:
                 cmd.extend([flag, value])
 
-        multiple_solutions = all_solutions or intermediate_solutions or nr_solutions is not None
+        multiple_solutions = (
+            all_solutions or intermediate_solutions or (nr_solutions is not None)
+        )
 
         # Add files as last arguments
         with self.files() as files, self._solver.configuration() as solver:
@@ -378,90 +380,52 @@ class Instance(Model):
                 # Python 3.7+: replace with asyncio.create_task
                 read_stderr = asyncio.ensure_future(_read_all(proc.stderr))
 
-                if self._driver.parsed_version >= (2, 6, 0):
-                    async for obj in decode_async_json_stream(
-                        proc.stdout, cls=MZNJSONDecoder, enum_map=self._enum_map
-                    ):
-                        new_solution, new_status, statistics = self._parse_stream_obj(
-                            obj, statistics
-                        )
-                        if new_status is not None:
-                            status = new_status
-                            status_changed = True
-                        elif new_solution is not None:
-                            solution = new_solution
-                            if status == Status.UNKNOWN:
-                                status = Status.SATISFIED
-                            if multiple_solutions:
-                                yield Result(status, solution, statistics)
-                                solution = None
-                                statistics = {}
-                                status_changed = False
-                else:
-                    async for raw_sol in _seperate_solutions(proc.stdout):
-                        status = Status.SATISFIED
-                        new_solution, new_statistics = parse_solution(
-                            raw_sol,
-                            self.output_type,
-                            self._enum_map,
-                            self._field_renames,
-                        )
-                        statistics.update(new_statistics)
-                        if new_solution is not None:
-                            solution = new_solution
-                            if multiple_solutions:
-                                yield Result(Status.SATISFIED, solution, statistics)
-                                solution = None
-                                statistics = {}
-                                status_changed = False
+                async for obj in decode_async_json_stream(
+                    proc.stdout, cls=MZNJSONDecoder, enum_map=self._enum_map
+                ):
+                    new_solution, new_status, statistics = self._parse_stream_obj(
+                        obj, statistics
+                    )
+                    if new_status is not None:
+                        status = new_status
+                        status_changed = True
+                    elif new_solution is not None:
+                        solution = new_solution
+                        if status == Status.UNKNOWN:
+                            status = Status.SATISFIED
+                        if multiple_solutions:
+                            yield Result(status, solution, statistics)
+                            solution = None
+                            statistics = {}
+                            status_changed = False
 
                 code = await proc.wait()
             except asyncio.IncompleteReadError as err:
                 # End of Stream has been reached
                 # Read remaining text in buffer
                 code = await proc.wait()
-                remainder = err.partial
+                remainder = err.partial.strip()
 
                 # Parse and output the remaining statistics and status messages
-                if self._driver.parsed_version >= (2, 6, 0):
-                    for obj in decode_json_stream(
+                if remainder != b"":
+                    obj = json.loads(
                         remainder, cls=MZNJSONDecoder, enum_map=self._enum_map
-                    ):
-                        new_solution, new_status, statistics = self._parse_stream_obj(
-                            obj, statistics
-                        )
-                        if new_status is not None:
-                            status = new_status
-                            status_changed = True
-                        elif new_solution is not None:
-                            solution = new_solution
-                            if status == Status.UNKNOWN:
-                                status = Status.SATISFIED
-                            if multiple_solutions:
-                                yield Result(status, solution, statistics)
-                                solution = None
-                                statistics = {}
-                                status_changed = False
-                else:
-                    for res in filter(None, remainder.split(SEPARATOR)):
-                        new_status = Status.from_output(res, method)
-                        if new_status is not None:
-                            status = new_status
-                            status_changed = True
-                        new_solution, new_statistics = parse_solution(
-                            res,
-                            self.output_type,
-                            self._enum_map,
-                            self._field_renames,
-                        )
-                        statistics.update(new_statistics)
-                        if new_solution is not None:
-                            solution = new_solution
-                            if multiple_solutions:
-                                yield Result(status, solution, statistics)
-                                solution = None
-                                statistics = {}
-                                status_changed = False
+                    )
+                    new_solution, new_status, statistics = self._parse_stream_obj(
+                        obj, statistics
+                    )
+                    if new_status is not None:
+                        status = new_status
+                        status_changed = True
+                    elif new_solution is not None:
+                        solution = new_solution
+                        if status == Status.UNKNOWN:
+                            status = Status.SATISFIED
+                        if multiple_solutions:
+                            yield Result(status, solution, statistics)
+                            solution = None
+                            statistics = {}
+                            status_changed = False
 
             except (asyncio.CancelledError, MiniZincError, Exception):
                 # Process was cancelled by the user, a MiniZincError occurred, or
@@ -474,9 +438,7 @@ class Instance(Model):
 
             if not multiple_solutions:
                 yield Result(status, solution, statistics)
-            elif self._driver.parsed_version >= (2, 6, 0) and (
-                status_changed or statistics != {}
-            ):
+            elif status_changed or statistics != {}:
                 yield Result(status, None, statistics)
 
             # Raise error if required
@@ -617,14 +579,11 @@ class Instance(Model):
         with self.files() as files:
             assert len(files) > 0
             output = self._driver._run(["--model-interface-only"] + files, self._solver)
-        if self._driver.parsed_version >= (2, 6, 0):
-            interface = None
-            for obj in decode_json_stream(output.stdout):
-                if obj["type"] == "interface":
-                    interface = obj
-                    break
-        else:
-            interface = json.loads(output.stdout)
+        interface = None
+        for obj in decode_json_stream(output.stdout):
+            if obj["type"] == "interface":
+                interface = obj
+                break
         old_method = self._method_cache
         self._method_cache = Method.from_string(interface["method"])
         self._input_cache = {}
@@ -855,17 +814,6 @@ def _to_python_type(mzn_type: dict) -> Type:
         pytype = List[pytype]  # type: ignore
         dim -= 1
     return pytype
-
-
-async def _seperate_solutions(stream: asyncio.StreamReader):
-    solution: bytes = b""
-    while not stream.at_eof():
-        try:
-            solution += await stream.readuntil(SEPARATOR)
-            yield solution
-            solution = b""
-        except asyncio.LimitOverrunError as err:
-            solution += await stream.readexactly(err.consumed)
 
 
 async def _read_all(stream: asyncio.StreamReader):

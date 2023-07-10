@@ -9,6 +9,13 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Changed
+^^^^^^^
+
+- Minimum supported version of MiniZinc has increased from 2.5.4 to 2.6.0.
+- ``Instance.solutions`` is now able to use the ``intermediate_solutions`` flag
+  correctly and will only yield a single solution when it is set to ``False``.
+
 0.9.0_ - 2023-04-04
 -------------------
 
