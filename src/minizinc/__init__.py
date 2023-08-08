@@ -12,6 +12,7 @@ from .model import Method, Model
 from .result import Result, Status
 from .solver import Solver
 from .types import AnonEnum, ConstrEnum
+from .diversity import Diversity
 
 __version__ = "0.9.1"
 
@@ -48,4 +49,5 @@ __all__ = [
     "Result",
     "Solver",
     "Status",
+    "Diversity",
 ]

@@ -252,6 +252,43 @@ class Instance(Model):
                     solution = result.solution
         return Result(status, solution, statistics)
 
+    def diverse_solutions(
+        self,
+        num_diverse_solutions: Optional[int] = None,
+        reference_solution: Optional[Result] = None
+        # timeout: Optional[timedelta] = None,
+        # nr_solutions: Optional[int] = None,
+        # processes: Optional[int] = None,
+        # random_seed: Optional[int] = None,
+        # free_search: bool = False,
+        # optimisation_level: Optional[int] = None,
+        # verbose: bool = False,
+        # debug_output: Optional[Path] = None,
+        # **kwargs,
+    ) -> Iterator[Dict]:
+        """Solves the Instance to find diverse solutions using its given solver configuration.
+
+        Finds diverse solutions to the given MiniZinc instance using the given solver
+        configuration. Every diverse solution is yielded one at a
+        time. If a reference solution is provided the diverse solutions are generated 
+        around it. For more information regarding this methods and its
+        arguments, see the documentation of :func:`~MiniZinc.Instance.diverse_solutions`.
+
+        Yields:
+            Result: (TODO)
+                A Result object containing the current solving status, values
+                assigned, and statistical information.
+
+        """
+
+        # Loads diverse solution generator if MiniZinc Data Annotator is present
+        div_sols = minizinc.Diversity.find()
+
+        with self.files() as files, self._solver.configuration() as solver:
+            # assert self.output_type is not None
+            for sol in div_sols.run(files, solver, self._solver, num_diverse_solutions, reference_solution):
+                yield sol
+
     async def solutions(
         self,
         timeout: Optional[timedelta] = None,
