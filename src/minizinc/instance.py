@@ -256,15 +256,8 @@ class Instance(Model):
     def diverse_solutions(
         self,
         num_diverse_solutions: Optional[int] = None,
-        reference_solution: Optional[Result] = None
-        # timeout: Optional[timedelta] = None,
-        # nr_solutions: Optional[int] = None,
-        # processes: Optional[int] = None,
-        # random_seed: Optional[int] = None,
-        # free_search: bool = False,
-        # optimisation_level: Optional[int] = None,
-        # verbose: bool = False,
-        # debug_output: Optional[Path] = None,
+        reference_solution: Optional[Result] = None,
+        mzn_analyse: Optional[MznAnalyse] = None,
         # **kwargs,
     ) -> Iterator[Result]:
         """Solves the Instance to find diverse solutions using its given solver configuration.
@@ -283,8 +276,10 @@ class Instance(Model):
         """
 
         # Loads diverse solution generator if MiniZinc Data Annotator is present
-        div_sols = MznAnalyse.find()
-        assert div_sols is not None
+        if mzn_analyse is None:
+            mzn_analyse = MznAnalyse.find()
+        if mzn_analyse is None:
+            raise ConfigurationError("mzn-analyse executable could not be located")
 
         with self.files() as files, self._solver.configuration() as solver:
             # assert self.output_type is not None

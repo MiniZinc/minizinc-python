@@ -23,18 +23,12 @@ from .solver import Solver
 class MznAnalyse:
     """Python interface to the mzn-analyse executable
 
-    This tool is used to retrieve information about MiniZinc instance. This is used, for example, to  diverse solutions to the given MiniZinc instance using the given solver
-    configuration.
-
+    This tool is used to retrieve information about or transform a MiniZinc
+    instance. This is used, for example, to  diverse solutions to the given
+    MiniZinc instance using the given solver configuration.
     """
 
     _executable: Path
-    div_vars = [
-        "div_orig_objective",
-        "div_curr_var_0",
-        "div_prev_var_0",
-        "div_orig_opt_objective",
-    ]
 
     def __init__(self, executable: Path):
         self._executable = executable
@@ -47,18 +41,18 @@ class MznAnalyse:
     def find(
         cls, path: Optional[List[str]] = None, name: str = "mzn-analyse"
     ) -> Optional["MznAnalyse"]:
-        """Finds MiniZinc Data Annotator Driver on default or specified path.
+        """Finds the mzn-analyse executable on default or specified path.
 
-        Find driver will look for the MiniZinc Data Annotator executable to
-        create a Driver for MiniZinc Python. If no path is specified, then the
-        paths given by the environment variables appended by default locations will be tried.
+        The find method will look for the mzn-analyse executable to create an
+        interface for MiniZinc Python. If no path is specified, then the paths
+        given by the environment variables appended by default locations will be
+        tried.
 
         Args:
-            path: List of locations to search.
-            name: Name of the executable.
+            path: List of locations to search. name: Name of the executable.
 
         Returns:
-            Optional[Driver]: Returns a Driver object when found or None.
+            Optional[MznAnalyse]: Returns a MznAnalyse object when found or None.
         """
 
         if path is None:
@@ -73,9 +67,6 @@ class MznAnalyse:
         executable = shutil.which(name, path=os.pathsep.join(path))
         if executable is not None:
             return cls(Path(executable))
-        raise ConfigurationError(
-            f"No MiniZinc data annotator executable was found at '{path}'."
-        )
         return None
 
     def run(
