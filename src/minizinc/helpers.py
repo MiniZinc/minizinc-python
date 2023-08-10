@@ -88,7 +88,7 @@ def check_solution(
         solution = asdict(solution)
 
     for k, v in solution.items():
-        if k not in ("objective", "__output_item"):
+        if k not in ("objective", "_output_item", "_checker"):
             instance[k] = v
     try:
         check = instance.solve(timeout=timedelta(seconds=5))

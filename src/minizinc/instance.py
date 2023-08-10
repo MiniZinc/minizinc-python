@@ -32,7 +32,7 @@ import minizinc
 
 from .diversity import MznAnalyse
 from .driver import Driver
-from .error import MiniZincError, parse_error
+from .error import MiniZincError, parse_error, ConfigurationError
 from .json import (
     MZNJSONDecoder,
     MZNJSONEncoder,
@@ -283,7 +283,7 @@ class Instance(Model):
 
         with self.files() as files, self._solver.configuration() as solver:
             # assert self.output_type is not None
-            for sol in div_sols.run(
+            for sol in mzn_analyse.run(
                 files, solver, self._solver, num_diverse_solutions, reference_solution
             ):
                 yield sol

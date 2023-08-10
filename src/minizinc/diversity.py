@@ -13,9 +13,6 @@ from typing import Any, Dict, Iterator, List, Optional, Union
 import numpy as np
 
 from .driver import MAC_LOCATIONS, WIN_LOCATIONS
-from .error import ConfigurationError
-from .instance import Instance
-from .model import Model
 from .result import Result
 from .solver import Solver
 
@@ -78,6 +75,9 @@ class MznAnalyse:
         reference_solution: Optional[Union[Result, Dict[str, Any]]] = None,
         optimise_diverse_sol: Optional[bool] = True,
     ) -> Iterator[Result]:
+        from .instance import Instance
+        from .model import Model
+
         verbose = False  # if enabled, outputs the progress
         path_tool = self._executable
 
@@ -152,14 +152,9 @@ class MznAnalyse:
                         else:
                             assert isinstance(reference_solution, dict)
                             solution_obj = reference_solution
-                        for key in solution_obj:
-                            if key not in [
-                                "objective",
-                                "_checker",
-                            ]:  # ignore keys not found in the original model
-                                child.add_string(
-                                    f'constraint array1d({key}) = [{", ".join(np.array(solution_obj[key]).flatten().astype(str))}];\n'
-                                )
+                        for k, v in solution_obj.items():
+                            if k not in ("objective", "_output_item", "_checker"):
+                                child[k] = v
 
                     # We will extend the annotated model with the objective and vars.
                     child.add_string(add_diversity_to_opt_model(obj_annots, variables))
