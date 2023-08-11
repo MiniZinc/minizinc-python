@@ -9,7 +9,7 @@ import re
 import sys
 import tempfile
 import warnings
-from dataclasses import field, make_dataclass
+from dataclasses import asdict, field, is_dataclass, make_dataclass
 from datetime import timedelta
 from enum import EnumMeta
 from keyword import iskeyword
@@ -30,7 +30,7 @@ from typing import (
 
 import minizinc
 
-from .diversity import MznAnalyse
+from .analyse import MznAnalyse
 from .driver import Driver
 from .error import ConfigurationError, MiniZincError, parse_error
 from .json import (
@@ -256,8 +256,9 @@ class Instance(Model):
     def diverse_solutions(
         self,
         num_diverse_solutions: Optional[int] = None,
-        reference_solution: Optional[Result] = None,
+        reference_solution: Optional[Union[Result, Dict]] = None,
         mzn_analyse: Optional[MznAnalyse] = None,
+        optimise_diverse_sol: Optional[bool] = True,
         # **kwargs,
     ) -> Iterator[Result]:
         """Solves the Instance to find diverse solutions using its given solver configuration.
@@ -274,19 +275,169 @@ class Instance(Model):
                 assigned, and statistical information.
 
         """
+        from .helpers import _add_diversity_to_div_model, _add_diversity_to_opt_model
 
         # Loads diverse solution generator if MiniZinc Data Annotator is present
         if mzn_analyse is None:
             mzn_analyse = MznAnalyse.find()
         if mzn_analyse is None:
             raise ConfigurationError("mzn-analyse executable could not be located")
+        verbose = False  # if enabled, outputs the progress
 
+        str_div_mzn = "out.mzn"
+        str_div_json = "out.json"
+
+        path_div_mzn = Path(str_div_mzn)
+        path_div_json = Path(str_div_json)
+
+        # Extract the diversity annotations.
         with self.files() as files:
-            # assert self.output_type is not None
-            for sol in mzn_analyse.run(
-                files, self._solver, num_diverse_solutions, reference_solution
-            ):
-                yield sol
+            mzn_analyse.run(
+                files,
+                # Do not change the order of the arguments 'inline-includes', 'remove-items:output', 'remove-litter' and 'get-diversity-anns'
+                [
+                    "inline-includes",
+                    "remove-items:output",
+                    "remove-anns:mzn_expression_name",
+                    "remove-litter",
+                    "get-diversity-anns",
+                    f"out:{str_div_mzn}",
+                    f"json_out:{str_div_json}",
+                ],
+            )
+
+        assert path_div_mzn.exists()
+        assert path_div_json.exists()
+
+        # Load the base model.
+        str_model = path_div_mzn.read_text()
+        div_annots = json.loads(path_div_json.read_text())["get-diversity-annotations"]
+
+        # Objective annotations.
+        obj_annots = div_annots["objective"]
+        variables = div_annots["vars"]
+
+        assert len(variables) > 0, "Distance measure not specified"
+
+        base_m = Model()
+        base_m.add_string(str_model)
+
+        inst = Instance(self._solver, base_m)
+
+        # Place holder for max gap.
+        max_gap = None
+
+        # Place holder for prev solutions
+        prev_solutions = None
+
+        # Number of total diverse solutions - If not provided use the count provided in the MiniZinc model
+        div_num = (
+            int(div_annots["k"])
+            if num_diverse_solutions is None
+            else num_diverse_solutions
+        )
+        # Increase the solution count by one if a reference solution is provided
+        if reference_solution:
+            div_num += 1
+
+        for i in range(1, div_num + 1):
+            with inst.branch() as child:
+                if i == 1:
+                    # Add constraints to the model that sets the decision variables to the reference solution, if provided
+                    if reference_solution:
+                        if isinstance(reference_solution, Result) and is_dataclass(
+                            reference_solution.solution
+                        ):
+                            solution_obj = asdict(reference_solution.solution)
+                        else:
+                            assert isinstance(reference_solution, dict)
+                            solution_obj = reference_solution
+                        for k, v in solution_obj.items():
+                            if k not in ("objective", "_output_item", "_checker"):
+                                child[k] = v
+
+                    # We will extend the annotated model with the objective and vars.
+                    child.add_string(_add_diversity_to_opt_model(obj_annots, variables))
+
+                    # Solve original model to optimality.
+                    if verbose:
+                        model_type = "opt" if obj_annots["sense"] != "0" else "sat"
+                        print(
+                            f"[Sol 1] Solving the original ({model_type}) model to get a solution"
+                        )
+                    # inst = minizinc.Instance(self._solver, base_m)
+                    res: Result = child.solve()
+
+                    # Ensure that the solution exists.
+                    assert res.solution is not None
+
+                    if reference_solution is None:
+                        yield res
+
+                    # Calculate max gap.
+                    max_gap = (
+                        (1 - int(obj_annots["sense"]) * float(div_annots["gap"]))
+                        * float(res["div_orig_opt_objective"])
+                        if obj_annots["sense"] != "0"
+                        else 0
+                    )
+
+                    # Store current solution as previous solution
+                    prev_solutions = asdict(res.solution)
+
+                else:
+                    if verbose:
+                        print(
+                            f"[Sol {i+1}] Generating diverse solution {i}"
+                            + (" (optimal)" if optimise_diverse_sol else "")
+                        )
+
+                    # We will extend the annotated model with the objective and vars.
+                    child = _add_diversity_to_div_model(
+                        child, variables, obj_annots["sense"], max_gap, prev_solutions
+                    )
+
+                    # Solve div model to get a diverse solution.
+                    res = child.solve()
+
+                    # Ensure that the solution exists.
+                    assert res.solution is not None
+
+                    # Solution as dictionary
+                    sol_div = asdict(res.solution)
+
+                    # Solve diverse solution to optimality after fixing the diversity vars to the obtained solution
+                    if optimise_diverse_sol:
+                        # COMMENDTED OUT FOR NOW: Merge the solution values.
+                        # sol_dist = dict()
+                        # for var in variables:
+                        #     distvarname = "dist_"+var["name"]
+                        #     sol_dist[distvarname] = (sol_div[distvarname])
+
+                        # Solve opt model after fixing the diversity vars to the obtained solution
+                        child_opt = Instance(self._solver, base_m)
+                        child_opt.add_string(
+                            _add_diversity_to_opt_model(obj_annots, variables, sol_div)
+                        )
+
+                        # Solve the model
+                        res = child_opt.solve()
+
+                        # Ensure that the solution exists.
+                        assert res.solution is not None
+
+                        # COMMENDTED OUT FOR NOW: Add distance to previous solutions
+                        # sol_opt = asdict(res.solution)
+                        # sol_opt["distance_to_prev_vars"] = sol_dist
+
+                    yield res
+
+                # Store current solution as previous solution
+                curr_solution = asdict(res.solution)
+                # Add the current solution to prev solution container
+                assert prev_solutions is not None
+                for var in variables:
+                    prev_solutions[var["prev_name"]].append(curr_solution[var["name"]])
 
     async def solutions(
         self,
