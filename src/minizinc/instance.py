@@ -32,7 +32,7 @@ import minizinc
 
 from .diversity import MznAnalyse
 from .driver import Driver
-from .error import MiniZincError, parse_error, ConfigurationError
+from .error import ConfigurationError, MiniZincError, parse_error
 from .json import (
     MZNJSONDecoder,
     MZNJSONEncoder,

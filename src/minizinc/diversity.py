@@ -10,8 +10,6 @@ from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Union
 
-import numpy as np
-
 from .driver import MAC_LOCATIONS, WIN_LOCATIONS
 from .result import Result
 from .solver import Solver
@@ -193,10 +191,8 @@ class MznAnalyse:
                         )
 
                     # We will extend the annotated model with the objective and vars.
-                    child.add_string(
-                        add_diversity_to_div_model(
-                            variables, obj_annots["sense"], max_gap, prev_solutions
-                        )
+                    child = add_diversity_to_div_model(
+                        child, variables, obj_annots["sense"], max_gap, prev_solutions
                     )
 
                     # Solve div model to get a diverse solution.
@@ -272,12 +268,7 @@ def add_diversity_to_opt_model(obj_annots, vars, sol_fix=None):
     return opt_model
 
 
-def add_diversity_to_div_model(vars, obj_sense, gap, sols):
-    opt_model = ""
-
-    # Indices i,j,k,...
-    indices = [chr(ord("i") + x) for x in range(15)]
-
+def add_diversity_to_div_model(inst, vars, obj_sense, gap, sols):
     # Add the 'previous solution variables'
     for var in vars:
         # Current and previous variables
@@ -286,40 +277,47 @@ def add_diversity_to_div_model(vars, obj_sense, gap, sols):
         varprevisfloat = "float" in var["prev_type"]
 
         distfun = var["distance_function"]
-        prevsols = np.array(sols[varprevname] + [sols[varname]])
+        prevsols = sols[varprevname] + [sols[varname]]
         prevsol = (
-            np.round(prevsols, 6) if varprevisfloat else prevsols
+            __round_elements(prevsols, 6) if True else prevsols
         )  # float values are rounded to six decimal places to avoid infeasibility due to decimal errors.
 
-        # Re-derive the domain of the solution from the return variable.
-        domains = [f"1..{x}" for x in prevsol.shape]
-        domain = ", ".join(domains)
-        d = len(domains)
-
-        # Derive the indices for the array reconstruction.
-        subindices = ",".join(indices[: (len(domains) - 1)])
-        ranger = ", ".join(
-            [f"{idx} in {subdomain}" for idx, subdomain in zip(subindices, domains[1:])]
-        )
-
         # Add the previous solutions to the model code.
-        opt_model += f"{varprevname} = array{d}d({domain}, {list(prevsol.flat)});\n"
+        inst[varprevname] = prevsol
 
         # Add the diversity distance measurement to the model code.
+        dim = __num_dim(prevsols)
+        dotdots = ", ".join([".." for _ in range(dim - 1)])
         varprevtype = "float" if "float" in var["prev_type"] else "int"
-        opt_model += (
-            f"array [{domains[0]}] of var {varprevtype}: dist_{varname} :: output;\n"
-            f"constraint (forall (sol in {domains[0]}) (dist_{varname}[sol] == {distfun}({varname}, [{varprevname}[sol,{subindices}] | {ranger}])));\n"
+        inst.add_string(
+            f"array [1..{len(prevsol)}] of var {varprevtype}: dist_{varname} :: output = [{distfun}({varname}, {varprevname}[sol,{dotdots}]) | sol in 1..{len(prevsol)}];\n"
         )
 
     # Add the bound on the objective.
     if obj_sense == "-1":
-        opt_model += f"constraint div_orig_objective <= {gap};\n"
+        inst.add_string(f"constraint div_orig_objective <= {gap};\n")
     elif obj_sense == "1":
-        opt_model += f"constraint div_orig_objective >= {gap};\n"
+        inst.add_string(f"constraint div_orig_objective >= {gap};\n")
 
     # Add new objective: maximize diversity.
     dist_sum = "+".join([f'sum(dist_{var["name"]})' for var in vars])
-    opt_model += f"solve maximize {dist_sum};\n"
+    inst.add_string(f"solve maximize {dist_sum};\n")
 
-    return opt_model
+    return inst
+
+
+def __num_dim(x: List) -> int:
+    i = 1
+    while isinstance(x[0], list):
+        i += 1
+        x = x[0]
+    return i
+
+
+def __round_elements(x: List, p: int) -> List:
+    for i in range(len(x)):
+        if isinstance(x[i], list):
+            x[i] = __round_elements(x[i], p)
+        elif isinstance(x[i], float):
+            x[i] = round(x[i], p)
+    return x
