@@ -67,7 +67,6 @@ class MznAnalyse:
     def run(
         self,
         mzn_files: List[Path],
-        backend_solver: str,
         solver_div: Solver,
         total_diverse_solutions: Optional[int] = None,
         reference_solution: Optional[Union[Result, Dict[str, Any]]] = None,

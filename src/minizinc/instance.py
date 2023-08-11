@@ -281,10 +281,10 @@ class Instance(Model):
         if mzn_analyse is None:
             raise ConfigurationError("mzn-analyse executable could not be located")
 
-        with self.files() as files, self._solver.configuration() as solver:
+        with self.files() as files:
             # assert self.output_type is not None
             for sol in mzn_analyse.run(
-                files, solver, self._solver, num_diverse_solutions, reference_solution
+                files, self._solver, num_diverse_solutions, reference_solution
             ):
                 yield sol
 
