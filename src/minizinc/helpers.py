@@ -1,7 +1,7 @@
 import sys
 from dataclasses import asdict, is_dataclass
 from datetime import timedelta
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Union
 
 import minizinc
 
@@ -111,37 +111,46 @@ def check_solution(
         return False
 
 
-def _add_diversity_to_opt_model(obj_annots, vars, sol_fix=None):
-    opt_model = ""
-
+def _add_diversity_to_opt_model(
+    inst: minizinc.Instance,
+    obj_annots: Dict[str, Any],
+    vars: List[Dict[str, Any]],
+    sol_fix: Dict[str, Iterable] = None,
+):
     for var in vars:
         # Current and previous variables
         varname = var["name"]
         varprevname = var["prev_name"]
 
         # Add the 'previous solution variables'
-        opt_model += f"{varprevname} = [];\n"
+        inst[varprevname] = []
 
         # Fix the solution to given once
         if sol_fix is not None:
-            opt_model += f"constraint {varname} == {list(sol_fix[varname])};\n"
+            inst.add_string(f"constraint {varname} == {list(sol_fix[varname])};\n")
 
     # Add the optimal objective.
     if obj_annots["sense"] != "0":
         obj_type = obj_annots["type"]
-        opt_model += f"{obj_type}: div_orig_opt_objective :: output;\n"
-        opt_model += f'constraint div_orig_opt_objective == {obj_annots["name"]};\n'
+        inst.add_string(f"{obj_type}: div_orig_opt_objective :: output;\n")
+        inst.add_string(f"constraint div_orig_opt_objective == {obj_annots['name']};\n")
         if obj_annots["sense"] == "-1":
-            opt_model += f'solve minimize {obj_annots["name"]};\n'
+            inst.add_string(f"solve minimize {obj_annots['name']};\n")
         else:
-            opt_model += f'solve maximize {obj_annots["name"]};\n'
+            inst.add_string(f"solve maximize {obj_annots['name']};\n")
     else:
-        opt_model += "solve satisfy;\n"
+        inst.add_string("solve satisfy;\n")
 
-    return opt_model
+    return inst
 
 
-def _add_diversity_to_div_model(inst, vars, obj_sense, gap, sols):
+def _add_diversity_to_div_model(
+    inst: minizinc.Instance,
+    vars: List[Dict[str, Any]],
+    obj_sense: str,
+    gap: Union[int, float],
+    sols: Dict[str, Any],
+):
     # Add the 'previous solution variables'
     for var in vars:
         # Current and previous variables
