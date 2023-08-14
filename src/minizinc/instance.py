@@ -254,14 +254,14 @@ class Instance(Model):
                     solution = result.solution
         return Result(status, solution, statistics)
 
-    def diverse_solutions(
+    async def diverse_solutions(
         self,
         num_diverse_solutions: Optional[int] = None,
         reference_solution: Optional[Union[Result, Dict]] = None,
         mzn_analyse: Optional[MznAnalyse] = None,
         optimise_diverse_sol: Optional[bool] = True,
         # **kwargs,
-    ) -> Iterator[Result]:
+    ) -> AsyncIterator[Result]:
         """Solves the Instance to find diverse solutions using its given solver configuration.
 
         Finds diverse solutions to the given MiniZinc instance using the given solver
@@ -361,7 +361,7 @@ class Instance(Model):
                 minizinc.logger.info(
                     f"[Sol 1] Solving the original ({model_type}) model to get a solution"
                 )
-            res: Result = child.solve()
+            res: Result = await child.solve_async()
             # TODO: I'm not sure this condition is guaranteed to hold
             # Ensure that the solution exists.
             assert res.solution is not None
@@ -393,7 +393,7 @@ class Instance(Model):
                 )
 
                 # Solve div model to get a diverse solution.
-                res = child.solve()
+                res = await child.solve_async()
 
             # Ensure that the solution exists.
             assert res.solution is not None
@@ -416,7 +416,7 @@ class Instance(Model):
                     )
 
                     # Solve the model
-                    res = child.solve()
+                    res = await child.solve_async()
 
                     # Ensure that the solution exists.
                     assert res.solution is not None
