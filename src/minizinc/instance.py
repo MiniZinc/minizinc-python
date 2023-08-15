@@ -306,7 +306,7 @@ class Instance(Model):
             obj_anns = div_anns["objective"]
             variables = div_anns["vars"]
 
-            if len(variables) > 0:
+            if len(variables) <= 0:
                 raise MiniZincError(message="No distance measure is specified")
 
             if solver is None:
@@ -351,9 +351,9 @@ class Instance(Model):
                         f"[Sol 1] Solving the original ({model_type}) model to get a solution"
                     )
                 res: Result = await child.solve_async()
-                # TODO: I'm not sure this condition is guaranteed to hold
-                # Ensure that the solution exists.
-                assert res.solution is not None
+                # No (additional) solutions can be found, return from function
+                if res.solution is None:
+                    return
 
             if reference_solution is None:
                 yield res
@@ -384,8 +384,9 @@ class Instance(Model):
                     # Solve div model to get a diverse solution.
                     res = await child.solve_async()
 
-                # Ensure that the solution exists.
-                assert res.solution is not None
+                # No (additional) solutions can be found, return from function
+                if res.solution is None:
+                    return
 
                 # Solve diverse solution to optimality after fixing the diversity vars to the obtained solution
                 if optimise_diverse_sol:
@@ -407,8 +408,9 @@ class Instance(Model):
                         # Solve the model
                         res = await child.solve_async()
 
-                        # Ensure that the solution exists.
-                        assert res.solution is not None
+                        # No (additional) solutions can be found, return from function
+                        if res.solution is None:
+                            return
 
                     # COMMENDTED OUT FOR NOW: Add distance to previous solutions
                     # sol_opt = asdict(res.solution)
