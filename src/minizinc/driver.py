@@ -26,7 +26,9 @@ CLI_REQUIRED_VERSION = (2, 6, 0)
 #: Default locations on MacOS where the MiniZinc packaged release would be installed
 MAC_LOCATIONS = [
     str(Path("/Applications/MiniZincIDE.app/Contents/Resources")),
+    str(Path("/Applications/MiniZincIDE.app/Contents/Resources/bin")),
     str(Path("~/Applications/MiniZincIDE.app/Contents/Resources").expanduser()),
+    str(Path("~/Applications/MiniZincIDE.app/Contents/Resources/bin").expanduser()),
 ]
 #: Default locations on Windows where the MiniZinc packaged release would be installed
 WIN_LOCATIONS = [

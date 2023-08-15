@@ -48,4 +48,5 @@ __all__ = [
     "Result",
     "Solver",
     "Status",
+    "Diversity",
 ]

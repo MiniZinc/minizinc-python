@@ -1,7 +1,7 @@
 import sys
 from dataclasses import asdict, is_dataclass
 from datetime import timedelta
-from typing import Any, Dict, Optional, Sequence, Union
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Union
 
 import minizinc
 
@@ -88,7 +88,7 @@ def check_solution(
         solution = asdict(solution)
 
     for k, v in solution.items():
-        if k not in ("objective", "__output_item"):
+        if k not in ("objective", "_output_item", "_checker"):
             instance[k] = v
     try:
         check = instance.solve(timeout=timedelta(seconds=5))
@@ -109,3 +109,97 @@ def check_solution(
         if status == minizinc.Status.ERROR:
             return True
         return False
+
+
+def _add_diversity_to_opt_model(
+    inst: minizinc.Instance,
+    obj_annots: Dict[str, Any],
+    vars: List[Dict[str, Any]],
+    sol_fix: Dict[str, Iterable] = None,
+):
+    for var in vars:
+        # Current and previous variables
+        varname = var["name"]
+        varprevname = var["prev_name"]
+
+        # Add the 'previous solution variables'
+        inst[varprevname] = []
+
+        # Fix the solution to given once
+        if sol_fix is not None:
+            inst.add_string(f"constraint {varname} == {list(sol_fix[varname])};\n")
+
+    # Add the optimal objective.
+    if obj_annots["sense"] != "0":
+        obj_type = obj_annots["type"]
+        inst.add_string(f"{obj_type}: div_orig_opt_objective :: output;\n")
+        inst.add_string(f"constraint div_orig_opt_objective == {obj_annots['name']};\n")
+        if obj_annots["sense"] == "-1":
+            inst.add_string(f"solve minimize {obj_annots['name']};\n")
+        else:
+            inst.add_string(f"solve maximize {obj_annots['name']};\n")
+    else:
+        inst.add_string("solve satisfy;\n")
+
+    return inst
+
+
+def _add_diversity_to_div_model(
+    inst: minizinc.Instance,
+    vars: List[Dict[str, Any]],
+    obj_sense: str,
+    gap: Union[int, float],
+    sols: Dict[str, Any],
+):
+    # Add the 'previous solution variables'
+    for var in vars:
+        # Current and previous variables
+        varname = var["name"]
+        varprevname = var["prev_name"]
+        varprevisfloat = "float" in var["prev_type"]
+
+        distfun = var["distance_function"]
+        prevsols = sols[varprevname] + [sols[varname]]
+        prevsol = (
+            __round_elements(prevsols, 6) if varprevisfloat else prevsols
+        )  # float values are rounded to six decimal places to avoid infeasibility due to decimal errors.
+
+        # Add the previous solutions to the model code.
+        inst[varprevname] = prevsol
+
+        # Add the diversity distance measurement to the model code.
+        dim = __num_dim(prevsols)
+        dotdots = ", ".join([".." for _ in range(dim - 1)])
+        varprevtype = "float" if "float" in var["prev_type"] else "int"
+        inst.add_string(
+            f"array [1..{len(prevsol)}] of var {varprevtype}: dist_{varname} :: output = [{distfun}({varname}, {varprevname}[sol,{dotdots}]) | sol in 1..{len(prevsol)}];\n"
+        )
+
+    # Add the bound on the objective.
+    if obj_sense == "-1":
+        inst.add_string(f"constraint div_orig_objective <= {gap};\n")
+    elif obj_sense == "1":
+        inst.add_string(f"constraint div_orig_objective >= {gap};\n")
+
+    # Add new objective: maximize diversity.
+    dist_sum = "+".join([f'sum(dist_{var["name"]})' for var in vars])
+    inst.add_string(f"solve maximize {dist_sum};\n")
+
+    return inst
+
+
+def __num_dim(x: List) -> int:
+    i = 1
+    while isinstance(x[0], list):
+        i += 1
+        x = x[0]
+    return i
+
+
+def __round_elements(x: List, p: int) -> List:
+    for i in range(len(x)):
+        if isinstance(x[i], list):
+            x[i] = __round_elements(x[i], p)
+        elif isinstance(x[i], float):
+            x[i] = round(x[i], p)
+    return x
