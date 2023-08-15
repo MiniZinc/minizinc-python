@@ -260,7 +260,7 @@ class Instance(Model):
         reference_solution: Optional[Union[Result, Dict]] = None,
         mzn_analyse: Optional[MznAnalyse] = None,
         optimise_diverse_sol: Optional[bool] = True,
-        # **kwargs,
+        solver: Optional[Solver] = None,
     ) -> AsyncIterator[Result]:
         """Solves the Instance to find diverse solutions using its given solver configuration.
 
@@ -306,9 +306,12 @@ class Instance(Model):
             obj_anns = div_anns["objective"]
             variables = div_anns["vars"]
 
-            assert len(variables) > 0, "Distance measure not specified"
+            if len(variables) > 0:
+                raise MiniZincError(message="No distance measure is specified")
 
-            inst = Instance(self._solver, Model(Path(div_file.name)))
+            if solver is None:
+                solver = self._solver
+            inst = Instance(solver, Model(Path(div_file.name)), self._driver)
 
             max_gap = None  # Place holder for max gap.
             prev_solutions = None  # Place holder for prev solutions
