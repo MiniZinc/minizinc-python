@@ -59,7 +59,6 @@ def check_result(
 
 class TimeoutError(Exception):
     """Exception raised for timeout errors (UNKNOWN status) when checking solutions"""
-
     pass
 
 
@@ -68,7 +67,7 @@ def check_solution(
     solution: Union[DataClass, Dict[str, Any]],
     status: minizinc.Status,
     solver: minizinc.Solver,
-    timeout: Optional[timedelta] = timedelta(seconds=30),
+    time_limit: Optional[timedelta] = timedelta(seconds=30),
 ) -> bool:
     """Checks a solution for a model using the given solver.
 
@@ -79,17 +78,19 @@ def check_solution(
     reached. Note that this method will not check the optimality of a solution.
 
     Args:
-        model (Model): To model for which the solution was provided
-        solution (Union[DataClass, Dict[str, Any]]): The solution to be checked
-        status (Status): The expected (compatible) MiniZinc status
+        model (Model): The model for which the solution was provided.
+        solution (Union[DataClass, Dict[str, Any]]): The solution to be checked.
+        status (Status): The expected (compatible) MiniZinc status.
         solver (Solver): The solver configuration used to check the
             solution.
-        timeout (Optional(timedelta)): An optional timeout for the checker. A
-            `TimeoutError` is raised if the timeout is exceeded.
+        time_limit (Optional(timedelta)): An optional time limit to check the
+            solution.
 
     Returns:
         bool: True if the given solution are correctly verified.
 
+    Raises:
+        TimeoutError: the given time limit was exceeded.
     """
     instance = minizinc.Instance(solver, model)
     if is_dataclass(solution):
@@ -98,25 +99,17 @@ def check_solution(
     for k, v in solution.items():
         if k not in ("objective", "__output_item"):
             instance[k] = v
-    try:
-        check = instance.solve(timeout=timeout)
+    check = instance.solve(timeout=time_limit)
 
-        if check.status is minizinc.Status.UNKNOWN:
-            raise TimeoutError(f"Solution checking failed because the checker exceeded the allotted timeout of {timeout}")
-        elif status == check.status:
-            return True
-        elif check.status in [
-            minizinc.Status.SATISFIED,
-            minizinc.Status.OPTIMAL_SOLUTION,
-        ] and status in [
-            minizinc.Status.SATISFIED,
-            minizinc.Status.OPTIMAL_SOLUTION,
-            minizinc.Status.ALL_SOLUTIONS,
-        ]:
-            return True
-        else:
-            return False
-    except minizinc.MiniZincError:
-        if status == minizinc.Status.ERROR:
-            return True
-        return False
+    if check.status is minizinc.Status.UNKNOWN:
+        raise TimeoutError(f"Solution checking failed because the checker exceeded the allotted timeout of {time_limit}")
+    elif status == check.status:
+        return True
+    return check.status in [
+        minizinc.Status.SATISFIED,
+        minizinc.Status.OPTIMAL_SOLUTION,
+    ] and status in [
+        minizinc.Status.SATISFIED,
+        minizinc.Status.OPTIMAL_SOLUTION,
+        minizinc.Status.ALL_SOLUTIONS,
+    ]

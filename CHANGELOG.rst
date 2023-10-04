@@ -15,6 +15,10 @@ Changed
 - Minimum supported version of MiniZinc has increased from 2.5.4 to 2.6.0.
 - ``Instance.solutions`` is now able to use the ``intermediate_solutions`` flag
   correctly and will only yield a single solution when it is set to ``False``.
+- ``helpers.check_solution`` now includes an optional time limit flag. If the
+  time limit is exceeded, then a ``TimeoutError`` exception will be raised.
+- ``helpers.check_solution`` will no longer capture MiniZinc exceptions.
+  Capturing these exceptions sometimes hid problems.
 
 0.9.0_ - 2023-04-04
 -------------------
