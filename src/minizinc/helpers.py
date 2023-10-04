@@ -57,12 +57,22 @@ def check_result(
 
     return True
 
+class TimeoutError(Exception):
+    """Exception raised for timeout errors (UNKNOWN status) when checking solutions"""
+
+    # def __init__(self, message, errors):            
+    #     # Call the base class constructor with the parameters it needs
+    #     super().__init__(message)
+
+    pass
+
 
 def check_solution(
     model: minizinc.Model,
     solution: Union[DataClass, Dict[str, Any]],
     status: minizinc.Status,
     solver: minizinc.Solver,
+    timeout: Optional[timedelta] = timedelta(seconds=30),
 ) -> bool:
     """Checks a solution for a model using the given solver.
 
@@ -78,6 +88,8 @@ def check_solution(
         status (Status): The expected (compatible) MiniZinc status
         solver (Solver): The solver configuration used to check the
             solution.
+        timeout (Optional(timedelta)): An optional timeout for the checker. A
+            `TimeoutError` is raised if the timeout is exceeded.
 
     Returns:
         bool: True if the given solution are correctly verified.
@@ -91,8 +103,11 @@ def check_solution(
         if k not in ("objective", "__output_item"):
             instance[k] = v
     try:
-        check = instance.solve(timeout=timedelta(seconds=5))
-        if status == check.status:
+        check = instance.solve(timeout=timeout)
+
+        if check.status is minizinc.Status.UNKNOWN:
+            raise TimeoutError(f"Solution checking failed because the checker exceeded the allotted timeout of {timeout}")
+        elif status == check.status:
             return True
         elif check.status in [
             minizinc.Status.SATISFIED,
