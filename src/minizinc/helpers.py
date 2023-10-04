@@ -60,10 +60,6 @@ def check_result(
 class TimeoutError(Exception):
     """Exception raised for timeout errors (UNKNOWN status) when checking solutions"""
 
-    # def __init__(self, message, errors):            
-    #     # Call the base class constructor with the parameters it needs
-    #     super().__init__(message)
-
     pass
 
 
