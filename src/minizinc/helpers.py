@@ -99,10 +99,10 @@ def check_solution(
     for k, v in solution.items():
         if k not in ("objective", "__output_item"):
             instance[k] = v
-    check = instance.solve(timeout=time_limit)
+    check = instance.solve(time_limit=time_limit)
 
     if check.status is minizinc.Status.UNKNOWN:
-        raise TimeoutError(f"Solution checking failed because the checker exceeded the allotted timeout of {time_limit}")
+        raise TimeoutError(f"Solution checking failed because the checker exceeded the allotted time limit of {time_limit}")
     elif status == check.status:
         return True
     return check.status in [

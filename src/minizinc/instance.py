@@ -102,7 +102,7 @@ class Instance(Model):
 
     def solve(
         self,
-        timeout: Optional[timedelta] = None,
+        time_limit: Optional[timedelta] = None,
         nr_solutions: Optional[int] = None,
         processes: Optional[int] = None,
         random_seed: Optional[int] = None,
@@ -110,6 +110,7 @@ class Instance(Model):
         intermediate_solutions: bool = False,
         free_search: bool = False,
         optimisation_level: Optional[int] = None,
+        timeout: Optional[timedelta] = None,
         **kwargs,
     ) -> Result:
         """Solves the Instance using its given solver configuration.
@@ -121,7 +122,7 @@ class Instance(Model):
         appropriate solution(s) to the problem.
 
         Args:
-            timeout (Optional[timedelta]): Set the time limit for the process of
+            time_limit (Optional[timedelta]): Set the time limit for the process of
                 solving the instance.
             nr_solutions (Optional[int]): The requested number of solution.
                 (Only available on satisfaction problems and when the ``-n``
@@ -167,7 +168,7 @@ class Instance(Model):
 
         """
         coroutine = self.solve_async(
-            timeout=timeout,
+            time_limit=time_limit,
             nr_solutions=nr_solutions,
             processes=processes,
             random_seed=random_seed,
@@ -175,6 +176,7 @@ class Instance(Model):
             intermediate_solutions=intermediate_solutions,
             free_search=free_search,
             optimisation_level=optimisation_level,
+            timeout=timeout,
             **kwargs,
         )
         try:
@@ -196,7 +198,7 @@ class Instance(Model):
 
     async def solve_async(
         self,
-        timeout: Optional[timedelta] = None,
+        time_limit: Optional[timedelta] = None,
         nr_solutions: Optional[int] = None,
         processes: Optional[int] = None,
         random_seed: Optional[int] = None,
@@ -204,6 +206,7 @@ class Instance(Model):
         intermediate_solutions=False,
         free_search: bool = False,
         optimisation_level: Optional[int] = None,
+        timeout: Optional[timedelta] = None,
         **kwargs,
     ) -> Result:
         """Solves the Instance using its given solver configuration in a coroutine.
@@ -233,7 +236,7 @@ class Instance(Model):
             solution = []
 
         async for result in self.solutions(
-            timeout=timeout,
+            time_limit=time_limit,
             nr_solutions=nr_solutions,
             processes=processes,
             random_seed=random_seed,
@@ -241,6 +244,7 @@ class Instance(Model):
             intermediate_solutions=intermediate_solutions,
             free_search=free_search,
             optimisation_level=optimisation_level,
+            timeout=timeout,
             **kwargs,
         ):
             status = result.status
@@ -254,7 +258,7 @@ class Instance(Model):
 
     async def solutions(
         self,
-        timeout: Optional[timedelta] = None,
+        time_limit: Optional[timedelta] = None,
         nr_solutions: Optional[int] = None,
         processes: Optional[int] = None,
         random_seed: Optional[int] = None,
@@ -264,6 +268,7 @@ class Instance(Model):
         optimisation_level: Optional[int] = None,
         verbose: bool = False,
         debug_output: Optional[Path] = None,
+        timeout: Optional[timedelta] = None,
         **kwargs,
     ) -> AsyncIterator[Result]:
         """An asynchronous generator for solutions of the MiniZinc instance.
@@ -281,6 +286,11 @@ class Instance(Model):
                 assigned, and statistical information.
 
         """
+        # rewrite deprecated option `timeout`
+        if timeout is not None and time_limit is None:
+            warnings.warn("The usage of the `timeout` parameter is deprecated, please use the `time_limit` parameter instead.", DeprecationWarning)
+            time_limit = timeout
+
         method = self.method  # Ensure self.analyse() has been executed
         # Set standard command line arguments
         cmd: List[Union[str, Path]] = [
@@ -339,8 +349,8 @@ class Instance(Model):
             cmd.extend(["-O", str(optimisation_level)])
 
         # Set time limit for the MiniZinc solving
-        if timeout is not None:
-            cmd.extend(["--time-limit", str(int(timeout.total_seconds() * 1000))])
+        if time_limit is not None:
+            cmd.extend(["--time-limit", str(int(time_limit.total_seconds() * 1000))])
 
         if verbose:
             cmd.append("--verbose")
@@ -651,14 +661,15 @@ class Instance(Model):
     @contextlib.contextmanager
     def flat(
         self,
-        timeout: Optional[timedelta] = None,
+        time_limit: Optional[timedelta] = None,
         optimisation_level: Optional[int] = None,
+        timeout: Optional[timedelta] = None,
         **kwargs,
     ):
         """Produce a FlatZinc file for the instance.
 
         Args:
-            timeout (Optional[timedelta]): Set the time limit for the process
+            time_limit (Optional[timedelta]): Set the time limit for the process
                 of flattening the instance. TODO: An exception is raised if the
                 timeout is reached.
             optimisation_level (Optional[int]): Set the MiniZinc compiler
@@ -680,6 +691,11 @@ class Instance(Model):
             and a dictionary the statistics of flattening
 
         """
+        # rewrite deprecated option `timeout`
+        if timeout is not None and time_limit is None:
+            warnings.warn("The usage of the `timeout` parameter is deprecated, please use the `time_limit` parameter instead.", DeprecationWarning)
+            time_limit = timeout
+
         cmd: List[Any] = ["--compile", "--statistics"]
 
         fzn = tempfile.NamedTemporaryFile(prefix="fzn_", suffix=".fzn", delete=False)
@@ -689,8 +705,8 @@ class Instance(Model):
         cmd.extend(["--ozn", ozn.name])
         ozn.close()
 
-        if timeout is not None:
-            cmd.extend(["--time-limit", str(int(timeout.total_seconds() * 1000))])
+        if time_limit is not None:
+            cmd.extend(["--time-limit", str(int(time_limit.total_seconds() * 1000))])
 
         # Set compiler optimisation level if specified
         if optimisation_level is not None:

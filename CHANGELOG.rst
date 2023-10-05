@@ -19,6 +19,10 @@ Changed
   time limit is exceeded, then a ``TimeoutError`` exception will be raised.
 - ``helpers.check_solution`` will no longer capture MiniZinc exceptions.
   Capturing these exceptions sometimes hid problems.
+- The ``timeout`` parameter has been renamed to ``time_limit`` in
+  ``Instance.solve``, ``Instance.solve_async``, and ``Instance.solutions``. The
+  ``timeout`` parameter is still accepted, but will add a
+  ``DeprecationWarning`` and will be removed in future versions.
 
 0.9.0_ - 2023-04-04
 -------------------
