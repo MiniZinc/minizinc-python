@@ -152,7 +152,7 @@ class TestEnum(InstanceTestCase):
 
 
 class TestSets(InstanceTestCase):
-    def test_ranges(self):
+    def test_sets(self):
         self.instance.add_string(
             """
             var set of 0..10: s;
@@ -163,8 +163,8 @@ class TestSets(InstanceTestCase):
 
         self.instance["s1"] = range(1, 4)
         result = self.instance.solve()
-        assert isinstance(result["s"], range)
-        assert result["s"] == range(1, 4)
+        assert isinstance(result["s"], set)
+        assert result["s"] == set(range(1, 4))
 
 
 class TestString(InstanceTestCase):
