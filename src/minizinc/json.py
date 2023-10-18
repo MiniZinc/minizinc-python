@@ -57,10 +57,6 @@ class MZNJSONDecoder(JSONDecoder):
     def mzn_object_hook(self, obj):
         if isinstance(obj, dict):
             if len(obj) == 1 and "set" in obj:
-                if len(obj["set"]) == 1 and isinstance(obj["set"][0], list):
-                    assert len(obj["set"][0]) == 2
-                    return range(obj["set"][0][0], obj["set"][0][1] + 1)
-
                 li = []
                 for item in obj["set"]:
                     if isinstance(item, list):
