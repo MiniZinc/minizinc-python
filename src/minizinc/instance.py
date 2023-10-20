@@ -10,6 +10,7 @@ import re
 import sys
 import tempfile
 import warnings
+from importlib import resources
 from dataclasses import asdict, field, is_dataclass, make_dataclass
 from datetime import timedelta
 from enum import EnumMeta
@@ -534,9 +535,13 @@ class Instance(Model):
             all_solutions or intermediate_solutions or (nr_solutions is not None)
         )
 
+        mznpy_share = resources.files(minizinc) / "share/minizinc-python"
         # Add files as last arguments
-        with self.files() as files, self._solver.configuration() as solver:
+        with resources.as_file(
+            mznpy_share
+        ) as share, self.files() as files, self._solver.configuration() as solver:
             assert self.output_type is not None
+            cmd.extend(["-I", share])
             cmd.extend(files)
 
             status = Status.UNKNOWN
