@@ -24,6 +24,12 @@ Changed
   ``timeout`` parameter is still accepted, but will add a
   ``DeprecationWarning`` and will be removed in future versions.
 
+Fixed
+^^^^^
+
+- Fix problem where some exceptions when creating processes where hidden and
+  would then cause errors where the ``proc`` variable did not exist.
+
 0.9.0_ - 2023-04-04
 -------------------
 

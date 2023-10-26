@@ -381,9 +381,9 @@ class Instance(Model):
             # Whether the status has changed since the last `yield`
             status_changed = False
 
+            # Run the MiniZinc process
+            proc = await self._driver._create_process(cmd, solver=solver)
             try:
-                # Run the MiniZinc process
-                proc = await self._driver._create_process(cmd, solver=solver)
                 assert isinstance(proc.stderr, asyncio.StreamReader)
                 assert isinstance(proc.stdout, asyncio.StreamReader)
 
