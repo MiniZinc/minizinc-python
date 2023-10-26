@@ -288,7 +288,10 @@ class Instance(Model):
         """
         # rewrite deprecated option `timeout`
         if timeout is not None and time_limit is None:
-            warnings.warn("The usage of the `timeout` parameter is deprecated, please use the `time_limit` parameter instead.", DeprecationWarning)
+            warnings.warn(
+                "The usage of the `timeout` parameter is deprecated, please use the `time_limit` parameter instead.",
+                DeprecationWarning,
+            )
             time_limit = timeout
 
         method = self.method  # Ensure self.analyse() has been executed
@@ -693,7 +696,10 @@ class Instance(Model):
         """
         # rewrite deprecated option `timeout`
         if timeout is not None and time_limit is None:
-            warnings.warn("The usage of the `timeout` parameter is deprecated, please use the `time_limit` parameter instead.", DeprecationWarning)
+            warnings.warn(
+                "The usage of the `timeout` parameter is deprecated, please use the `time_limit` parameter instead.",
+                DeprecationWarning,
+            )
             time_limit = timeout
 
         cmd: List[Any] = ["--compile", "--statistics"]

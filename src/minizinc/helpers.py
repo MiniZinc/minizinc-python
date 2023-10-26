@@ -57,8 +57,10 @@ def check_result(
 
     return True
 
+
 class TimeoutError(Exception):
     """Exception raised for timeout errors (UNKNOWN status) when checking solutions"""
+
     pass
 
 
@@ -102,7 +104,9 @@ def check_solution(
     check = instance.solve(time_limit=time_limit)
 
     if check.status is minizinc.Status.UNKNOWN:
-        raise TimeoutError(f"Solution checking failed because the checker exceeded the allotted time limit of {time_limit}")
+        raise TimeoutError(
+            f"Solution checking failed because the checker exceeded the allotted time limit of {time_limit}"
+        )
     elif status == check.status:
         return True
     return check.status in [
