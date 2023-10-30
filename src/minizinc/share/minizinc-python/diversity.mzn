@@ -12,25 +12,33 @@
 
 /** @group diversity.annotations Produce at most \a k number of diverse solutions with thier objective values 
   bounded between optimal value and \a gap % from the optimal. Diverse solutions are obtained one after the other
-  and distance to kth diverse solution is sum of pairwise distance to all the previous diverse solutions 
+  and distance to k-th diverse solution is sum of pairwise distance to all the previous diverse solutions 
 */
 annotation diversity_incremental(int: k, float: gap);
 /** @group diversity.annotations
-  Returns the Hamming distance between \a x and \a compare_fn
+  Use \a distance_metric on \a x when computing distance to solutions. Here same index on different solutions are compared.
+  For example, when obtaining the distance to k-th diverse solution using the incremental approach (diversity_incremental) each index of 
+  \a x in k-th solution is compared to the corresponding index of all previously obtained diverse solutions. 
 */
-annotation diverse_pairwise(array[int] of var int: x, string: compare_fn);
+annotation diverse_pairwise(array[int] of var int: x, string: distance_metric);
 /** @group diversity.annotations
-  Returns the Hamming distance between \a x and \a compare_fn
+  Use \a distance_metric on \a x when computing distance to solutions. Here same index on different solutions are compared.
+  For example, when obtaining the distance to k-th diverse solution using the incremental approach (diversity_incremental) each index of 
+  \a x in k-th solution is compared to the corresponding index of all previously obtained diverse solutions. 
 */
-annotation diverse_pairwise(array[$T] of var int: x, string: compare_fn) = diverse_pairwise(array1d(x), compare_fn);
+annotation diverse_pairwise(array[$T] of var int: x, string: distance_metric) = diverse_pairwise(array1d(x), distance_metric);
 /** @group diversity.annotations
-  Returns the Hamming distance between \a x and \a compare_fn
+  Use \a distance_metric on \a x when computing distance to solutions. Here same index on different solutions are compared.
+  For example, when obtaining the distance to k-th diverse solution using the incremental approach (diversity_incremental) each index of 
+  \a x in k-th solution is compared to the corresponding index of all previously obtained diverse solutions. 
 */
-annotation diverse_pairwise(array[int] of var float: x, string: compare_fn);
+annotation diverse_pairwise(array[int] of var float: x, string: distance_metric);
 /** @group diversity.annotations
-  Returns the Hamming distance between \a x and \a compare_fn
+  Use \a distance_metric on \a x when computing distance to solutions. Here same index on different solutions are compared.
+  For example, when obtaining the distance to k-th diverse solution using the incremental approach (diversity_incremental) each index of 
+  \a x in k-th solution is compared to the corresponding index of all previously obtained diverse solutions. 
 */
-annotation diverse_pairwise(array[$T] of var float: x, string: compare_fn) = diverse_pairwise(array1d(x), compare_fn);
+annotation diverse_pairwise(array[$T] of var float: x, string: distance_metric) = diverse_pairwise(array1d(x), distance_metric);
 
 /***
  @groupdef diversity.distance Distance functions provided in the MiniZinc diversity extension.
