@@ -10,16 +10,27 @@
  @groupdef diversity.annotations Annotations provided to guide the MiniZinc diversity extension.
 */
 
+/** @group diversity.annotations Produce at most \a k number of diverse solutions with thier objective values 
+  bounded between optimal value and \a gap % from the optimal. Diverse solutions are obtained one after the other
+  and distance to kth diverse solution is sum of pairwise distance to all the previous diverse solutions 
+*/
 annotation diversity_incremental(int: k, float: gap);
-annotation diversity_global(int: k, float: gap);
-annotation diversity_pairwise(array[int] of var int: x, string: compare_fn);
-annotation diversity_pairwise(array[int,int] of var int: x, string: compare_fn);
-annotation diversity_pairwise(array[int] of var float: x, string: compare_fn);
-annotation diversity_pairwise(array[int,int] of var float: x, string: compare_fn);
-annotation diversity_aggregator(string);
-annotation diversity_combinator(string);
-annotation diversity_intra_constraint(string);
-annotation diversity_inter_constraint(string);
+/** @group diversity.annotations
+  Returns the Hamming distance between \a x and \a compare_fn
+*/
+annotation diverse_pairwise(array[int] of var int: x, string: compare_fn);
+/** @group diversity.annotations
+  Returns the Hamming distance between \a x and \a compare_fn
+*/
+annotation diverse_pairwise(array[$T] of var int: x, string: compare_fn) = diverse_pairwise(array1d(x), compare_fn);
+/** @group diversity.annotations
+  Returns the Hamming distance between \a x and \a compare_fn
+*/
+annotation diverse_pairwise(array[int] of var float: x, string: compare_fn);
+/** @group diversity.annotations
+  Returns the Hamming distance between \a x and \a compare_fn
+*/
+annotation diverse_pairwise(array[$T] of var float: x, string: compare_fn) = diverse_pairwise(array1d(x), compare_fn);
 
 /***
  @groupdef diversity.distance Distance functions provided in the MiniZinc diversity extension.
@@ -33,7 +44,7 @@ function int: hamming_distance(
   array[$A] of opt $T: y
 ) = assert(
   index_sets_agree(x, y),
-  "hamming_distance: x and x must have identical index sets",
+  "hamming_distance: x and y must have identical index sets",
   let {
     any: xx = array1d(x);
     any: yy = array1d(y);
@@ -48,7 +59,7 @@ function var int: hamming_distance(
   array[$A] of var opt $T: y
 ) = assert(
   index_sets_agree(x, y),
-  "hamming_distance: x and x must have identical index sets",
+  "hamming_distance: x and y must have identical index sets",
   let {
     any: xx = array1d(x);
     any: yy = array1d(y);
@@ -63,7 +74,7 @@ function int: manhattan_distance(
   array[$A] of $$T: y
 ) = assert(
   index_sets_agree(x, y),
-  "manhattan_distance: x and x must have identical index sets",
+  "manhattan_distance: x and y must have identical index sets",
   let {
     any: xx = array1d(x);
     any: yy = array1d(y);
@@ -78,7 +89,7 @@ function var int: manhattan_distance(
   array[$A] of var $$T: y
 ) = assert(
   index_sets_agree(x, y),
-  "manhattan_distance: x and x must have identical index sets",
+  "manhattan_distance: x and y must have identical index sets",
   let {
     any: xx = array1d(x);
     any: yy = array1d(y);
@@ -93,7 +104,7 @@ function float: manhattan_distance(
   array[$A] of float: y
 ) = assert(
   index_sets_agree(x, y),
-  "manhattan_distance: x and x must have identical index sets",
+  "manhattan_distance: x and y must have identical index sets",
   let {
     any: xx = array1d(x);
     any: yy = array1d(y);
@@ -109,7 +120,7 @@ function var float: manhattan_distance(
   array[$A] of var float: y
 ) = assert(
   index_sets_agree(x, y),
-  "manhattan_distance: x and x must have identical index sets",
+  "manhattan_distance: x and y must have identical index sets",
   let {
     any: xx = array1d(x);
     any: yy = array1d(y);
