@@ -85,7 +85,7 @@ target-version = ['py37', 'py38', 'py39', 'py310']
 profile = "black"
 
 [tool.mypy]
-python_version = "3.7"
+python_version = "3.8"
 platform = "linux"
 
 # do not follow imports (except for ones found in typeshed)

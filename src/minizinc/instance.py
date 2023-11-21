@@ -390,8 +390,7 @@ class Instance(Model):
                 assert isinstance(proc.stderr, asyncio.StreamReader)
                 assert isinstance(proc.stdout, asyncio.StreamReader)
 
-                # Python 3.7+: replace with asyncio.create_task
-                read_stderr = asyncio.ensure_future(_read_all(proc.stderr))
+                read_stderr = asyncio.create_task(_read_all(proc.stderr))
 
                 async for obj in decode_async_json_stream(
                     proc.stdout, cls=MZNJSONDecoder, enum_map=self._enum_map

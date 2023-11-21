@@ -9,6 +9,12 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Removed
+^^^^^^^
+
+- **BREAKING:** The project no longer supports Python 3.7. This change will make
+  it easier to manage MiniZinc Python's build system.
+
 Changed
 ^^^^^^^
 
