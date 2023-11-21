@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.7", "3.11", "pypy3.10"]
-        minizinc-version: ["2.7.6", "2.6.0"]
+        minizinc-version: ["2.8.0", "2.6.0"]
 
     env:
       MINIZINC_URL: https://github.com/MiniZinc/MiniZincIDE/releases/download/${{ matrix.minizinc-version }}/MiniZincIDE-${{ matrix.minizinc-version }}-x86_64.AppImage
