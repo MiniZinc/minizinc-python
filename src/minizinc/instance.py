@@ -67,6 +67,7 @@ class Instance(Model):
     _input_cache: Optional[Dict[str, Type]] = None
     _output_cache: Optional[Dict[str, Type]] = None
     _method_cache: Optional[Method] = None
+    _has_output_item_cache: Optional[bool] = None
     _parent: Optional["Instance"] = None
     _field_renames: List[Tuple[str, str]]
 
@@ -301,9 +302,11 @@ class Instance(Model):
             "json",  # Ensure MiniZinc's solutions are given as parsable JSON
             "--output-time",  # Output MiniZinc recorded time with every solution
             "--output-objective",  # Output objective value with every solution
-            "--output-output-item",  # Add the model's evaluated output item to the json output object
             "--statistics",  # Enable statistics
         ]
+        # Add the model's evaluated output item to the json output object
+        if self.has_output_item:
+            cmd.append("--output-output-item")
 
         # Process number of solutions to be generated
         if all_solutions:
@@ -580,6 +583,18 @@ class Instance(Model):
         assert self._output_cache is not None
         return self._output_cache
 
+    @property
+    def has_output_item(self) -> Method:
+        """Query whether the instance constains an output item.
+
+        Returns:
+            Method: Method of the goal used by the Instance.
+        """
+        if self._has_output_item_cache is None:
+            self.analyse()
+        assert self._has_output_item_cache is not None
+        return self._has_output_item_cache
+
     def analyse(self):
         """Discovers basic information about a CLIInstance
 
@@ -605,7 +620,8 @@ class Instance(Model):
         self._output_cache = {}
         for key, value in interface["output"].items():
             self._output_cache[key] = _to_python_type(value)
-        if interface.get("has_output_item", True):
+        self._has_output_item_cache = interface.get("has_output_item", True)
+        if self._has_output_item_cache:
             self._output_cache["_output_item"] = str
         if self._checker:
             self._output_cache["_checker"] = str
