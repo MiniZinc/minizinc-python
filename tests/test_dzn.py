@@ -52,7 +52,7 @@ def test_dzn_set():
     assert parse_dzn("x = {}") == {"x": set()}
     assert parse_dzn("x = {1}") == {"x": {1}}
     assert parse_dzn("x = {1,2,3}") == {"x": {1, 2, 3}}
-    assert parse_dzn("x = {1,1,2}") == {"x": {1, 1, 2}}
+    assert parse_dzn("x = {1,1,2}") == {"x": {1, 2}}
     assert parse_dzn("x = {1.2,2.1}") == {"x": {1.2, 2.1}}
 
     # Set Ranges

@@ -283,7 +283,7 @@ class Result:
             else:
                 raise KeyError
         except AttributeError:
-            raise KeyError
+            raise KeyError from None
 
     def __len__(self):
         """Returns the number of solutions included in the Result object

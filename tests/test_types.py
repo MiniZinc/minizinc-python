@@ -234,7 +234,6 @@ class TestRecord(InstanceTestCase):
         reason="requires MiniZinc 2.7 or higher",
     )
     def test_simple_record(self):
-        pytest.skip
         self.instance.add_string(
             """
         var record(1..3: a, bool: b, 1.0..3.0: c): x;

@@ -292,6 +292,7 @@ class Instance(Model):
             warnings.warn(
                 "The usage of the `timeout` parameter is deprecated, please use the `time_limit` parameter instead.",
                 DeprecationWarning,
+                stacklevel=1,
             )
             time_limit = timeout
 
@@ -364,7 +365,7 @@ class Instance(Model):
         for flag, value in kwargs.items():
             if not flag.startswith("-"):
                 flag = "--" + flag
-            if type(value) is bool:
+            if isinstance(value, bool):
                 if value:
                     cmd.append(flag)
             else:
@@ -584,11 +585,11 @@ class Instance(Model):
         return self._output_cache
 
     @property
-    def has_output_item(self) -> Method:
+    def has_output_item(self) -> bool:
         """Query whether the instance constains an output item.
 
         Returns:
-            Method: Method of the goal used by the Instance.
+            bool: whether the instance contains an output item.
         """
         if self._has_output_item_cache is None:
             self.analyse()
@@ -645,6 +646,7 @@ class Instance(Model):
                         f"MiniZinc field '{k}' is a Python keyword. It has been "
                         f"renamed to 'mzn_{k}'",
                         SyntaxWarning,
+                        stacklevel=1,
                     )
                     self._field_renames.append((k, "mzn_" + k))
                     fields.append(("mzn_" + k, v))
@@ -656,7 +658,7 @@ class Instance(Model):
             )
 
             methods = {}
-            if interface.get("has_output_item", True):
+            if self._has_output_item_cache:
                 methods["__str__"] = (
                     lambda myself: myself.__repr__()
                     if myself._output_item == ""
@@ -714,6 +716,7 @@ class Instance(Model):
             warnings.warn(
                 "The usage of the `timeout` parameter is deprecated, please use the `time_limit` parameter instead.",
                 DeprecationWarning,
+                stacklevel=1,
             )
             time_limit = timeout
 
@@ -735,8 +738,8 @@ class Instance(Model):
 
         for flag, value in kwargs.items():
             if not flag.startswith("-"):
-                flag = "--" + flag
-            if type(value) is bool:
+                flag = f"--{flag}"
+            if isinstance(value, bool):
                 if value:
                     cmd.append(flag)
             else:
@@ -836,6 +839,7 @@ def _to_python_type(mzn_type: dict) -> Type:
         warnings.warn(
             f"Unable to determine minizinc type `{basetype}` assuming integer type",
             FutureWarning,
+            stacklevel=1,
         )
         pytype = int
 

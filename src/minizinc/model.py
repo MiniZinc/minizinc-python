@@ -183,7 +183,8 @@ class Model:
                 except LarkError:
                     warnings.warn(
                         f"Could not parse {file}. Parameters included within this file "
-                        f"are not available in Python"
+                        f"are not available in Python",
+                        stacklevel=1,
                     )
                     with self._lock:
                         self._includes.append(file)

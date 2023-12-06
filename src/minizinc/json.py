@@ -81,7 +81,7 @@ def decode_json_stream(byte_stream: bytes, cls=None, **kw):
                 obj["type"] == "error" and obj["what"] == "warning"
             ):
                 # TODO: stack trace and location
-                warnings.warn(obj["message"], MiniZincWarning)
+                warnings.warn(obj["message"], MiniZincWarning, stacklevel=1)
             elif obj["type"] == "error":
                 raise error_from_stream_obj(obj)
             else:
@@ -101,7 +101,7 @@ async def decode_async_json_stream(stream: asyncio.StreamReader, cls=None, **kw)
                 obj["type"] == "error" and obj["what"] == "warning"
             ):
                 # TODO: stack trace and location
-                warnings.warn(obj["message"], MiniZincWarning)
+                warnings.warn(obj["message"], MiniZincWarning, stacklevel=1)
             elif obj["type"] == "error":
                 raise error_from_stream_obj(obj)
             else:

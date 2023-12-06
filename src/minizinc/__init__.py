@@ -27,12 +27,14 @@ try:
             "MiniZinc was not found on the system. No default driver could be "
             "initialised.",
             RuntimeWarning,
+            stacklevel=1,
         )
 except ConfigurationError as err:
     warnings.warn(
         f"The MiniZinc version found on the system is incompatible with "
         f"MiniZinc Python:\n{err}\n No default driver could be initialised.",
         RuntimeWarning,
+        stacklevel=1,
     )
 
 __all__ = [

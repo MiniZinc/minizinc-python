@@ -98,6 +98,7 @@ def check_solution(
     if is_dataclass(solution):
         solution = asdict(solution)
 
+    assert isinstance(solution, dict)
     for k, v in solution.items():
         if k not in ("objective", "__output_item"):
             instance[k] = v
