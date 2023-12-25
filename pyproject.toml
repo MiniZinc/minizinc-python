@@ -57,7 +57,7 @@ numpy = { version = "^1.22.4", python = ">=3.8,<3.11" }
 [tool.poetry.group.test]
 optional = true
 [tool.poetry.group.test.dependencies]
-mypy = ">=0.950,<1.8"
+mypy = ">=0.950,<1.9"
 types-dataclasses = "^0.6.5"
 types-setuptools = ">=65.3,<70.0"
 # Testing Framework
