@@ -30,7 +30,7 @@ jobs:
           sudo apt-get install libfuse2 libegl1
       - name: Cache MiniZinc
         id: cache-minizinc
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/bin/minizinc
           key: ${{ env.MINIZINC_URL }}
