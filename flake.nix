@@ -1,5 +1,5 @@
 {
-  description = "Application packaged using poetry2nix";
+  description = "Python package to access MiniZinc";
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
@@ -30,5 +30,6 @@
           inputsFrom = [ self.packages.${system}.minizinc-python-dev ];
           packages = [ pkgs.poetry ];
         };
-      });
+      }
+    );
 }
