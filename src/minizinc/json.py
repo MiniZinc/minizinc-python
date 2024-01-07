@@ -5,9 +5,9 @@
 import asyncio
 import warnings
 from enum import Enum
-from json import JSONDecoder, JSONEncoder, loads
+from json import JSONDecodeError, JSONDecoder, JSONEncoder, loads
 
-from .error import MiniZincWarning, error_from_stream_obj
+from .error import MiniZincError, MiniZincWarning, error_from_stream_obj
 from .types import AnonEnum, ConstrEnum
 
 try:
@@ -76,7 +76,12 @@ def decode_json_stream(byte_stream: bytes, cls=None, **kw):
     for line in byte_stream.split(b"\n"):
         line = line.strip()
         if line != b"":
-            obj = loads(line, cls=cls, **kw)
+            try:
+                obj = loads(line, cls=cls, **kw)
+            except JSONDecodeError as e:
+                raise MiniZincError(
+                    message=f"MiniZinc driver output a message that cannot be parsed as JSON:\n{repr(line)}"
+                ) from e
             if obj["type"] == "warning" or (
                 obj["type"] == "error" and obj["what"] == "warning"
             ):
@@ -96,7 +101,12 @@ async def decode_async_json_stream(stream: asyncio.StreamReader, cls=None, **kw)
             buffer = buffer.strip()
             if buffer == b"":
                 continue
-            obj = loads(buffer, cls=cls, **kw)
+            try:
+                obj = loads(buffer, cls=cls, **kw)
+            except JSONDecodeError as e:
+                raise MiniZincError(
+                    message=f"MiniZinc driver output a message that cannot be parsed as JSON:\n{repr(buffer)}"
+                ) from e
             if obj["type"] == "warning" or (
                 obj["type"] == "error" and obj["what"] == "warning"
             ):

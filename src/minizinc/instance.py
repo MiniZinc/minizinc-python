@@ -424,9 +424,14 @@ class Instance(Model):
 
                 # Parse and output the remaining statistics and status messages
                 if remainder != b"":
-                    obj = json.loads(
-                        remainder, cls=MZNJSONDecoder, enum_map=self._enum_map
-                    )
+                    try:
+                        obj = json.loads(
+                            remainder, cls=MZNJSONDecoder, enum_map=self._enum_map
+                        )
+                    except json.JSONDecodeError as e:
+                        raise MiniZincError(
+                            message=f"MiniZinc driver output a message that cannot be parsed as JSON:\n{repr(remainder)}"
+                        ) from e
                     new_solution, new_status, statistics = self._parse_stream_obj(
                         obj, statistics
                     )
