@@ -62,7 +62,7 @@ types-dataclasses = "^0.6.5"
 types-setuptools = ">=65.3,<70.0"
 # Testing Framework
 pytest = "^7.1"
-ruff = "0.1.11"
+ruff = "0.1.13"
 
 [tool.poetry.extras]
 dzn = ["lark-parser"]
