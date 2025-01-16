@@ -342,9 +342,11 @@ class Instance(Model):
             with inst.branch() as child:
                 # Add constraints to the model that sets the decision variables to the reference solution, if provided
                 if reference_solution:
-                    if isinstance(reference_solution, Result) and is_dataclass(
-                        reference_solution.solution
-                    ) and not isinstance(reference_solution.solution, type):
+                    if (
+                        isinstance(reference_solution, Result)
+                        and is_dataclass(reference_solution.solution)
+                        and not isinstance(reference_solution.solution, type)
+                    ):
                         solution_obj = asdict(reference_solution.solution)
                     else:
                         assert isinstance(reference_solution, dict)
