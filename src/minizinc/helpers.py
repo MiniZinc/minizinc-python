@@ -162,7 +162,7 @@ def _add_diversity_to_opt_model(
 def _add_diversity_to_div_model(
     inst: minizinc.Instance,
     vars: List[Dict[str, Any]],
-    obj_sense: str,
+    div_anns: Dict[str, Any],
     gap: Union[int, float],
     sols: Dict[str, Any],
 ):
@@ -190,6 +190,26 @@ def _add_diversity_to_div_model(
             f"array [1..{len(prevsol)}] of var {varprevtype}: dist_{varname} :: output = [{distfun}({varname}, {varprevname}[sol,{dotdots}]) | sol in 1..{len(prevsol)}];\n"
         )
 
+        # Add minimum distance to the diversity distance measurement in the model code
+        if var["lb"] != "infinity":
+            inst.add_string(
+                f"constraint forall(sol in 1..{len(prevsol)})( dist_{varname}[sol] >= {var['lb']});"
+            )
+
+        # Add maximum distance to the diversity distance measurement in the model code
+        if var["ub"] != "infinity":
+            inst.add_string(
+                f"constraint forall(sol in 1..{len(prevsol)})( dist_{varname}[sol] <= {var['ub']});"
+            )
+
+    obj_sense = div_anns["objective"]["sense"]
+    aggregator = (
+        div_anns["aggregator"] if div_anns["aggregator"] != "" else "sum"
+    )
+    combinator = (
+        div_anns["combinator"] if div_anns["combinator"] != "" else "sum"
+    )
+
     # Add the bound on the objective.
     if obj_sense == "-1":
         inst.add_string(f"constraint div_orig_objective <= {gap};\n")
@@ -197,8 +217,11 @@ def _add_diversity_to_div_model(
         inst.add_string(f"constraint div_orig_objective >= {gap};\n")
 
     # Add new objective: maximize diversity.
-    dist_sum = "+".join([f'sum(dist_{var["name"]})' for var in vars])
-    inst.add_string(f"solve maximize {dist_sum};\n")
+    div_combinator = ", ".join(
+        [f'{var["coef"]} * dist_{var["name"]}[sol]' for var in vars]
+    )
+    dist_total = f"{aggregator}([{combinator}([{div_combinator}]) | sol in 1..{len(prevsol)}])"
+    inst.add_string(f"solve maximize {dist_total};\n")
 
     return inst
 
