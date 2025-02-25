@@ -192,6 +192,8 @@ class Instance(Model):
                 )
             return asyncio.run(coroutine)
         except RuntimeError as r:
+            coroutine.close()
+            del coroutine
             if "called from a running event loop" in r.args[0]:
                 raise RuntimeError(
                     "the synchronous MiniZinc Python `solve()` method was called from"
