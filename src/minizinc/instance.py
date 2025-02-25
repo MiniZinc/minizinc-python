@@ -661,9 +661,11 @@ class Instance(Model):
                 # an unexpected Python exception occurred
                 # First, terminate the process
                 if sys.platform == "win32":
-                    import signal
-
-                    proc.send_signal(signal.CTRL_C_EVENT)
+                    with open(
+                        f"\\\\.\\pipe\\minizinc-{proc.pid}", mode="w"
+                    ) as named_pipe:
+                        # Trigger MiniZinc termination
+                        named_pipe.write("")
                 else:
                     proc.terminate()
                 _ = await proc.wait()
