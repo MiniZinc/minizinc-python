@@ -110,7 +110,7 @@ class Instance(Model):
         processes: Optional[int] = None,
         random_seed: Optional[int] = None,
         all_solutions: bool = False,
-        intermediate_solutions: bool = False,
+        intermediate_solutions: Optional[bool] = None,
         free_search: bool = False,
         optimisation_level: Optional[int] = None,
         timeout: Optional[timedelta] = None,
@@ -141,10 +141,13 @@ class Instance(Model):
             all_solutions (bool): Request to solver to find all solutions. (Only
                 available on satisfaction problems and when the ``-a`` flag is
                 supported by the solver)
-            intermediate_solutions (bool): Request the solver to output any
-                intermediate solutions that are found during the solving
-                process. (Only available on optimisation problems and when the
-                ``-a`` flag is supported by the solver)
+            intermediate_solutions (Optional[bool]): Request the solver to
+                output any intermediate solutions that are found during the
+                solving process. If left to ``None``, then intermediate
+                solutions might still be requested to ensure that the solving
+                process gives its final solution. (Only available on
+                optimisation problems and when the ``-i`` or ``-a`` flag is
+                supported by the solver)
             optimisation_level (Optional[int]): Set the MiniZinc compiler
                 optimisation level.
 
@@ -207,8 +210,8 @@ class Instance(Model):
         nr_solutions: Optional[int] = None,
         processes: Optional[int] = None,
         random_seed: Optional[int] = None,
-        all_solutions=False,
-        intermediate_solutions=False,
+        all_solutions: bool = False,
+        intermediate_solutions: Optional[bool] = None,
         free_search: bool = False,
         optimisation_level: Optional[int] = None,
         timeout: Optional[timedelta] = None,
@@ -256,6 +259,7 @@ class Instance(Model):
             statistics.update(result.statistics)
             if result.solution is not None:
                 if multiple_solutions:
+                    assert solution is not None
                     solution.append(result.solution)
                 else:
                     solution = result.solution
@@ -454,8 +458,8 @@ class Instance(Model):
         nr_solutions: Optional[int] = None,
         processes: Optional[int] = None,
         random_seed: Optional[int] = None,
-        all_solutions=False,
-        intermediate_solutions=False,
+        all_solutions: bool = False,
+        intermediate_solutions: Optional[bool] = None,
         free_search: bool = False,
         optimisation_level: Optional[int] = None,
         verbose: bool = False,
@@ -537,12 +541,20 @@ class Instance(Model):
                         "Solver does not support the -n-o flag"
                     )
                 cmd.extend(["--num-optimal", str(nr_solutions)])
-        elif (
-            "-i" not in self._solver.stdFlags
-            or "-a" not in self._solver.stdFlags
+        elif intermediate_solutions:
+            if (
+                "-i" not in self._solver.stdFlags
+                and "-a" not in self._solver.stdFlags
+            ):
+                raise NotImplementedError(
+                    "Solver does not support the -i and -a flags"
+                )
+            cmd.append("--intermediate-solutions")
+        elif (intermediate_solutions is None and time_limit is not None) and (
+            "-i" in self._solver.stdFlags or "-a" in self._solver.stdFlags
         ):
-            # Enable intermediate solutions when possible
-            # (ensure that solvers always output their best solution)
+            # Enable intermediate solutions just in case to ensure that there is
+            # a best solution available at the time limit.
             cmd.append("--intermediate-solutions")
         # Set number of processes to be used
         if processes is not None:

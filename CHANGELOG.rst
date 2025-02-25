@@ -37,6 +37,9 @@ Changed
   ``Instance.solve``, ``Instance.solve_async``, and ``Instance.solutions``. The
   ``timeout`` parameter is still accepted, but will add a
   ``DeprecationWarning`` and will be removed in future versions.
+- The ``intermediate_solutions`` parameter can now be explicitly set to
+  ``False`` to avoid the ``-i`` flag to be passed to MiniZinc, which is
+  generally added to ensure that a final solution is available.
 
 Fixed
 ^^^^^
