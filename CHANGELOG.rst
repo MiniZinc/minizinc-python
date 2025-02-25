@@ -9,6 +9,14 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+
+Added
+^^^^^
+
+- Add the ``Instance.diverse_solutions`` method to use the MiniZinc
+  experimental feature to model diversity and try and find a set of diverse
+  solutions for the given problem.
+
 Removed
 ^^^^^^^
 
@@ -35,6 +43,8 @@ Fixed
 
 - Fix problem where some exceptions when creating processes where hidden and
   would then cause errors where the ``proc`` variable did not exist.
+- Fix issue where MiniZinc would not correctly be terminated on Windows when
+  the Python process was interrupted.
 
 0.9.0_ - 2023-04-04
 -------------------
@@ -88,7 +98,7 @@ Removed
 - **BREAKING:** The project no longer contains the (uncompleted) direct library
   connection to libminizinc. With this change come some simplications in methods of
   relocated from ``CLIDriver`` and ``CLIInstance``, and the move of ``find_driver`` to
-  ``Driver.find``. 
+  ``Driver.find``.
 
 Fixed
 ^^^^^
@@ -107,7 +117,7 @@ Added
 Fixed
 ^^^^^
 
-- Do not raise error about unsupported solver flags when MiniZinc driver would 
+- Do not raise error about unsupported solver flags when MiniZinc driver would
   not raise an error.
 - Fix warnings caused by unterminated coroutines when using the asynchronous
   iterators
