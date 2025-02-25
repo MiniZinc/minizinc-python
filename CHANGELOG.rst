@@ -9,6 +9,8 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+0.10.0_ - 2025-02-25
+-------------------
 
 Added
 ^^^^^
@@ -394,9 +396,10 @@ Initial release of MiniZinc Python. This release contains an initial
 functionality to use MiniZinc directly from Python using an interface to the
 ``minizinc`` command line application. The exact functionality available in this
 release is best described in the `documentation
-<https://minizinc-python.readthedocs.io/en/0.1.0/>`_.
+<https://python.minizinc.dev/en/0.1.0/>`_.
 
 
+..  _0.10.0: https://github.com/MiniZinc/minizinc-python/compare/0.9.0...0.10.0
 ..  _0.9.0: https://github.com/MiniZinc/minizinc-python/compare/0.8.0...0.9.0
 ..  _0.8.0: https://github.com/MiniZinc/minizinc-python/compare/0.7.0...0.8.0
 ..  _0.7.0: https://github.com/MiniZinc/minizinc-python/compare/0.6.0...0.7.0

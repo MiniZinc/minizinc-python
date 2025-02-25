@@ -13,7 +13,7 @@ from .result import Result, Status
 from .solver import Solver
 from .types import AnonEnum, ConstrEnum
 
-__version__ = "0.9.1"
+__version__ = "0.10.0"
 
 logger = logging.getLogger("minizinc")
 

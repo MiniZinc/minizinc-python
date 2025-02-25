@@ -218,7 +218,7 @@ def _add_diversity_to_div_model(
 
     # Add new objective: maximize diversity.
     div_combinator = ", ".join(
-        [f'{var["coef"]} * dist_{var["name"]}[sol]' for var in vars]
+        [f"{var['coef']} * dist_{var['name']}[sol]" for var in vars]
     )
     dist_total = f"{aggregator}([{combinator}([{div_combinator}]) | sol in 1..{len(prevsol)}])"
     inst.add_string(f"solve maximize {dist_total};\n")

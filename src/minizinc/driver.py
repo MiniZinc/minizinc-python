@@ -213,7 +213,7 @@ class Driver:
                 str(arg) for arg in args
             ]
             minizinc.logger.debug(
-                f"CLIDriver:run -> command: \"{' '.join(cmd)}\""
+                f'CLIDriver:run -> command: "{" ".join(cmd)}"'
             )
             output = subprocess.run(
                 cmd,
@@ -231,7 +231,7 @@ class Driver:
                     "--allow-multiple-assignments",
                 ] + [str(arg) for arg in args]
                 minizinc.logger.debug(
-                    f"CLIDriver:run -> command: \"{' '.join(cmd)}\""
+                    f'CLIDriver:run -> command: "{" ".join(cmd)}"'
                 )
                 output = subprocess.run(
                     cmd,
@@ -275,7 +275,7 @@ class Driver:
             minizinc.logger.debug(
                 f"CLIDriver:create_process -> program: {str(self._executable)} "
                 f'args: "--allow-multiple-assignments '
-                f"{' '.join(str(arg) for arg in args)}\""
+                f'{" ".join(str(arg) for arg in args)}"'
             )
             proc = await create_subprocess_exec(
                 str(self._executable),
@@ -290,7 +290,7 @@ class Driver:
             minizinc.logger.debug(
                 f"CLIDriver:create_process -> program: {str(self._executable)} "
                 f'args: "--solver {solver} --allow-multiple-assignments '
-                f"{' '.join(str(arg) for arg in args)}\""
+                f'{" ".join(str(arg) for arg in args)}"'
             )
             proc = await create_subprocess_exec(
                 str(self._executable),

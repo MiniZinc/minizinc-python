@@ -10,7 +10,7 @@
   <p align="center">
     The python package that allows you to access all of MiniZinc's functionalities directly from Python.
     <br />
-    <a href="https://minizinc-python.readthedocs.io/en/latest/"><strong>Explore the docs »</strong></a>
+    <a href="https://python.minizinc.dev/en/latest/"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     <a href="https://github.com/MiniZinc/minizinc-python/issues">Report Bug</a>
@@ -61,7 +61,7 @@ python expects the `minizinc` executable to be available on the executable path,
 the `$PATH` environmental variable, or in a default installation location.
 
 _For more information, please refer to the
-[Documentation](https://minizinc-python.readthedocs.io/en/latest/)_
+[Documentation](https://python.minizinc.dev/en/latest/)_
 
 
 ### Usage
@@ -96,7 +96,7 @@ for i in range(len(result)):
 ```
 
 _For more examples, please refer to the
-[Documentation](https://minizinc-python.readthedocs.io/en/latest/)_
+[Documentation](https://python.minizinc.dev/en/latest/)_
 
 <!-- TESTING INSTRUCTIONS -->
 ## Testing
