@@ -90,7 +90,7 @@ jobs:
         run: uv run sphinx-build -b html docs dist/docs
       - name: Check the documentation doesn't have broken links
         run: uv run sphinx-build -b linkcheck docs dist/docs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: documentation
           path: dist/docs/
