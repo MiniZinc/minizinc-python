@@ -17,7 +17,7 @@ jobs:
     env:
       MINIZINC_URL: https://github.com/MiniZinc/MiniZincIDE/releases/download/${{ matrix.minizinc-version }}/MiniZincIDE-${{ matrix.minizinc-version }}-x86_64.AppImage
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Add bin/ to PATH
@@ -58,7 +58,7 @@ jobs:
   lints:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install uv
         uses: astral-sh/setup-uv@v7
       - name: Set up Python
@@ -77,7 +77,7 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install uv
         uses: astral-sh/setup-uv@v7
       - name: Set up Python ${{ matrix.python-version }}
