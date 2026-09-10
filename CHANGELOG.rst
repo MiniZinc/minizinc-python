@@ -9,6 +9,16 @@ this project adheres to `Semantic Versioning <https://semver.org/>`_.
 Unreleased_
 ------------
 
+Fixed
+^^^^^
+
+- Do not raise ``FileNotFoundError`` on Windows instead of the error MiniZinc
+  reported. The cleanup path stops MiniZinc by writing to its
+  ``\\.\pipe\minizinc-<pid>`` interrupt pipe, but when the error came from
+  MiniZinc itself the process has already exited and taken its pipe with it. A
+  missing pipe now falls back to killing the process, so the original error is
+  the one that surfaces.
+
 0.10.0_ - 2025-02-25
 -------------------
 

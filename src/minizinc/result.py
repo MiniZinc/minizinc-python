@@ -238,11 +238,11 @@ class Result:
         """
         if self.solution is not None:
             if isinstance(self.solution, list):
+                if len(self.solution) == 0:
+                    return None
                 return getattr(self.solution[-1], "objective", None)
-            else:
-                return getattr(self.solution, "objective", None)
-        else:
-            return None
+            return getattr(self.solution, "objective", None)
+        return None
 
     def __getitem__(self, key):
         """Retrieves solution or a member of a solution.

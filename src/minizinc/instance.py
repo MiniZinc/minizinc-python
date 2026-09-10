@@ -674,11 +674,20 @@ class Instance(Model):
                 # an unexpected Python exception occurred
                 # First, terminate the process
                 if sys.platform == "win32":
-                    with open(
-                        f"\\\\.\\pipe\\minizinc-{proc.pid}", mode="w"
-                    ) as named_pipe:
-                        # Trigger MiniZinc termination
-                        named_pipe.write("")
+                    try:
+                        with open(
+                            f"\\\\.\\pipe\\minizinc-{proc.pid}", mode="w"
+                        ) as named_pipe:
+                            # Trigger MiniZinc termination
+                            named_pipe.write("")
+                    except OSError:
+                        # There is no interrupt pipe to write to. MiniZinc has
+                        # already exited, which is always the case when the error
+                        # came from MiniZinc itself, or it has not created its
+                        # pipe yet. Kill it instead, so that the wait below cannot
+                        # block on a process that was never asked to stop.
+                        with contextlib.suppress(ProcessLookupError):
+                            proc.kill()
                 else:
                     proc.terminate()
                 _ = await proc.wait()
